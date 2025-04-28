@@ -1,4 +1,5 @@
 lang: en-US
 title: Kevin Casas
 #show_downloads: true
-theme: jekyll-theme-minimal
+#theme: jekyll-theme-minimal
+theme: cvless
