@@ -103,10 +103,7 @@ Agile, Scrum
 
 ## About Me
 
-When I'm not building software, I enjoy exploring the Arizona desert, tinkering with AI models, and solving algorithm puzzles over coffee. I'm passionate about creating elegant solutions to complex problems and continuously expanding my technical skillset.
+When I'm not building software, I enjoy exploring the Arizona desert. I'm passionate about creating elegant solutions to complex problems and continuously expanding my technical skillset.
 
 > "The best code is no code at all. Every new line of code you willingly bring into the world is code that has to be debugged, code that has to be read and understood, code that has to be supported." — Jeff Atwood
 
----
-
-*This site was built using Jekyll and GitHub Pages. Last updated: April 2025*
