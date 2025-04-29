@@ -2,8 +2,6 @@
 
 Software Engineer with 6+ years of experience building full stack solutions for financial services, payment processing, and banking systems. Proficient in Java, Kotlin, and Python with expertise in developing secure transaction software for Clover, Pax, and Dejavoo terminals. Currently integrating AI language models to enhance payment processing systems.
 
-👋 [Email](mailto:kc.py@icloud.com) | 🔗 [LinkedIn](https://www.linkedin.com/in/kevincasas-dev/) | 📍 Scottsdale, Arizona
-
 ---
 
 ## Work Experience
@@ -89,21 +87,10 @@ Agile, Scrum
 
 ---
 
-## Projects
+## Contact
 
-*Check out my repositories for examples of my work in:*
-
-- 💳 Payment Processing Systems
-- 📱 Mobile App Development
-- 🌐 RESTful API Design
-- 🤖 AI/ML Integration
-- 📊 Data Analysis & Visualization
+📧 [Email](mailto:kc.py@icloud.com) | 🔗 [LinkedIn](https://www.linkedin.com/in/kevincasas-dev/) | 📍 Scottsdale, Arizona
 
 ---
 
-## About Me
-
-When I'm not building software, I enjoy exploring the Arizona desert. I'm passionate about creating elegant solutions to complex problems and continuously expanding my technical skillset.
-
-> "The best code is no code at all. Every new line of code you willingly bring into the world is code that has to be debugged, code that has to be read and understood, code that has to be supported." — Jeff Atwood
-
+*When I'm not coding, you can find me exploring the Arizona desert.*
