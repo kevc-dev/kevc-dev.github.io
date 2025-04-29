@@ -1,0 +1,50 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+/* Dark mode customization */
+body {
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #e0e0e0;
+}
+
+a {
+  color: #58a6ff;
+}
+
+a:hover {
+  color: #79b8ff;
+}
+
+.wrapper {
+  background-color: #2d2d2d;
+}
+
+section {
+  background-color: #2d2d2d;
+  border-color: #444;
+}
+
+hr {
+  background-color: #444;
+}
+
+code {
+  background-color: #3a3a3a;
+  color: #e0e0e0;
+}
+
+blockquote {
+  border-left-color: #444;
+}
+
+/* Ensure profile picture looks good on dark background */
+.profile-image {
+  border-radius: 50%;
+  border: 3px solid #444;
+}
