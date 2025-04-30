@@ -14,7 +14,6 @@ Software Engineer with 6+ years of experience building full stack solutions for 
 - Lead development of payment transaction systems, integrating custom APIs and CRM systems for merchants needs
 - Standardize Agile workflows with Jira and Confluence, reducing project management time by 25%
 - Collaborate with Sales, Marketing, and Finance to align payment solutions with business objectives
-- Mentor junior developers through project lifecycle, providing guidance on API integration, SQL architecture, testing, and documentation best practices
 
 ### Information System Analyst/Programmer, Alcock & Associates — Phoenix, Arizona
 *May 2024 — Nov 2024*
