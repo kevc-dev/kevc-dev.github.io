@@ -125,10 +125,10 @@
             line-height: 1.2;
             margin-bottom: 20px;
             background: linear-gradient(90deg, #ffffff, #ffb800, #cc8500); /* Gradient white -> #ffb800 -> darker amber */
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
         }
         
         .hero p {
@@ -221,6 +221,7 @@
         .focus-content {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 50px;
         }
         
@@ -230,6 +231,24 @@
         
         .focus-image {
             width: 40%;
+            text-align: center;
+        }
+        
+        /* Add shake animation */
+        .shake {
+            animation: shake-animation 4.72s ease infinite;
+            transform-origin: 50% 50%;
+        }
+        
+        @keyframes shake-animation {
+            0% { transform: translate(0, 0) }
+            1.78571% { transform: translate(5px, 0) }
+            3.57143% { transform: translate(0, 0) }
+            5.35714% { transform: translate(5px, 0) }
+            7.14286% { transform: translate(0, 0) }
+            8.92857% { transform: translate(5px, 0) }
+            10.71429% { transform: translate(0, 0) }
+            100% { transform: translate(0, 0) }
         }
         
         .journey-timeline {
@@ -406,6 +425,35 @@
             background-color: var(--black); /* Change back to black when header is scrolled */
         }
         
+        /* Responsive styling */
+        @media (max-width: 992px) {
+            .focus-content {
+                flex-direction: column;
+            }
+            
+            .focus-text, .focus-image {
+                width: 100%;
+            }
+            
+            .focus-image {
+                margin-top: 30px;
+            }
+            
+            .journey-timeline::before {
+                left: 30px;
+            }
+            
+            .timeline-item:nth-child(odd) .timeline-content,
+            .timeline-item:nth-child(even) .timeline-content {
+                width: calc(100% - 60px);
+                left: 60px;
+            }
+            
+            .timeline-dot {
+                left: 30px;
+            }
+        }
+        
         @media (max-width: 768px) {
             .nav-links {
                 position: fixed;
@@ -442,44 +490,22 @@
             }
         }
 
-        /* Add this to your existing CSS */
         @media (min-width: 1200px) {
             .hero .container {
                 max-width: 1200px;
                 margin: 0 auto;
                 display: flex;
+                flex-direction: column;
                 justify-content: center;
                 align-items: center;
             }
-            
-            .hero-content, .hero-image {
-                width: auto;
-                max-width: 45%;
-            }
-            
-            .hero-content {
-                padding-right: 40px;
-            }
         }
+        
         @media (min-width: 1400px) {
             .hero .container {
                 max-width: 1400px;
-                margin: 0 auto;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-            
-            .hero-content, .hero-image {
-                width: auto;
-                max-width: 45%;
-            }
-            
-            .hero-content {
-                padding-right: 40px;
             }
         }
-
     </style>
 </head>
 <body>
@@ -553,6 +579,9 @@
                         <span class="skill-tag" style="background-color: var(--primary);">Agile Leadership</span>
                         <span class="skill-tag" style="background-color: var(--primary);">AI/ML</span>
                     </div>
+                </div>
+                <div class="focus-image">
+                    <img id="shake-image" src="assets/img/focus-icon.png" alt="Technology Focus" style="max-width: 200px; width: 100%;">
                 </div>
             </div>
         </div>
@@ -772,6 +801,28 @@
             } else {
                 // We're still in the hero section, keep it black
                 header.classList.remove('scrolled');
+            }
+        });
+
+        // Make sure DOM is loaded before adding shake event
+        document.addEventListener('DOMContentLoaded', function() {
+            const shakeImage = document.getElementById('shake-image');
+            
+            // Check if the image exists before trying to add classes to it
+            if (shakeImage) {
+                // Add the shake class initially
+                shakeImage.classList.add('shake');
+                
+                // Optional: Add event listeners to control the animation
+                shakeImage.addEventListener('mouseenter', function() {
+                    this.classList.add('shake');
+                });
+                
+                shakeImage.addEventListener('mouseleave', function() {
+                    // Keep the shake effect or remove it on mouse leave
+                    // Uncomment the next line if you want to stop the animation when mouse leaves
+                    // this.classList.remove('shake');
+                });
             }
         });
     </script>
