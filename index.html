@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kevin Casas | Software Engineer</title>
+    <style>
+        :root {
+            --primary: #ffb800;
+            --black: #000000;
+            --white: #ffffff;
+            --gray: #f0f0f0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--white);
+            color: var(--black);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: var(--black); /* Initial color is black */
+            padding: 20px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: background-color 0.3s ease; /* Smooth transition for color change */
+        }
+        
+        /* Header styles for scrolled state will be added by JavaScript */
+        header.scrolled {
+            background-color: var(--primary);
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-weight: bold;
+            font-size: 24px;
+            color: var(--white); /* Changed to white for better contrast with black background */
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease; /* Smooth transition for text color */
+        }
+        
+        header.scrolled .logo {
+            color: var(--black); /* Change back to black when header is scrolled */
+        }
+        
+        .toggle-circle {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background-color: var(--white);
+            border-radius: 50%;
+            left: 3px;
+            transition: all 0.3s;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-links a {
+            color: var(--white); /* Changed to white for better contrast with black background */
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        header.scrolled .nav-links a {
+            color: var(--black); /* Change back to black when header is scrolled */
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .hero {
+            background-color: var(--black);
+            padding: 140px 0 80px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .hero-content {
+            width: 50%;
+            padding-right: 20px;
+        }
+        
+        .hero-image {
+            width: 50%;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 64px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+        
+        .hero p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: var(--white);
+            color: var(--black);
+            padding: 12px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(122, 122, 122, 0.1);
+        }
+
+        
+        .section {
+            padding: 80px 0;
+        }
+        
+        .section-title {
+            font-size: 40px;
+            margin-bottom: 40px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            height: 5px;
+            width: 60%;
+            background-color: var(--primary);
+            bottom: -10px;
+            left: 0;
+        }
+        
+        .expertise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .expertise-item {
+            background-color: var(--white);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+        
+        .expertise-item:hover {
+            transform: translateY(-10px);
+        }
+        
+        .expertise-item h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+        
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .skill-tag {
+            background-color: var(--primary);
+            color: var(--black);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .focus-section {
+            background-color: var(--black);
+            color: var(--white);
+        }
+        
+        .focus-content {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+        
+        .focus-text {
+            width: 60%;
+        }
+        
+        .focus-image {
+            width: 40%;
+        }
+        
+        .journey-timeline {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .journey-timeline::before {
+            content: '';
+            position: absolute;
+            width: 3px;
+            background-color: var(--primary);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .timeline-item {
+            margin-bottom: 50px;
+            position: relative;
+        }
+        
+        .timeline-content {
+            position: relative;
+            width: 45%;
+            padding: 20px;
+            background-color: var(--white);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+        
+        .timeline-content:hover {
+            transform: translateY(-5px);
+        }
+        
+        .timeline-item:nth-child(odd) .timeline-content {
+            left: 55%;
+        }
+        
+        .timeline-item:nth-child(even) .timeline-content {
+            left: 0;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        
+        .timeline-content h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-content p {
+            margin-bottom: 10px;
+        }
+        
+        .timeline-content .year {
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .education-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .education-item {
+            background-color: var(--white);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+        
+        .education-item:hover {
+            transform: translateY(-10px);
+        }
+        
+        .education-item h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .education-item p {
+            margin-bottom: 5px;
+        }
+        
+        .connect-section {
+            background-color: var(--primary);
+        }
+        
+        .connect-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        
+        .connect-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .connect-item svg {
+            margin-bottom: 15px;
+            width: 40px;
+            height: 40px;
+        }
+        
+        .connect-item a {
+            color: var(--black);
+            font-weight: 500;
+            text-decoration: none;
+            margin-top: 5px;
+            transition: color 0.3s;
+        }
+        
+        .connect-item a:hover {
+            color: var(--white);
+        }
+        
+        footer {
+            background-color: var(--black);
+            color: var(--white);
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .footer-logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .footer-quote {
+            font-style: italic;
+            max-width: 600px;
+            margin: 0 auto 20px;
+        }
+        
+        .hamburger {
+            display: none;
+            cursor: pointer;
+        }
+        
+        .hamburger div {
+            width: 25px;
+            height: 3px;
+            background-color: var(--white); /* Changed to white for better contrast with black background */
+            margin: 5px 0;
+            transition: background-color 0.3s ease; /* Smooth transition for hamburger color */
+        }
+        
+        header.scrolled .hamburger div {
+            background-color: var(--black); /* Change back to black when header is scrolled */
+        }
+        
+        @media (max-width: 992px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                background-color: var(--black);
+                color: var(--white);
+            }
+            
+            .hero-content, .hero-image {
+                width: 100%;
+                padding-right: 0;
+            }
+            
+            .hero-image {
+                margin-top: 40px;
+            }
+            
+            .focus-content {
+                flex-direction: column;
+            }
+            
+            .focus-text, .focus-image {
+                width: 100%;
+            }
+            
+            .journey-timeline::before {
+                left: 30px;
+            }
+            
+            .timeline-item:nth-child(odd) .timeline-content,
+            .timeline-item:nth-child(even) .timeline-content {
+                width: calc(100% - 60px);
+                left: 60px;
+            }
+            
+            .timeline-dot {
+                left: 30px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                position: fixed;
+                background-color: var(--black); /* Changed to black initially */
+                height: 100vh;
+                width: 100%;
+                top: 70px;
+                right: -100%;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                transition: right 0.5s, background-color 0.3s ease; /* Added transition for bg color */
+                gap: 50px;
+            }
+            
+            header.scrolled .nav-links {
+                background-color: var(--primary); /* Change mobile menu background when scrolled */
+            }
+            
+            .nav-links.active {
+                right: 0;
+            }
+            
+            .hamburger {
+                display: block;
+            }
+            
+            h1 {
+                font-size: 40px;
+            }
+            
+            .section-title {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                KEVIN CASAS
+            </a>
+            <div class="nav-links">
+                <a href="#expertise">Expertise</a>
+                <a href="#focus">Current Focus</a>
+                <a href="#journey">Journey</a>
+                <a href="#connect">Connect</a>
+            </div>
+            <div class="hamburger">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>SOFTWARE ENGINEER</h1>
+                <p>Hi there, I'm Kevin! A Software Engineer with 6+ years of experience building full-stack solutions across financial services, payment processing, and banking systems. Currently based in Scottsdale, Arizona.</p>
+                <a href="#connect" class="btn">Let's Connect</a>
+            </div>
+            <div class="hero-image">
+                <div class="profile-photo">
+                    <img src="assets/img/profile.jpg" alt="Kevin Casas" style="border-radius: 50%; border: 5px solid #000000; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); max-width: 320px; width: 100%;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="expertise" class="section">
+        <div class="container">
+            <h2 class="section-title">Technical Expertise</h2>
+            <div class="expertise-grid">
+                <div class="expertise-item">
+                    <h3>Languages</h3>
+                    <div class="skill-list">
+                        <span class="skill-tag">Java</span>
+                        <span class="skill-tag">Kotlin</span>
+                        <span class="skill-tag">Python</span>
+                        <span class="skill-tag">JavaScript</span>
+                        <span class="skill-tag">TypeScript</span>
+                    </div>
+                </div>
+                <div class="expertise-item">
+                    <h3>Frameworks</h3>
+                    <div class="skill-list">
+                        <span class="skill-tag">Spring Boot</span>
+                        <span class="skill-tag">React</span>
+                        <span class="skill-tag">Angular</span>
+                        <span class="skill-tag">Node.js</span>
+                        <span class="skill-tag">ASP.NET Core</span>
+                    </div>
+                </div>
+                <div class="expertise-item">
+                    <h3>Data</h3>
+                    <div class="skill-list">
+                        <span class="skill-tag">SQL Server</span>
+                        <span class="skill-tag">MySQL</span>
+                        <span class="skill-tag">MongoDB</span>
+                        <span class="skill-tag">PostgreSQL</span>
+                    </div>
+                </div>
+                <div class="expertise-item">
+                    <h3>Cloud/DevOps</h3>
+                    <div class="skill-list">
+                        <span class="skill-tag">AWS</span>
+                        <span class="skill-tag">Azure</span>
+                        <span class="skill-tag">Docker</span>
+                        <span class="skill-tag">Jenkins</span>
+                        <span class="skill-tag">Git</span>
+                        <span class="skill-tag">CI/CD</span>
+                    </div>
+                </div>
+                <div class="expertise-item">
+                    <h3>Architecture</h3>
+                    <div class="skill-list">
+                        <span class="skill-tag">Microservices</span>
+                        <span class="skill-tag">MVC</span>
+                        <span class="skill-tag">MVP</span>
+                        <span class="skill-tag">MVVM</span>
+                    </div>
+                </div>
+                <div class="expertise-item">
+                    <h3>Tools & Methodologies</h3>
+                    <div class="skill-list">
+                        <span class="skill-tag">Jira</span>
+                        <span class="skill-tag">Confluence</span>
+                        <span class="skill-tag">Postman</span>
+                        <span class="skill-tag">JMeter</span>
+                        <span class="skill-tag">Agile</span>
+                        <span class="skill-tag">Scrum</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">What I Do</h2>
+            <p>I build secure, scalable software solutions that solve real business problems. My experience spans:</p>
+            <div class="expertise-grid">
+                <div class="expertise-item">
+                    <h3>Payment Systems</h3>
+                    <p>Developing transaction systems for payment terminals (Clover, Pax, Dejavoo)</p>
+                </div>
+                <div class="expertise-item">
+                    <h3>High-Performance APIs</h3>
+                    <p>Creating high-availability REST APIs handling millions of weekly transactions</p>
+                </div>
+                <div class="expertise-item">
+                    <h3>Mobile Development</h3>
+                    <p>Building mobile applications with 30,000+ active users</p>
+                </div>
+                <div class="expertise-item">
+                    <h3>AI Integration</h3>
+                    <p>Integrating AI language models to enhance payment processing systems</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="focus" class="section focus-section">
+        <div class="container">
+            <h2 class="section-title">Current Focus</h2>
+            <div class="focus-content">
+                <div class="focus-text">
+                    <p>As a Software Engineer II at MiCamp Solutions in Scottsdale, I'm leading development of payment transaction systems and standardizing Agile workflows to improve team efficiency. I'm also exploring AI and Machine Learning to enhance our payment processing capabilities.</p>
+                    <div style="margin-top: 30px;">
+                        <span class="skill-tag" style="background-color: var(--primary);">Payment Systems</span>
+                        <span class="skill-tag" style="background-color: var(--primary);">Agile Leadership</span>
+                        <span class="skill-tag" style="background-color: var(--primary);">AI/ML</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="journey" class="section">
+        <div class="container">
+            <h2 class="section-title">Professional Journey</h2>
+            <div class="journey-timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>MiCamp Solutions</h3>
+                        <p>Software Engineer II</p>
+                        <p class="year">Current</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>Alcock & Associates</h3>
+                        <p>Information System Analyst/Programmer</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>MiCamp Solutions</h3>
+                        <p>Software Engineer</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>Tata Consultancy Services</h3>
+                        <p>Intermediate Developer</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>Teleperformance</h3>
+                        <p>Developer I</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Education</h2>
+            <div class="education-grid">
+                <div class="education-item">
+                    <h3>CS Professional Certification</h3>
+                    <p>AI and Machine Learning</p>
+                    <p>Arizona State University (2025)</p>
+                </div>
+                <div class="education-item">
+                    <h3>Bachelor of Science</h3>
+                    <p>Software Engineering</p>
+                    <p>Grancolombiano Polytechnic University (2023)</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="connect" class="section connect-section">
+        <div class="container">
+            <h2 class="section-title">Let's Connect</h2>
+            <div class="connect-grid">
+                <div class="connect-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <p>Email</p>
+                    <a href="mailto:kc.py@icloud.com">kc.py@icloud.com</a>
+                </div>
+                <div class="connect-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                        <rect x="2" y="9" width="4" height="12"></rect>
+                        <circle cx="4" cy="4" r="2"></circle>
+                    </svg>
+                    <p>LinkedIn</p>
+                    <a href="https://www.linkedin.com/in/kevincasas-dev/" target="_blank">linkedin.com/in/kevincasas-dev</a>
+                </div>
+                <div class="connect-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                    </svg>
+                    <p>GitHub</p>
+                    <a href="https://github.com/kevincasas-dev" target="_blank">github.com/kevincasas-dev</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-logo">KEVIN CASAS</div>
+            <p class="footer-quote">"Code is like humor. When you have to explain it, it's bad." – Cory House</p>
+            <p>When I'm not coding, you can find me exploring the Arizona desert.</p>
+            <p style="margin-top: 20px; font-size: 14px;">© 2025 Kevin Casas. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile navigation toggle
+        const hamburger = document.querySelector('.hamburger');
+        const navLinks = document.querySelector('.nav-links');
+        const header = document.querySelector('header');
+        
+        if (hamburger) {
+            hamburger.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+        }
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                if (navLinks.classList.contains('active')) {
+                    navLinks.classList.remove('active');
+                }
+                
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // Scroll event listener for header color change
+        window.addEventListener('scroll', () => {
+            // Get the hero section
+            const heroSection = document.querySelector('.hero');
+            const heroHeight = heroSection.offsetHeight;
+            
+            // Check if we've scrolled past the hero section
+            // We'll change the header when the hero is at least 90% scrolled out of view
+            if (window.scrollY > (heroHeight * 0.9)) {
+                // We've scrolled past the hero section, change to yellow
+                header.classList.add('scrolled');
+            } else {
+                // We're still in the hero section, keep it black
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>
