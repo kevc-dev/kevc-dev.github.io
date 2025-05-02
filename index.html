@@ -101,16 +101,21 @@
             color: #ffffff;
             padding: 140px 0 80px;
             display: flex;
+            flex-direction: column; /* Change to column layout by default */
             align-items: center;
+            text-align: center;
         }
-        
+
         .hero-content {
-            width: 50%;
-            padding-right: 20px;
+            width: 100%;
+            max-width: 800px; /* Add max-width for better readability */
+            padding: 0 20px;
+            margin: 0 auto;
         }
-        
+
         .hero-image {
-            width: 50%;
+            width: 100%;
+            margin-top: 40px; /* Add space between button and image */
             text-align: center;
         }
         
@@ -119,6 +124,11 @@
             font-weight: 800;
             line-height: 1.2;
             margin-bottom: 20px;
+            background: linear-gradient(90deg, #ffffff, #ffb800, #cc8500); /* Gradient white -> #ffb800 -> darker amber */
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
         }
         
         .hero p {
@@ -141,7 +151,6 @@
             transform: translateY(-3px);
             box-shadow: 0 10px 20px rgba(122, 122, 122, 0.1);
         }
-
         
         .section {
             padding: 80px 0;
@@ -397,46 +406,6 @@
             background-color: var(--black); /* Change back to black when header is scrolled */
         }
         
-        @media (max-width: 992px) {
-            .hero {
-                flex-direction: column;
-                text-align: center;
-                background-color: var(--black);
-                color: var(--white);
-            }
-            
-            .hero-content, .hero-image {
-                width: 100%;
-                padding-right: 0;
-            }
-            
-            .hero-image {
-                margin-top: 40px;
-            }
-            
-            .focus-content {
-                flex-direction: column;
-            }
-            
-            .focus-text, .focus-image {
-                width: 100%;
-            }
-            
-            .journey-timeline::before {
-                left: 30px;
-            }
-            
-            .timeline-item:nth-child(odd) .timeline-content,
-            .timeline-item:nth-child(even) .timeline-content {
-                width: calc(100% - 60px);
-                left: 60px;
-            }
-            
-            .timeline-dot {
-                left: 30px;
-            }
-        }
-        
         @media (max-width: 768px) {
             .nav-links {
                 position: fixed;
@@ -472,17 +441,56 @@
                 font-size: 32px;
             }
         }
+
+        /* Add this to your existing CSS */
+        @media (min-width: 1200px) {
+            .hero .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .hero-content, .hero-image {
+                width: auto;
+                max-width: 45%;
+            }
+            
+            .hero-content {
+                padding-right: 40px;
+            }
+        }
+        @media (min-width: 1400px) {
+            .hero .container {
+                max-width: 1400px;
+                margin: 0 auto;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .hero-content, .hero-image {
+                width: auto;
+                max-width: 45%;
+            }
+            
+            .hero-content {
+                padding-right: 40px;
+            }
+        }
+
     </style>
 </head>
 <body>
     <header>
         <div class="container nav-container">
             <a href="#" class="logo">
-                KEVIN CASAS
+                kevincasas-dev
             </a>
             <div class="nav-links">
-                <a href="#expertise">Expertise</a>
                 <a href="#focus">Current Focus</a>
+                <a href="#expertise">Expertise</a>
                 <a href="#journey">Journey</a>
                 <a href="#connect">Connect</a>
             </div>
@@ -497,13 +505,54 @@
     <section class="hero">
         <div class="container">
             <div class="hero-content">
-                <h1>SOFTWARE ENGINEER</h1>
-                <p>Hi there, I'm Kevin! A Software Engineer with 6+ years of experience building full-stack solutions across financial services, payment processing, and banking systems. Currently based in Scottsdale, Arizona.</p>
+                <h1>Hey, I'm Kevin Casas!</h1>
+                <p> A Software Engineer with 6+ years of experience building full-stack solutions across financial services, payment processing, and banking systems. Currently based in Scottsdale, Arizona.</p>
                 <a href="#connect" class="btn">Let's Connect</a>
             </div>
             <div class="hero-image">
                 <div class="profile-photo">
                     <img src="assets/img/profile.jpg" alt="Kevin Casas" style="border-radius: 50%; border: 5px solid #000000; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); max-width: 320px; width: 100%;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">What I Do</h2>
+            <p>I build secure, scalable software solutions that solve real business problems. My experience spans:</p>
+            <div class="expertise-grid">
+                <div class="expertise-item">
+                    <h3>Payment Systems</h3>
+                    <p>Developing transaction systems for payment terminals (Clover, Pax, Dejavoo)</p>
+                </div>
+                <div class="expertise-item">
+                    <h3>High-Performance APIs</h3>
+                    <p>Creating high-availability REST APIs handling millions of weekly transactions</p>
+                </div>
+                <div class="expertise-item">
+                    <h3>Mobile Development</h3>
+                    <p>Building mobile applications with 30,000+ active users</p>
+                </div>
+                <div class="expertise-item">
+                    <h3>AI Integration</h3>
+                    <p>Integrating AI language models to enhance payment processing systems</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="focus" class="section focus-section">
+        <div class="container">
+            <h2 class="section-title">Current Focus</h2>
+            <div class="focus-content">
+                <div class="focus-text">
+                    <p>As a Software Engineer II at MiCamp Solutions in Scottsdale, I'm leading development of payment transaction systems and standardizing Agile workflows to improve team efficiency. I'm also exploring AI and Machine Learning to enhance our payment processing capabilities.</p>
+                    <div style="margin-top: 30px;">
+                        <span class="skill-tag" style="background-color: var(--primary);">Payment Systems</span>
+                        <span class="skill-tag" style="background-color: var(--primary);">Agile Leadership</span>
+                        <span class="skill-tag" style="background-color: var(--primary);">AI/ML</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -571,47 +620,6 @@
                         <span class="skill-tag">JMeter</span>
                         <span class="skill-tag">Agile</span>
                         <span class="skill-tag">Scrum</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section">
-        <div class="container">
-            <h2 class="section-title">What I Do</h2>
-            <p>I build secure, scalable software solutions that solve real business problems. My experience spans:</p>
-            <div class="expertise-grid">
-                <div class="expertise-item">
-                    <h3>Payment Systems</h3>
-                    <p>Developing transaction systems for payment terminals (Clover, Pax, Dejavoo)</p>
-                </div>
-                <div class="expertise-item">
-                    <h3>High-Performance APIs</h3>
-                    <p>Creating high-availability REST APIs handling millions of weekly transactions</p>
-                </div>
-                <div class="expertise-item">
-                    <h3>Mobile Development</h3>
-                    <p>Building mobile applications with 30,000+ active users</p>
-                </div>
-                <div class="expertise-item">
-                    <h3>AI Integration</h3>
-                    <p>Integrating AI language models to enhance payment processing systems</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="focus" class="section focus-section">
-        <div class="container">
-            <h2 class="section-title">Current Focus</h2>
-            <div class="focus-content">
-                <div class="focus-text">
-                    <p>As a Software Engineer II at MiCamp Solutions in Scottsdale, I'm leading development of payment transaction systems and standardizing Agile workflows to improve team efficiency. I'm also exploring AI and Machine Learning to enhance our payment processing capabilities.</p>
-                    <div style="margin-top: 30px;">
-                        <span class="skill-tag" style="background-color: var(--primary);">Payment Systems</span>
-                        <span class="skill-tag" style="background-color: var(--primary);">Agile Leadership</span>
-                        <span class="skill-tag" style="background-color: var(--primary);">AI/ML</span>
                     </div>
                 </div>
             </div>
@@ -714,9 +722,11 @@
 
     <footer>
         <div class="container footer-content">
-            <div class="footer-logo">KEVIN CASAS</div>
-            <p class="footer-quote">"Code is like humor. When you have to explain it, it's bad." – Cory House</p>
-            <p>When I'm not coding, you can find me exploring the Arizona desert.</p>
+            <div class="footer-logo"></div>
+            <!--<div class="footer-logo">KEVIN CASAS</div>
+             <p class="footer-quote">"Code is like humor. When you have to explain it, it's bad." – Cory House</p> -->
+            <p>When I'm not coding, you can find me exploring the Arizona desert 🌵</p>
+            <div class="footer-logo"></div>
             <p style="margin-top: 20px; font-size: 14px;">© 2025 Kevin Casas. All rights reserved.</p>
         </div>
     </footer>
