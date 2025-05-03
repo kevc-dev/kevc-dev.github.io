@@ -64,6 +64,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
+    <style>
+        /* Critical CSS for above-the-fold content */
+        :root{--primary:#ffb800;--black:#000000;--white:#ffffff;--gray:#f0f0f0}
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+        body{background-color:var(--white);color:var(--black);line-height:1.6}
+        .container{max-width:1200px;margin:0 auto;padding:0 20px}
+        header{background-color:var(--black);padding:20px 0;position:fixed;width:100%;top:0;z-index:1000}
+    </style>
     <!-- Link to external CSS file -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -100,9 +108,8 @@
             </div>
             <div class="hero-image">
                 <div class="profile-photo">
-                    <img src="assets/img/profile.jpg"
-                        alt="Kevin Casas, Software Engineer based in Scottsdale, Arizona specializing in payment systems"
-                        style="border-radius: 50%; border: 5px solid #000000; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); max-width: 320px; width: 100%;">
+                    <!-- For profile image -->
+                    <img src="assets/img/profile.jpg" alt="Kevin Casas, Software Engineer based in Scottsdale, Arizona specializing in payment systems" width="320" height="320" style="border-radius: 50%; border: 5px solid #000000; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); max-width: 320px; width: 100%;">
                 </div>
             </div>
         </div>
@@ -148,9 +155,8 @@
                     </div>
                 </div>
                 <div class="focus-image">
-                    <img id="shake-image" src="assets/img/focus-icon.png"
-                        alt="Kevin Casas's focus on Payment Systems, Agile Leadership, and AI/ML integration"
-                        style="max-width: 200px; width: 100%;">
+                    <!-- For focus icon -->
+                    <img id="shake-image" src="assets/img/focus-icon.png" alt="Kevin Casas's focus on Payment Systems, Agile Leadership, and AI/ML integration" width="200" height="200" style="max-width: 200px; width: 100%;" class="shake">
                 </div>
             </div>
         </div>
@@ -335,6 +341,6 @@
     </footer>
 
     <!-- Link to external JS file at the end of body -->
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/main.js" defer></script>
 </body>
 </html>
