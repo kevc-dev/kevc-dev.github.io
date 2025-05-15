@@ -15,13 +15,6 @@ Software Engineer with 6+ years of experience building full stack solutions for 
 - Standardize Agile workflows with Jira and Confluence, reducing project management time by 25%
 - Collaborate with Sales, Marketing, and Finance to align payment solutions with business objectives
 
-### Information System Analyst/Programmer, Alcock & Associates — Phoenix, Arizona
-*May 2024 — Nov 2024*
-
-- Architected and developed a Java Spring Boot payroll management system that streamlined employee and client compensation processes, improving efficiency by 75%
-- Integrated Bank of America payment API to enable secure, automated financial transactions
-- Developed Power BI dashboards with SQL Server backend for comprehensive sales analytics
-
 ### Software Engineer, MiCamp Solutions — Scottsdale, Arizona
 *Jan 2023 — May 2024*
 
