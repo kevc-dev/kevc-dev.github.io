@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cales - Your Digital Payment Hub</title>
+  <style>
+    :root {
+      --primary-orange: #e67e22;
+      --dark-bg: #0d0d0d;
+      --card-bg: #1a1a1a;
+      --card-border: #333;
+      --text-primary: #f5f5f5;
+      --text-secondary: #888;
+      --success: #2ecc71;
+      --danger: #e74c3c;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      background: rgba(26, 26, 26, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo img {
+      width: 40px;
+      height: 40px;
+    }
+
+    .logo h1 {
+      font-size: 1.5rem;
+      color: var(--primary-orange);
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-menu a {
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .nav-menu a:hover {
+      color: var(--primary-orange);
+    }
+
+    .mobile-menu {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* Main Content */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .card h2 {
+      color: var(--primary-orange);
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+    }
+
+    .balance-card {
+      background: linear-gradient(135deg, var(--primary-orange), #d35400);
+      color: white;
+      grid-column: span 2;
+    }
+
+    .balance-card h2 {
+      color: white;
+      font-size: 1rem;
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+    }
+
+    .balance-amount {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .balance-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.7rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-primary {
+      background: var(--primary-orange);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #d35400;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(230, 126, 34, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: rgba(51, 51, 51, 0.5);
+      color: var(--text-primary);
+      transition: border-color 0.3s, background 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary-orange);
+      background: rgba(51, 51, 51, 0.8);
+    }
+
+    /* Transactions */
+    .transaction-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .transaction-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid var(--card-border);
+      transition: background 0.3s;
+    }
+
+    .transaction-item:hover {
+      background: rgba(230, 126, 34, 0.1);
+    }
+
+    .transaction-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .transaction-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(230, 126, 34, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .transaction-amount {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .amount-positive {
+      color: var(--success);
+    }
+
+    .amount-negative {
+      color: var(--danger);
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 1rem;
+    }
+
+    .action-btn {
+      background: rgba(230, 126, 34, 0.1);
+      border: 1px solid var(--primary-orange);
+      border-radius: 12px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .action-btn:hover {
+      background: rgba(230, 126, 34, 0.2);
+      transform: translateY(-3px);
+    }
+
+    .action-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--card-border);
+      margin-top: 4rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .nav-menu {
+        display: none;
+      }
+
+      .mobile-menu {
+        display: block;
+      }
+
+      .header-content {
+        padding: 0.5rem 0;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .balance-card {
+        grid-column: span 1;
+      }
+
+      .balance-amount {
+        font-size: 2rem;
+      }
+
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      main {
+        padding: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logo h1 {
+        font-size: 1.2rem;
+      }
+
+      .card {
+        padding: 1rem;
+      }
+
+      .balance-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .card:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .card:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    .card:nth-child(4) {
+      animation-delay: 0.3s;
+    }
+
+    /* Loading state */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--primary-orange);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="logo">
+        <svg width="40" height="40" viewBox="0 0 512 512">
+          <circle cx="256" cy="256" r="245" fill="#e67e22"/>
+          <path d="M256 80 C 356 80, 400 156, 400 256 C 400 356, 356 400, 256 400 C 156 400, 112 324, 112 224 C 112 124, 156 80, 256 80 M 256 180 C 206 180, 212 204, 212 254 C 212 304, 206 320, 256 320 C 306 320, 300 296, 300 246 C 300 196, 306 180, 256 180" fill="#0d0d0d"/>
+        </svg>
+        <h1>Cales</h1>
+      </div>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="#dashboard">Dashboard</a></li>
+          <li><a href="#transactions">Transactions</a></li>
+          <li><a href="#cards">Cards</a></li>
+          <li><a href="#profile">Profile</a></li>
+        </ul>
+        <button class="mobile-menu">☰</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="dashboard-grid">
+      <!-- Balance Card -->
+      <div class="card balance-card">
+        <h2>Total Balance</h2>
+        <div class="balance-amount">$24,563.00</div>
+        <div class="balance-actions">
+          <button class="btn btn-secondary" onclick="simulateTransaction('deposit')">Deposit</button>
+          <button class="btn btn-secondary" onclick="simulateTransaction('withdraw')">Withdraw</button>
+          <button class="btn btn-secondary" onclick="simulateTransaction('transfer')">Transfer</button>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="card">
+        <h2>Recent Transactions</h2>
+        <div class="transaction-list">
+          <div class="transaction-item">
+            <div class="transaction-info">
+              <div class="transaction-icon">📱</div>
+              <div>
+                <div>Mobile Recharge</div>
+                <small>Today, 2:30 PM</small>
+              </div>
+            </div>
+            <div class="transaction-amount amount-negative">-$45.00</div>
+          </div>
+          <div class="transaction-item">
+            <div class="transaction-info">
+              <div class="transaction-icon">💰</div>
+              <div>
+                <div>Salary Credit</div>
+                <small>May 1, 9:00 AM</small>
+              </div>
+            </div>
+            <div class="transaction-amount amount-positive">+$3,500.00</div>
+          </div>
+          <div class="transaction-item">
+            <div class="transaction-info">
+              <div class="transaction-icon">🛒</div>
+              <div>
+                <div>Amazon Purchase</div>
+                <small>Apr 30, 6:45 PM</small>
+              </div>
+            </div>
+            <div class="transaction-amount amount-negative">-$125.99</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <h2>Quick Actions</h2>
+        <div class="quick-actions">
+          <div class="action-btn" onclick="simulateTransaction('pay-bills')">
+            <div class="action-icon">📄</div>
+            <div>Pay Bills</div>
+          </div>
+          <div class="action-btn" onclick="simulateTransaction('scan-pay')">
+            <div class="action-icon">📸</div>
+            <div>Scan & Pay</div>
+          </div>
+          <div class="action-btn" onclick="simulateTransaction('rewards')">
+            <div class="action-icon">🎁</div>
+            <div>Rewards</div>
+          </div>
+          <div class="action-btn" onclick="simulateTransaction('cards')">
+            <div class="action-icon">💳</div>
+            <div>Cards</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Authentication Section -->
+      <div class="card" id="auth">
+        <h2>Account</h2>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="Enter your email">
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter your password">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Response/Notification Area -->
+    <div id="response" class="card" style="display: none;">
+      <h3>System Response</h3>
+      <div id="responseContent"></div>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 Cales Fintech Inc. | Secure Banking For Everyone</p>
+  </footer>
+
+  <script>
+    function simulateTransaction(type) {
+      const responseBox = document.getElementById("response");
+      const responseContent = document.getElementById("responseContent");
+      responseBox.style.display = "block";
+      
+      // Show loading state
+      responseContent.innerHTML = `<p>Processing ${type} request... <span class="loading"></span></p>`;
+      
+      // Simulate API call
+      setTimeout(() => {
+        const responses = {
+          'deposit': 'Deposit successful! $500 has been added to your account.',
+          'withdraw': 'Withdrawal successful! $200 has been withdrawn.',
+          'transfer': 'Transfer initiated. Please select recipient.',
+          'pay-bills': 'Bill payment portal opened.',
+          'scan-pay': 'QR scanner activated.',
+          'rewards': 'You have 2,450 reward points!',
+          'cards': 'Viewing your connected cards.'
+        };
+        
+        responseContent.innerHTML = `
+          <p style="color: var(--success);">✓ ${responses[type] || 'Transaction successful!'}</p>
+          <button class="btn btn-primary" onclick="closeResponse()">Close</button>
+        `;
+      }, 1500);
+    }
+
+    function closeResponse() {
+      document.getElementById("response").style.display = "none";
+    }
+
+    // Handle login form
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (email && password) {
+        simulateTransaction('login');
+        setTimeout(() => {
+          const responseContent = document.getElementById("responseContent");
+          responseContent.innerHTML = `
+            <p style="color: var(--success);">✓ Welcome back! You are now logged in.</p>
+            <button class="btn btn-primary" onclick="closeResponse()">Continue to Dashboard</button>
+          `;
+        }, 1500);
+      }
+    });
+
+    // Mobile menu toggle
+    document.querySelector('.mobile-menu').addEventListener('click', function() {
+      const navMenu = document.querySelector('.nav-menu');
+      navMenu.style.display = navMenu.style.display === 'flex' ? 'none' : 'flex';
+      navMenu.style.position = 'absolute';
+      navMenu.style.top = '60px';
+      navMenu.style.right = '20px';
+      navMenu.style.background = 'var(--card-bg)';
+      navMenu.style.flexDirection = 'column';
+      navMenu.style.padding = '1rem';
+      navMenu.style.borderRadius = '8px';
+      navMenu.style.boxShadow = '0 5px 20px rgba(0,0,0,0.5)';
+    });
+  </script>
+</body>
+</html>
