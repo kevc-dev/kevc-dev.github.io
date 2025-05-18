@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desert Chronicles: The Arizona Artifact (Enhanced)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column; /* Allow for messages above/below game */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212;
+            font-family: 'Press Start 2P', monospace;
+            overflow: hidden;
+            color: #FFF;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            overflow: hidden;
+            background-color: #000;
+            box-shadow: 0 0 20px rgba(170, 114, 65, 0.7);
+            border: 4px solid #8B4513;
+            margin-bottom: 10px;
+        }
+        
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+        }
+        
+        #uiContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allow clicks to pass through to canvas if needed */
+        }
+
+        #dialogBox {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #FFF;
+            border: 3px solid #8B4513;
+            padding: 15px;
+            font-size: 12px;
+            display: none;
+            z-index: 100;
+            line-height: 1.5;
+        }
+        
+        #inventory {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 2px solid #8B4513;
+            padding: 5px;
+            display: flex;
+            z-index: 50;
+        }
+        
+        .invItem {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #666;
+            margin: 2px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #FFF;
+            background-color: #333;
+            cursor: pointer;
+        }
+        .invItem:hover {
+            border-color: #FFF;
+        }
+        
+        #startScreen, #pauseScreen, #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            text-align: center;
+        }
+        
+        #startScreen h1, #pauseScreen h1, #gameOverScreen h1 {
+            color: #FFAA33;
+            font-size: 24px;
+            text-shadow: 3px 3px 0 #AA5500;
+            margin-bottom: 10px;
+        }
+        
+        #startScreen h2 {
+            color: #FF6633;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        
+        #startScreen p, #pauseScreen p, #gameOverScreen p {
+            color: #AAA;
+            font-size: 10px;
+            max-width: 80%;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        #startScreen button, #pauseScreen button, #gameOverScreen button {
+            background-color: #8B4513;
+            color: #FFF;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 16px;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        #startScreen button:hover, #pauseScreen button:hover, #gameOverScreen button:hover {
+            background-color: #AA5500;
+        }
+        
+        #loadingText {
+            color: #FFAA33;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        
+        .statusBar {
+            position: absolute;
+            top: 10px;
+            height: 15px;
+            background-color: #333;
+            border: 2px solid #8B4513;
+            font-size: 10px;
+            line-height: 15px;
+            color: white;
+            padding-left: 5px;
+            z-index: 50;
+        }
+        #hpBar { right: 120px; width: 100px; }
+        #hpFill { width: 100%; height: 100%; background-color: #CC3333; }
+        #hydrationBar { right: 10px; width: 100px; }
+        #hydrationFill { width: 100%; height: 100%; background-color: #3377CC; }
+        
+        #mapNameDisplay {
+            position: absolute;
+            top: 35px; /* Adjusted for new bars */
+            right: 10px;
+            color: #FFF;
+            font-size: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px;
+            border: 1px solid #8B4513;
+            z-index: 50;
+        }
+
+        #questLogDisplay {
+            position: absolute;
+            bottom: 75px; /* Above dialog box */
+            left: 10px;
+            color: #FFF;
+            font-size: 10px;
+            background-color: rgba(0,0,0,0.6);
+            padding: 8px;
+            border: 1px solid #8B4513;
+            z-index: 50;
+            max-width: 200px;
+            display: none; /* Hidden by default */
+        }
+        #questLogDisplay h3 {
+            margin: 0 0 5px 0;
+            font-size: 11px;
+            color: #FFAA33;
+        }
+        #questLogDisplay ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #questLogDisplay li {
+            margin-bottom: 3px;
+        }
+        #clockDisplay {
+            position: absolute;
+            top: 10px;
+            left: 160px; /* Next to inventory */
+            color: #FFF;
+            font-size: 10px;
+            background-color: rgba(0,0,0,0.7);
+            padding: 5px 8px;
+             border: 1px solid #8B4513;
+            z-index: 50;
+        }
+         #saveNotification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0,0,0,0.8);
+            color: #FFAA33;
+            padding: 20px;
+            font-size: 14px;
+            border: 2px solid #8B4513;
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="640" height="480"></canvas>
+        <div id="uiContainer">
+            <div id="inventory"></div>
+            <div id="hpBar" class="statusBar">HP <div id="hpFill"></div></div>
+            <div id="hydrationBar" class="statusBar">H2O <div id="hydrationFill"></div></div>
+            <div id="mapNameDisplay">Sonoran Desert</div>
+            <div id="clockDisplay">Day 1 - 08:00 AM</div>
+            <div id="questLogDisplay">
+                <h3>Active Quests:</h3>
+                <ul id="questList"></ul>
+            </div>
+            <div id="dialogBox"></div>
+        </div>
+        
+        <div id="startScreen">
+            <h1>DESERT CHRONICLES</h1>
+            <h2>The Arizona Artifact</h2>
+            <p>The year is 1986. Professor James Walker, retired archaeologist and computer enthusiast, finds himself drawn back into adventure when he discovers an ancient petroglyph map in his Scottsdale home.</p>
+            <p>The map hints at a lost artifact hidden somewhere in the Arizona desert - one that may hold the key to understanding the advanced astronomical knowledge of ancient native civilizations.</p>
+            <p>Armed with his trusty canteen, pocket computer, and decades of field experience, the Professor embarks on one last expedition...</p>
+            <button id="startButton">START ADVENTURE</button>
+            <button id="loadButton">LOAD GAME</button>
+            <div id="loadingText" style="display: none;">Loading...</div>
+        </div>
+
+        <div id="pauseScreen" style="display: none;">
+            <h1>PAUSED</h1>
+            <button id="resumeButton">RESUME</button>
+            <button id="saveButton">SAVE GAME</button>
+            <button id="mainMenuButton">MAIN MENU</button>
+        </div>
+
+        <div id="gameOverScreen" style="display: none;">
+            <h1>GAME OVER</h1>
+            <p id="gameOverMessage"></p>
+            <button id="restartButton">RESTART</button>
+            <button id="gameOverMainMenuButton">MAIN MENU</button>
+        </div>
+         <div id="saveNotification">Game Saved!</div>
+    </div>
+    <div id="controlsInfo" style="font-size: 10px; margin-top: 10px; text-align:center; max-width: 640px;">
+        Controls: WASD/Arrows - Move | E/Space - Interact | I - Inventory | Q - Quests | P - Pause
+    </div>
+
+    <script>
+        // --- Core Game Constants ---
+        const CANVAS_WIDTH = 640;
+        const CANVAS_HEIGHT = 480;
+        const TILE_SIZE = 32; // Example, adjust as needed
+        const PLAYER_SPEED = 2;
+        const HYDRATION_RATE = 0.05; // Amount hydration decreases per game tick (when not paused)
+        const HYDRATION_PER_DRINK = 30;
+        const GAME_TIME_MULTIPLIER = 60; // 1 real second = 1 game minute
+
+        // --- Game States ---
+        const GAME_STATE = {
+            START_SCREEN: 'START_SCREEN',
+            LOADING: 'LOADING',
+            PLAYING: 'PLAYING',
+            PAUSED: 'PAUSED',
+            DIALOG: 'DIALOG',
+            GAME_OVER: 'GAME_OVER',
+            INVENTORY_OPEN: 'INVENTORY_OPEN', // Not fully implemented as a separate state, but good for thought
+        };
+
+        class SoundManager {
+            constructor() {
+                this.sounds = {};
+                this.music = {};
+                this.masterVolume = 1.0;
+                this.sfxVolume = 1.0;
+                this.musicVolume = 1.0;
+                // Example: this.sounds.step = new Audio('sounds/step.wav');
+                // Example: this.music.desertTheme = new Audio('music/desert.mp3');
+            }
+
+            playSound(soundName) {
+                // if (this.sounds[soundName]) {
+                //     this.sounds[soundName].currentTime = 0;
+                //     this.sounds[soundName].volume = this.masterVolume * this.sfxVolume;
+                //     this.sounds[soundName].play();
+                // }
+                console.log(`Playing sound: ${soundName}`); // Placeholder
+            }
+
+            playMusic(musicName, loop = true) {
+                // if (this.music[musicName]) {
+                //     this.music[musicName].loop = loop;
+                //     this.music[musicName].volume = this.masterVolume * this.musicVolume;
+                //     this.music[musicName].play();
+                // }
+                console.log(`Playing music: ${musicName}`); // Placeholder
+            }
+
+            stopMusic(musicName) {
+                // if (this.music[musicName]) {
+                //     this.music[musicName].pause();
+                //     this.music[musicName].currentTime = 0;
+                // }
+                 console.log(`Stopping music: ${musicName}`); // Placeholder
+            }
+        }
+
+        class InputHandler {
+            constructor(game) {
+                this.game = game;
+                this.keys = {};
+                window.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
+                window.addEventListener('keyup', (e) => {
+                    this.keys[e.key.toLowerCase()] = false;
+                    this.game.handleKeyUp(e.key.toLowerCase()); // For single press actions
+                });
+            }
+
+            isPressed(key) {
+                return this.keys[key] || false;
+            }
+        }
+
+        class UIManager {
+            constructor(game) {
+                this.game = game;
+                this.canvas = document.getElementById('gameCanvas'); // For interaction indicator
+                this.ctx = this.canvas.getContext('2d');
+                this.dialogBox = document.getElementById('dialogBox');
+                this.inventoryDiv = document.getElementById('inventory');
+                this.hpFill = document.getElementById('hpFill');
+                this.hydrationFill = document.getElementById('hydrationFill');
+                this.mapNameDisplay = document.getElementById('mapNameDisplay');
+                this.clockDisplay = document.getElementById('clockDisplay');
+                this.questLogDisplay = document.getElementById('questLogDisplay');
+                this.questList = document.getElementById('questList');
+                
+                this.startScreen = document.getElementById('startScreen');
+                this.pauseScreen = document.getElementById('pauseScreen');
+                this.gameOverScreen = document.getElementById('gameOverScreen');
+                this.loadingText = document.getElementById('loadingText');
+                this.saveNotification = document.getElementById('saveNotification');
+
+
+                document.getElementById('startButton').addEventListener('click', () => this.game.startGame());
+                document.getElementById('loadButton').addEventListener('click', () => this.game.loadGame(true));
+                document.getElementById('resumeButton').addEventListener('click', () => this.game.togglePause());
+                document.getElementById('saveButton').addEventListener('click', () => this.game.saveGame());
+                document.getElementById('mainMenuButton').addEventListener('click', () => this.game.goToMainMenu());
+                document.getElementById('restartButton').addEventListener('click', () => this.game.startGame(true)); // Full restart
+                document.getElementById('gameOverMainMenuButton').addEventListener('click', () => this.game.goToMainMenu());
+            }
+
+            showStartScreen() { this.startScreen.style.display = 'flex'; }
+            hideStartScreen() { this.startScreen.style.display = 'none'; }
+            showPauseScreen() { this.pauseScreen.style.display = 'flex'; }
+            hidePauseScreen() { this.pauseScreen.style.display = 'none'; }
+            showGameOverScreen(message) {
+                document.getElementById('gameOverMessage').textContent = message;
+                this.gameOverScreen.style.display = 'flex';
+            }
+            hideGameOverScreen() { this.gameOverScreen.style.display = 'none'; }
+            
+            showLoading() { this.loadingText.style.display = 'block';}
+            hideLoading() { this.loadingText.style.display = 'none';}
+
+            updateHealth(current, max) { this.hpFill.style.width = `${(current / max) * 100}%`; }
+            updateHydration(current, max) { this.hydrationFill.style.width = `${(current / max) * 100}%`; }
+            updateMapName(name) { this.mapNameDisplay.textContent = name; }
+
+            updateClock(gameTimeInSeconds) {
+                const day = Math.floor(gameTimeInSeconds / (24 * 60 * 60)) + 1;
+                const totalSecondsInDay = gameTimeInSeconds % (24 * 60 * 60);
+                const hours = Math.floor(totalSecondsInDay / 3600);
+                const minutes = Math.floor((totalSecondsInDay % 3600) / 60);
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+                this.clockDisplay.textContent = `Day ${day} - ${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+            }
+            
+            showDialog(text, speaker) {
+                this.dialogBox.innerHTML = speaker ? `<strong>${speaker}:</strong> ${text}` : text;
+                this.dialogBox.style.display = 'block';
+            }
+            hideDialog() { this.dialogBox.style.display = 'none'; }
+
+            updateInventoryDisplay(inventory, itemTypes) {
+                this.inventoryDiv.innerHTML = '';
+                inventory.forEach(itemKey => {
+                    const item = itemTypes[itemKey];
+                    if (!item) return;
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'invItem';
+                    itemDiv.textContent = item.name.charAt(0).toUpperCase();
+                    itemDiv.title = `${item.name}: ${item.description}`;
+                    itemDiv.addEventListener('click', () => this.game.useItem(itemKey));
+                    this.inventoryDiv.appendChild(itemDiv);
+                });
+            }
+
+            updateQuestLog(quests) {
+                if (quests.length === 0) {
+                    this.questLogDisplay.style.display = 'none';
+                    return;
+                }
+                this.questLogDisplay.style.display = 'block';
+                this.questList.innerHTML = '';
+                quests.forEach(quest => {
+                    const li = document.createElement('li');
+                    li.textContent = quest.description + (quest.completed ? " (Completed)" : "");
+                    if(quest.completed) li.style.textDecoration = "line-through";
+                    this.questList.appendChild(li);
+                });
+            }
+            
+            toggleQuestLog() {
+                this.questLogDisplay.style.display = this.questLogDisplay.style.display === 'none' ? 'block' : 'none';
+            }
+
+            drawInteractionIndicator(x, y) {
+                this.ctx.fillStyle = '#FFFF00';
+                this.ctx.beginPath();
+                this.ctx.arc(x, y - 35, 5, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+
+            showSaveNotification() {
+                this.saveNotification.style.display = 'block';
+                setTimeout(() => {
+                    this.saveNotification.style.display = 'none';
+                }, 1500);
+            }
+        }
+        
+        class Entity {
+            constructor(game, x, y, width, height, type = 'entity') {
+                this.game = game;
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.type = type;
+                this.animationFrame = 0;
+                this.spriteIndex = 0; // For sprite sheet animations
+            }
+
+            draw(ctx) { /* Base draw method, to be overridden */ }
+            update() { /* Base update method, to be overridden */ }
+            
+            get centerX() { return this.x + this.width / 2; }
+            get centerY() { return this.y + this.height / 2; }
+        }
+
+        class Player extends Entity {
+            constructor(game, x, y) {
+                super(game, x, y, 24, 32, 'player'); // Player visual size
+                this.collisionBox = { xOffset: 4, yOffset: 16, width: 16, height: 16 }; // Smaller collision box
+                this.speed = PLAYER_SPEED;
+                this.direction = 'down';
+                this.health = 100;
+                this.maxHealth = 100;
+                this.hydration = 100;
+                this.maxHydration = 100;
+                this.inventory = ['canteen', 'compass'];
+                this.quests = [ {id: "main_artifact", description: "Find the Arizona Artifact.", completed: false}];
+                this.isMoving = false;
+            }
+
+            update() {
+                this.isMoving = false;
+                let nextX = this.x;
+                let nextY = this.y;
+                let moveX = 0;
+                let moveY = 0;
+
+                if (this.game.input.isPressed('w') || this.game.input.isPressed('arrowup')) {
+                    moveY = -this.speed; this.direction = 'up'; this.isMoving = true;
+                } else if (this.game.input.isPressed('s') || this.game.input.isPressed('arrowdown')) {
+                    moveY = this.speed; this.direction = 'down'; this.isMoving = true;
+                }
+                if (this.game.input.isPressed('a') || this.game.input.isPressed('arrowleft')) {
+                    moveX = -this.speed; this.direction = 'left'; this.isMoving = true;
+                } else if (this.game.input.isPressed('d') || this.game.input.isPressed('arrowright')) {
+                    moveX = this.speed; this.direction = 'right'; this.isMoving = true;
+                }
+                
+                nextX += moveX;
+                nextY += moveY;
+
+                if (!this.game.currentMap.checkCollision(nextX + this.collisionBox.xOffset, this.y + this.collisionBox.yOffset, this.collisionBox.width, this.collisionBox.height)) {
+                    this.x = nextX;
+                }
+                if (!this.game.currentMap.checkCollision(this.x + this.collisionBox.xOffset, nextY + this.collisionBox.yOffset, this.collisionBox.width, this.collisionBox.height)) {
+                    this.y = nextY;
+                }
+
+                // Boundary checks
+                this.x = Math.max(0, Math.min(this.x, CANVAS_WIDTH - this.width));
+                this.y = Math.max(0, Math.min(this.y, CANVAS_HEIGHT - this.height));
+
+                // Animation
+                this.animationFrame++;
+                if (this.animationFrame % 8 === 0 && this.isMoving) {
+                    this.spriteIndex = (this.spriteIndex + 1) % 4; // Assuming 4 frames for walking
+                } else if (!this.isMoving) {
+                    this.spriteIndex = 0; // Idle frame
+                }
+
+                // Hydration
+                this.hydration -= HYDRATION_RATE / 60; // Per frame (assuming 60fps target for tick)
+                if (this.hydration < 0) this.hydration = 0;
+                if (this.hydration === 0 && this.animationFrame % 120 === 0) { // Damage if dehydrated
+                    this.takeDamage(1, "Dehydration");
+                }
+                this.game.ui.updateHydration(this.hydration, this.maxHydration);
+            }
+
+            draw(ctx) {
+                // Body
+                ctx.fillStyle = '#CC3333';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // Head (simplified)
+                ctx.fillStyle = '#DDBB99';
+                ctx.fillRect(this.x + (this.width/2) - 8, this.y - 14, 16, 16); // Centered head on top
+                
+                // Hat (simplified)
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(this.x + (this.width/2) - 10, this.y - 20, 20, 6);
+
+                // Walking animation hint (simple leg movement)
+                const legOffset = this.isMoving ? Math.sin(this.animationFrame * 0.2) * 3 : 0;
+                ctx.fillStyle = '#AA2222'; // Darker red for legs
+                ctx.fillRect(this.x + 4, this.y + this.height - 8 + legOffset, 6, 8);
+                ctx.fillRect(this.x + this.width - 10, this.y + this.height - 8 - legOffset, 6, 8);
+
+                // Collision box (for debugging)
+                // ctx.strokeStyle = 'lime';
+                // ctx.strokeRect(this.x + this.collisionBox.xOffset, this.y + this.collisionBox.yOffset, this.collisionBox.width, this.collisionBox.height);
+            }
+
+            interact() {
+                const checkRange = 20; // Increased slightly from just hitbox
+                let checkX = this.x + this.width / 2;
+                let checkY = this.y + this.height / 2;
+
+                switch (this.direction) {
+                    case 'up': checkY -= this.height / 2 + checkRange / 2; break;
+                    case 'down': checkY += this.height / 2 + checkRange / 2; break;
+                    case 'left': checkX -= this.width / 2 + checkRange / 2; break;
+                    case 'right': checkX += this.width / 2 + checkRange / 2; break;
+                }
+                
+                this.game.currentMap.tryInteraction(checkX, checkY, this);
+            }
+
+            addItem(itemKey) {
+                if (!this.inventory.includes(itemKey)) {
+                    this.inventory.push(itemKey);
+                    this.game.ui.updateInventoryDisplay(this.inventory, this.game.itemTypes);
+                    this.game.sound.playSound('pickup');
+                    return true;
+                }
+                return false;
+            }
+            
+            hasItem(itemKey) {
+                return this.inventory.includes(itemKey);
+            }
+
+            takeDamage(amount, source = "Unknown") {
+                this.health -= amount;
+                if (this.health < 0) this.health = 0;
+                this.game.ui.updateHealth(this.health, this.maxHealth);
+                this.game.sound.playSound('player_hurt');
+                // Flash screen red (visual effect)
+                this.game.canvas.style.backgroundColor = '#FF0000';
+                setTimeout(() => { this.game.canvas.style.backgroundColor = ''; }, 100);
+
+                if (this.health <= 0) {
+                    this.game.gameOver(`Defeated by ${source}.`);
+                }
+            }
+
+            heal(amount) {
+                this.health = Math.min(this.maxHealth, this.health + amount);
+                this.game.ui.updateHealth(this.health, this.maxHealth);
+            }
+
+            hydrate(amount) {
+                this.hydration = Math.min(this.maxHydration, this.hydration + amount);
+                this.game.ui.updateHydration(this.hydration, this.maxHydration);
+            }
+            
+            addQuest(quest) { // quest = {id: "q1", description: "Do something", completed: false}
+                if (!this.quests.find(q => q.id === quest.id)) {
+                    this.quests.push(quest);
+                    this.game.ui.updateQuestLog(this.quests);
+                }
+            }
+            
+            completeQuest(questId) {
+                const quest = this.quests.find(q => q.id === questId);
+                if (quest) {
+                    quest.completed = true;
+                    this.game.ui.updateQuestLog(this.quests);
+                    this.game.ui.showDialog(`Quest Completed: ${quest.description}`);
+                }
+            }
+        }
+        
+        class NPC extends Entity {
+            constructor(game, x, y, name, spriteKey, dialog) {
+                super(game, x, y, 24, 32, 'npc'); // NPC visual size
+                this.name = name;
+                this.spriteKey = spriteKey; // For future sprite loading
+                this.dialog = dialog; // Can be a string or a function returning a string, or an array of strings
+                this.isInteractable = true;
+            }
+
+            draw(ctx) {
+                // Generic NPC body
+                ctx.fillStyle = '#5577AA'; // Blueish
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                // Generic NPC head
+                ctx.fillStyle = '#DDBB99'; // Skin tone
+                ctx.fillRect(this.x + 4, this.y - 14, 16, 16);
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = '8px "Press Start 2P"';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.name, this.x + this.width / 2, this.y - 20);
+                ctx.textAlign = 'left'; // Reset
+            }
+
+            onInteract(player) {
+                let currentDialog = this.dialog;
+                if (typeof this.dialog === 'function') {
+                    currentDialog = this.dialog(player, this.game);
+                } else if (Array.isArray(this.dialog)) {
+                    // Simple cycling dialog for arrays
+                    if (this.dialogIndex === undefined || this.dialogIndex >= this.dialog.length -1 ) this.dialogIndex = 0;
+                    else this.dialogIndex++;
+                    currentDialog = this.dialog[this.dialogIndex];
+                }
+                this.game.ui.showDialog(currentDialog, this.name);
+                this.game.setGameState(GAME_STATE.DIALOG);
+            }
+        }
+        
+        class Enemy extends Entity {
+            constructor(game, x, y, enemyTypeData) {
+                super(game, x, y, enemyTypeData.width, enemyTypeData.height, 'enemy');
+                this.enemyType = enemyTypeData;
+                this.health = enemyTypeData.health;
+                this.speed = enemyTypeData.speed;
+                this.damage = enemyTypeData.damage;
+                this.aggroRange = 150;
+                this.attackRange = 20; // Adjusted for simpler collision
+                this.attackCooldown = 120; // Frames
+                this.currentAttackCooldown = 0;
+            }
+
+            update() {
+                if (this.currentAttackCooldown > 0) this.currentAttackCooldown--;
+
+                const player = this.game.player;
+                const distX = player.centerX - this.centerX;
+                const distY = player.centerY - this.centerY;
+                const distanceToPlayer = Math.sqrt(distX * distX + distY * distY);
+
+                if (distanceToPlayer < this.aggroRange) {
+                    if (distanceToPlayer > this.attackRange) {
+                        // Move towards player
+                        this.x += (distX / distanceToPlayer) * this.speed;
+                        this.y += (distY / distanceToPlayer) * this.speed;
+                    } else if (this.currentAttackCooldown === 0) {
+                        // Attack player
+                        player.takeDamage(this.damage, this.enemyType.name);
+                        this.currentAttackCooldown = this.attackCooldown;
+                        this.game.sound.playSound('enemy_attack');
+                         // Knockback self slightly (optional)
+                        this.x -= (distX / distanceToPlayer) * 10;
+                        this.y -= (distY / distanceToPlayer) * 10;
+                    }
+                }
+                // Add basic wandering AI if desired when player not in aggroRange
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = this.enemyType.color || '#FF0000'; // Default red
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // Simple health bar above enemy
+                if (this.health < this.enemyType.health) {
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(this.x, this.y - 8, this.width, 4);
+                    ctx.fillStyle = 'green';
+                    ctx.fillRect(this.x, this.y - 8, this.width * (this.health / this.enemyType.health) , 4);
+                }
+            }
+
+            takeDamage(amount) {
+                this.health -= amount;
+                this.game.sound.playSound('enemy_hit');
+                if (this.health <= 0) {
+                    this.game.currentMap.removeEnemy(this);
+                    // Potentially drop loot or give EXP
+                    this.game.sound.playSound('enemy_die');
+                }
+            }
+        }
+
+        class InteractiveObject extends Entity {
+            constructor(game, x, y, objData) {
+                super(game, x, y, objData.width, objData.height, objData.type);
+                this.objData = objData;
+                this.isInteractable = objData.interactive || objData.portal;
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = this.objData.color || '#888888'; // Default grey
+                if (this.type === 'cactus') {
+                    ctx.fillStyle = '#2D7D40';
+                    ctx.fillRect(this.x + 8, this.y, 16, 32);
+                    ctx.fillRect(this.x, this.y + 8, 32, 16);
+                } else if (this.type === 'rock') {
+                    ctx.fillStyle = '#7D7064';
+                    ctx.beginPath();
+                    ctx.arc(this.x + 16, this.y + 16, 16, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.type === 'chest') {
+                    ctx.fillStyle = '#8B4513'; // Brown
+                    ctx.fillRect(this.x, this.y + 10, this.width, this.height - 10);
+                    ctx.fillStyle = '#DAA520'; // Gold trim
+                    ctx.fillRect(this.x + this.width/2 - 2, this.y + this.height/2, 4, 10); // Lock
+                } else if (this.type === 'sign') {
+                    ctx.fillStyle = '#8B4513'; // Post
+                    ctx.fillRect(this.x + this.width/2 - 4, this.y + this.height/2, 8, this.height/2);
+                    ctx.fillStyle = '#DAA520'; // Sign board
+                    ctx.fillRect(this.x, this.y, this.width, this.height/2);
+                } else if (this.type === 'water_source') {
+                    ctx.fillStyle = '#3377CC'; // Blue
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                    ctx.fillStyle = '#66AADD'; // Lighter blue highlight
+                    ctx.fillRect(this.x + 4, this.y + 4, this.width - 8, this.height - 8);
+                } else if (this.type === 'doorway') {
+                    ctx.fillStyle = '#555555';
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                    // Could add a small arrow or symbol
+                }
+                 else {
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                }
+            }
+
+            onInteract(player) {
+                if (this.objData.portal && this.objData.toMap) {
+                    this.game.changeMap(this.objData.toMap, this.objData.toX, this.objData.toY);
+                    return;
+                }
+                if (this.objData.text) {
+                    this.game.ui.showDialog(this.objData.text, this.type.toUpperCase());
+                    this.game.setGameState(GAME_STATE.DIALOG);
+                }
+                if (this.type === 'chest' && this.objData.contains && !this.objData.opened) {
+                    if (player.addItem(this.objData.contains)) {
+                        this.game.ui.showDialog(this.objData.text || `You found a ${this.game.itemTypes[this.objData.contains].name}!`, "CHEST");
+                        this.objData.opened = true; // Prevent re-opening for same item
+                        this.color = '#654321'; // Change appearance to opened
+                    } else {
+                         this.game.ui.showDialog("The chest is empty or you already have this.", "CHEST");
+                    }
+                     this.game.setGameState(GAME_STATE.DIALOG);
+                }
+                if (this.type === 'water_source') {
+                    if (player.hydration < player.maxHydration) {
+                        player.hydrate(player.maxHydration); // Full refill from a source for simplicity
+                        this.game.ui.showDialog("You refill your canteen and take a long drink. You feel refreshed.", "Water Source");
+                        this.game.sound.playSound('drink');
+                    } else {
+                        this.game.ui.showDialog("Your canteen is already full.", "Water Source");
+                    }
+                    this.game.setGameState(GAME_STATE.DIALOG);
+                }
+                if (this.objData.questTrigger) { // { questId: "q_sample", description: "New Quest!" }
+                    player.addQuest(this.objData.questTrigger);
+                     this.game.ui.showDialog(this.objData.questTrigger.startText || `New Quest: ${this.objData.questTrigger.description}`, "INFO");
+                     this.game.setGameState(GAME_STATE.DIALOG);
+                }
+                 if (this.objData.requiredItem && this.objData.questComplete) {
+                    if (player.hasItem(this.objData.requiredItem)) {
+                        player.completeQuest(this.objData.questComplete);
+                        // Potentially remove item: player.removeItem(this.objData.requiredItem);
+                        if(this.objData.rewardText) this.game.ui.showDialog(this.objData.rewardText);
+                        this.isInteractable = false; // One-time interaction
+                    } else {
+                        this.game.ui.showDialog(this.objData.needItemText || "You seem to be missing something...");
+                    }
+                    this.game.setGameState(GAME_STATE.DIALOG);
+                }
+            }
+        }
+        
+        class GameMap {
+            constructor(game, mapData) {
+                this.game = game;
+                this.name = mapData.name;
+                this.background = mapData.background;
+                this.objects = [];
+                this.npcs = [];
+                this.enemies = [];
+                
+                this.loadEntities(mapData);
+            }
+
+            loadEntities(mapData) {
+                mapData.objects.forEach(objData => {
+                    this.objects.push(new InteractiveObject(this.game, objData.x, objData.y, { ...objData, ...this.game.objectTypes[objData.type] }));
+                });
+                (mapData.npcs || []).forEach(npcData => {
+                    this.npcs.push(new NPC(this.game, npcData.x, npcData.y, npcData.name, npcData.sprite, npcData.dialog));
+                });
+                (mapData.enemies || []).forEach(enemyData => {
+                    // Need to clone enemyTypeData to avoid shared health etc if respawning same type
+                    this.enemies.push(new Enemy(this.game, enemyData.x, enemyData.y, {...this.game.enemyTypes[enemyData.type], name: enemyData.type}));
+                });
+            }
+
+            update() {
+                if (this.game.gameState !== GAME_STATE.PLAYING) return;
+                this.npcs.forEach(npc => npc.update());
+                this.enemies.forEach(enemy => enemy.update());
+                // Check for portal objects (doorways are handled in Player interaction now for clarity)
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = this.background;
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+                // Day/night cycle effect
+                if (!this.game.dayTime) {
+                    ctx.fillStyle = 'rgba(0, 0, 30, 0.65)'; // Darker tint for night
+                    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                }
+
+                // Crude Z-sorting: draw objects/entities based on Y position
+                const allDrawableEntities = [...this.objects, ...this.npcs, ...this.enemies, this.game.player];
+                allDrawableEntities.sort((a, b) => (a.y + a.height) - (b.y + b.height));
+                
+                allDrawableEntities.forEach(entity => entity.draw(ctx));
+            }
+
+            checkCollision(x, y, width, height) {
+                // Check map boundaries
+                if (x < 0 || x + width > CANVAS_WIDTH || y < 0 || y + height > CANVAS_HEIGHT) {
+                    return true;
+                }
+                // Check solid objects
+                for (const obj of this.objects) {
+                    if (obj.objData.solid && 
+                        x < obj.x + obj.width && x + width > obj.x &&
+                        y < obj.y + obj.height && y + height > obj.y) {
+                        return true;
+                    }
+                }
+                // Check solid NPCs/Enemies (optional, usually NPCs aren't solid to player)
+                // for (const npc of this.npcs) { /* ... collision logic ... */ }
+                // for (const enemy of this.enemies) { /* ... collision logic ... */ }
+                return false;
+            }
+
+            tryInteraction(checkX, checkY, player) {
+                let interactionTarget = null;
+                let minDistance = Infinity;
+
+                const checkInteraction = (entity) => {
+                    if (!entity.isInteractable) return;
+                    const dist = Math.sqrt(Math.pow(entity.centerX - checkX, 2) + Math.pow(entity.centerY - checkY, 2));
+                    if (dist < (entity.width + entity.height) / 2 + 10 && dist < minDistance) { // Generous interaction range
+                        minDistance = dist;
+                        interactionTarget = entity;
+                    }
+                };
+
+                this.objects.forEach(checkInteraction);
+                this.npcs.forEach(checkInteraction);
+                // Could add interaction with specific enemy states if needed
+
+                if (interactionTarget) {
+                    this.game.interactionTarget = interactionTarget; // Store for visual cue
+                    interactionTarget.onInteract(player);
+                } else {
+                    this.game.interactionTarget = null;
+                }
+            }
+            
+            removeEnemy(enemyInstance) {
+                this.enemies = this.enemies.filter(e => e !== enemyInstance);
+            }
+        }
+
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.gameState = GAME_STATE.START_SCREEN;
+                
+                this.ui = new UIManager(this);
+                this.input = new InputHandler(this);
+                this.sound = new SoundManager();
+
+                this.player = null;
+                this.currentMap = null;
+                this.interactionTarget = null; // For visual cues
+
+                this.gameTime = 8 * 3600; // Start at 8 AM on Day 1 (in seconds)
+                this.dayTime = true;
+                this.lastFrameTime = 0;
+                this.timeToNextHydrationTick = 1; // seconds
+
+                this.defineGameData(); // Item types, object types, enemy types, maps
+
+                // Initial setup
+                this.ui.showStartScreen();
+                // this.loadGame(); // Optionally try to auto-load last save
+            }
+
+            defineGameData() {
+                this.objectTypes = {
+                    cactus: { width: 32, height: 48, solid: true, color: '#2D7D40' },
+                    rock: { width: 32, height: 32, solid: true, color: '#7D7064' },
+                    chest: { width: 32, height: 32, solid: true, interactive: true, color: '#8B4513' },
+                    sign: { width: 32, height: 32, solid: true, interactive: true, color: '#DAA520' },
+                    petroglyph: { width: 48, height: 48, solid: false, interactive: true, color: '#AA6633' },
+                    telescope: { width: 48, height: 64, solid: true, interactive: true },
+                    computer: { width: 32, height: 32, solid: true, interactive: true },
+                    doorway: { width: 48, height: 16, solid: false, portal: true, color: '#555555' },
+                    water_source: { width: 32, height: 32, solid: false, interactive: true, color: '#3377CC'}
+                };
+                this.enemyTypes = {
+                    scorpion: { width: 24, height: 24, damage: 5, speed: 0.8, health: 30, color: '#663300' },
+                    snake: { width: 32, height: 16, damage: 8, speed: 1.2, health: 20, color: '#AA7722' },
+                    coyote: { width: 40, height: 24, damage: 10, speed: 1.5, health: 50, color: '#AA8855' }
+                };
+                this.itemTypes = {
+                    canteen: { name: 'Canteen', description: 'Keeps you hydrated. Refill at water sources.', useFunc: (game) => {
+                        if (game.player.hydration < game.player.maxHydration) {
+                            game.player.hydrate(HYDRATION_PER_DRINK);
+                            game.ui.showDialog("You take a drink of water.", "Canteen");
+                            // If canteen has uses: this.uses--; if (this.uses <= 0) player.removeItem('canteen_empty');
+                        } else {
+                             game.ui.showDialog("You're not thirsty right now.", "Canteen");
+                        }
+                        game.setGameState(GAME_STATE.DIALOG);
+                    }},
+                    compass: { name: 'Compass', description: 'Helps you navigate (shows direction).' },
+                    journal: { name: 'Journal', description: 'Contains research notes and quests.', useFunc: (game) => {
+                        game.ui.toggleQuestLog(); // Or show specific journal entries
+                        // game.ui.showDialog("Your journal contains notes about ancient astronomical alignments...", "Journal");
+                        // game.setGameState(GAME_STATE.DIALOG);
+                    }},
+                    artifact1: { name: 'Stone Tablet', description: 'Part of an ancient artifact set.' },
+                    flashlight: { name: 'Flashlight', description: 'Illuminates dark areas (passive effect at night for now).' },
+                    diskette: { name: 'Floppy Disk', description: '5.25" floppy with mysterious data.' }
+                };
+                 this.maps = {
+                    desert: {
+                        name: 'Sonoran Desert Outskirts',
+                        background: '#E2C9A1',
+                        objects: [
+                            { type: 'cactus', x: 100, y: 100 }, { type: 'cactus', x: 400, y: 150 },
+                            { type: 'rock', x: 250, y: 200 }, { type: 'rock', x: 550, y: 50},
+                            { type: 'sign', x: 150, y: 240, text: "Caution: Desert conditions ahead. Stay hydrated! (Current date: "+ new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })+")" },
+                            { type: 'water_source', x: 50, y: 300},
+                            { type: 'petroglyph', x: 500, y: 200, text: "Ancient symbols depict stars and a mountain range...",
+                                questTrigger: {id: "petro_observe", description: "Investigate the petroglyphs.", startText: "These markings seem important..."}
+                            },
+                            { type: 'doorway', x: 600, y: 232, toMap: 'canyon', toX: 50, toY: 240 }
+                        ],
+                        npcs: [
+                            { name: 'Ranger Rick', x: 200, y: 300, sprite: 'ranger', dialog: [
+                                "Howdy, Professor! Be careful out there. Dehydration is no joke.",
+                                "There have been strange lights in the sky lately. Some folks think it's UFOs...",
+                                "I suspect it's military testing from the base up north. Or maybe just swamp gas."
+                            ]}
+                        ],
+                        enemies: [ { type: 'scorpion', x: 300, y: 400 }, { type: 'snake', x: 450, y: 100 } ]
+                    },
+                    canyon: {
+                        name: 'Red Rock Canyon',
+                        background: '#BC6C25',
+                        objects: [
+                            { type: 'rock', x: 100, y: 100 }, { type: 'rock', x: 150, y: 90 },
+                            { type: 'chest', x: 400, y: 200, contains: 'artifact1', text: "You found an ancient stone tablet with celestial markings!" },
+                            { type: 'doorway', x: 20, y: 232, toMap: 'desert', toX: 570, toY: 240 },
+                            // { type: 'doorway', x: 600, y: 240, toMap: 'observatory', toX: 50, toY: 240 } // Future map
+                        ],
+                        npcs: [
+                             { name: 'Old Hermit', x: 250, y: 150, sprite: 'hermit', dialog: (player, game) => {
+                                if (player.hasItem('artifact1')) {
+                                    player.completeQuest("petro_observe");
+                                    return "Ah, the tablet! It speaks of a time when the stars danced differently. You are on the right path, seeker.";
+                                }
+                                return "This canyon whispers secrets to those who listen... and those who bring jerky. Got any jerky?";
+                            }}
+                        ],
+                        enemies: [ { type: 'coyote', x: 350, y: 100 }, { type: 'snake', x: 150, y: 300 } ]
+                    }
+                    // Add observatory map later
+                };
+            }
+            
+            setGameState(newState) {
+                this.gameState = newState;
+                // Handle UI changes based on state
+                this.ui.hideDialog(); this.ui.hidePauseScreen(); this.ui.hideStartScreen(); this.ui.hideGameOverScreen();
+
+                switch(newState) {
+                    case GAME_STATE.START_SCREEN: this.ui.showStartScreen(); break;
+                    case GAME_STATE.PLAYING: this.sound.playMusic('desertTheme'); break; // Example
+                    case GAME_STATE.PAUSED: this.ui.showPauseScreen(); this.sound.stopMusic('desertTheme'); break; // Example
+                    case GAME_STATE.DIALOG: /* Dialog shown by interaction */ break;
+                    case GAME_STATE.GAME_OVER: /* Game over screen shown by player death */ this.sound.stopMusic('desertTheme'); break;
+                }
+            }
+
+            startGame(isRestart = false) {
+                this.ui.hideStartScreen();
+                this.ui.showLoading();
+                
+                // Simulate loading
+                setTimeout(() => {
+                    this.player = new Player(this, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+                    this.gameTime = 8 * 3600; // Reset time
+                    this.changeMap('desert', this.player.x, this.player.y); // Default start map
+                    this.ui.updateHealth(this.player.health, this.player.maxHealth);
+                    this.ui.updateHydration(this.player.hydration, this.player.maxHydration);
+                    this.ui.updateInventoryDisplay(this.player.inventory, this.itemTypes);
+                    this.ui.updateQuestLog(this.player.quests);
+                    
+                    this.setGameState(GAME_STATE.PLAYING);
+                    this.ui.hideLoading();
+                    if (!isRestart) this.gameLoop(0); // Start game loop only once
+                }, 500);
+            }
+            
+            goToMainMenu() {
+                this.setGameState(GAME_STATE.START_SCREEN);
+                // Potentially clear/reset more game data if needed
+            }
+
+            changeMap(mapName, playerX, playerY) {
+                if (this.maps[mapName]) {
+                    this.currentMap = new GameMap(this, this.maps[mapName]);
+                    this.player.x = playerX;
+                    this.player.y = playerY;
+                    this.ui.updateMapName(this.currentMap.name);
+                } else {
+                    console.error(`Map ${mapName} not found!`);
+                }
+            }
+
+            gameLoop(timestamp) {
+                const deltaTime = (timestamp - this.lastFrameTime) / 1000; // Delta time in seconds
+                this.lastFrameTime = timestamp;
+
+                if (this.gameState === GAME_STATE.PLAYING) {
+                    this.update(deltaTime);
+                }
+                this.draw();
+                
+                requestAnimationFrame((ts) => this.gameLoop(ts));
+            }
+
+            update(deltaTime) {
+                if (!this.player || !this.currentMap) return;
+
+                this.player.update();
+                this.currentMap.update();
+                this.interactionTarget = null; // Clear previous interaction target
+
+                // Game Time and Day/Night Cycle
+                this.gameTime += deltaTime * GAME_TIME_MULTIPLIER;
+                const currentHour = Math.floor((this.gameTime % (24 * 3600)) / 3600);
+                this.dayTime = currentHour >= 6 && currentHour < 20; // Day from 6 AM to 8 PM
+                this.ui.updateClock(this.gameTime);
+
+                // Check for interaction target for UI hint
+                let checkX = this.player.x + this.player.width / 2;
+                let checkY = this.player.y + this.player.height / 2;
+                const checkRange = 20;
+                 switch (this.player.direction) {
+                    case 'up': checkY -= this.player.height / 2 + checkRange / 2; break;
+                    case 'down': checkY += this.player.height / 2 + checkRange / 2; break;
+                    case 'left': checkX -= this.player.width / 2 + checkRange / 2; break;
+                    case 'right': checkX += this.player.width / 2 + checkRange / 2; break;
+                }
+                // Simplified check for interaction target visual cue
+                const potentialTargets = [...this.currentMap.objects, ...this.currentMap.npcs];
+                for (const entity of potentialTargets) {
+                    if (entity.isInteractable && 
+                        Math.abs(entity.centerX - checkX) < (entity.width/2 + 10) && 
+                        Math.abs(entity.centerY - checkY) < (entity.height/2 + 10)) {
+                        this.interactionTarget = entity;
+                        break;
+                    }
+                }
+            }
+
+            draw() {
+                this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // Clear canvas
+                if (this.gameState === GAME_STATE.PLAYING || this.gameState === GAME_STATE.DIALOG || this.gameState === GAME_STATE.PAUSED) {
+                    if (this.currentMap) {
+                        this.currentMap.draw(this.ctx);
+                    }
+                    // Draw interaction indicator if target is available and not in dialog
+                    if (this.interactionTarget && this.gameState === GAME_STATE.PLAYING) {
+                        this.ui.drawInteractionIndicator(this.interactionTarget.centerX, this.interactionTarget.y);
+                    }
+                }
+                // UI elements like dialogs, menus are handled by their own visibility styles
+            }
+            
+            handleKeyUp(key) {
+                if (this.gameState === GAME_STATE.PLAYING) {
+                    if (key === 'e' || key === ' ') {
+                        this.player.interact();
+                    } else if (key === 'p') {
+                        this.togglePause();
+                    } else if (key === 'i') {
+                        // Could implement a dedicated inventory screen/state
+                        this.ui.showDialog("Inventory: " + this.player.inventory.map(itemKey => this.itemTypes[itemKey].name).join(', '), "System");
+                        this.setGameState(GAME_STATE.DIALOG);
+                    } else if (key === 'q') {
+                         this.ui.toggleQuestLog();
+                    }
+                } else if (this.gameState === GAME_STATE.DIALOG) {
+                    if (key === 'e' || key === ' ' || key === 'enter') {
+                        this.ui.hideDialog();
+                        this.setGameState(GAME_STATE.PLAYING);
+                    }
+                } else if (this.gameState === GAME_STATE.PAUSED) {
+                     if (key === 'p') this.togglePause();
+                } else if (this.gameState === GAME_STATE.GAME_OVER) {
+                    // Handled by buttons mostly
+                }
+            }
+
+            togglePause() {
+                if (this.gameState === GAME_STATE.PLAYING) {
+                    this.setGameState(GAME_STATE.PAUSED);
+                } else if (this.gameState === GAME_STATE.PAUSED) {
+                    this.setGameState(GAME_STATE.PLAYING);
+                }
+            }
+
+            useItem(itemKey) {
+                if (this.gameState !== GAME_STATE.PLAYING && this.gameState !== GAME_STATE.DIALOG) return;
+
+                const item = this.itemTypes[itemKey];
+                if (item && item.useFunc) {
+                    item.useFunc(this); // Pass 'this' (the game object) to useFunc
+                } else if (item) {
+                    this.ui.showDialog(`${item.name}: ${item.description}`, "Item");
+                    this.setGameState(GAME_STATE.DIALOG);
+                }
+            }
+
+            saveGame() {
+                if (!this.player || !this.currentMap) {
+                    console.warn("Cannot save: game not fully initialized.");
+                    this.ui.showDialog("Cannot save game state yet.", "System")
+                    return;
+                }
+                const saveData = {
+                    player: {
+                        x: this.player.x,
+                        y: this.player.y,
+                        health: this.player.health,
+                        hydration: this.player.hydration,
+                        inventory: this.player.inventory,
+                        quests: this.player.quests,
+                        direction: this.player.direction,
+                    },
+                    currentMapName: this.currentMap.name,
+                    gameTime: this.gameTime,
+                    // Note: map object states (like opened chests) are trickier.
+                    // For simplicity, we're not saving individual object states here,
+                    // but in a fuller game, you'd iterate currentMap.objects and save their relevant properties.
+                    // Example: openedChests: this.currentMap.objects.filter(o => o.type === 'chest' && o.objData.opened).map(o => ({x: o.x, y: o.y}))
+                };
+                try {
+                    localStorage.setItem('desertChroniclesSave', JSON.stringify(saveData));
+                    console.log('Game Saved:', saveData);
+                    this.ui.showSaveNotification();
+                    if(this.gameState === GAME_STATE.PAUSED) this.ui.showDialog("Game Saved!", "System");
+
+                } catch (e) {
+                    console.error('Error saving game:', e);
+                     if(this.gameState === GAME_STATE.PAUSED) this.ui.showDialog("Error saving game.", "System");
+                }
+            }
+
+            loadGame(fromStartScreen = false) {
+                if (fromStartScreen) {
+                    this.ui.hideStartScreen();
+                    this.ui.showLoading();
+                }
+                try {
+                    const savedDataJSON = localStorage.getItem('desertChroniclesSave');
+                    if (!savedDataJSON) {
+                        console.warn('No save data found.');
+                         if (fromStartScreen) {
+                            this.ui.hideLoading();
+                            this.ui.showStartScreen(); // Go back if no save
+                            alert("No save data found!"); // Simple alert
+                         }
+                        return false;
+                    }
+                    const saveData = JSON.parse(savedDataJSON);
+
+                    // Create player if not exists (e.g., loading from start screen)
+                    if (!this.player) {
+                        this.player = new Player(this, saveData.player.x, saveData.player.y);
+                    }
+
+                    this.player.x = saveData.player.x;
+                    this.player.y = saveData.player.y;
+                    this.player.health = saveData.player.health;
+                    this.player.hydration = saveData.player.hydration;
+                    this.player.inventory = saveData.player.inventory;
+                    this.player.quests = saveData.player.quests || [{id: "main_artifact", description: "Find the Arizona Artifact.", completed: false}]; // Fallback for old saves
+                    this.player.direction = saveData.player.direction;
+                    this.gameTime = saveData.gameTime;
+                    
+                    this.changeMap(saveData.currentMapName, this.player.x, this.player.y);
+                    // TODO: Restore map object states (e.g., opened chests) from saveData if implemented
+
+                    this.ui.updateHealth(this.player.health, this.player.maxHealth);
+                    this.ui.updateHydration(this.player.hydration, this.player.maxHydration);
+                    this.ui.updateInventoryDisplay(this.player.inventory, this.itemTypes);
+                    this.ui.updateQuestLog(this.player.quests);
+                    
+                    this.setGameState(GAME_STATE.PLAYING);
+                    console.log('Game Loaded.');
+                    if (fromStartScreen) {
+                        this.ui.hideLoading();
+                        this.gameLoop(0); // Start game loop if loading from main menu
+                    }
+                    return true;
+
+                } catch (e) {
+                    console.error('Error loading game:', e);
+                    if (fromStartScreen) {
+                        this.ui.hideLoading();
+                        this.ui.showStartScreen(); // Go back if error
+                        alert("Error loading save data. It might be corrupted.");
+                    }
+                    return false;
+                }
+            }
+            
+            gameOver(message) {
+                this.setGameState(GAME_STATE.GAME_OVER);
+                this.ui.showGameOverScreen(message);
+                this.sound.playSound('game_over');
+            }
+        }
+
+        // --- Initialize Game ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const game = new Game();
+            // game.startGame(); // Moved to button click or auto-load
+        });
+
+    </script>
+</body>
+</html>
