@@ -497,7 +497,7 @@
             <p>The map hints at a lost artifact hidden somewhere in the Arizona desert - one that may hold the key to understanding the advanced astronomical knowledge of ancient native civilizations.</p>
             <p>Armed with his trusty canteen, pocket computer, and decades of field experience, the Professor embarks on one last expedition...</p>
             <button id="startButton">START ADVENTURE</button>
-            <button id="loadButton">LOAD GAME</button>
+            <!-- <button id="loadButton">LOAD GAME</button> -->
             <div id="loadingText" style="display: none;">Loading...</div>
             <div id="audioNote" style="color:#FFAA33; font-size:8px; margin-top:10px;">Tap anywhere for sound</div>
         </div>
@@ -505,7 +505,7 @@
         <div id="pauseScreen" style="display: none;">
             <h1>PAUSED</h1>
             <button id="resumeButton">RESUME</button>
-            <button id="saveButton">SAVE GAME</button>
+            <!-- <button id="saveButton">SAVE GAME</button> -->
             <button id="mainMenuButton">MAIN MENU</button>
         </div>
 
@@ -981,20 +981,24 @@
                     this.game.sound.playSound('selectOption');
                     this.game.startGame();
                 });
+                /*
                 document.getElementById('loadButton').addEventListener('click', () => {
                     this.game.sound.initializeAudio(); // Initialize audio on first interaction
                     this.game.sound.stopMusic('menuTheme');
                     this.game.sound.playSound('selectOption');
                     this.game.loadGame(true);
                 });
+                */
                 document.getElementById('resumeButton').addEventListener('click', () => {
                     this.game.sound.initializeAudio(); // Ensure audio is initialized
                     this.game.togglePause();
                 });
+                /*
                 document.getElementById('saveButton').addEventListener('click', () => {
                     this.game.sound.initializeAudio(); // Ensure audio is initialized
                     this.game.saveGame();
                 });
+                */
                 document.getElementById('mainMenuButton').addEventListener('click', () => {
                     this.game.sound.initializeAudio(); // Ensure audio is initialized
                     this.game.goToMainMenu();
