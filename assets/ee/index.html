@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desert Chronicles: The Arizona Artifact</title>
+    <!-- Favicon -->
+    <link rel="icon" href="../img/icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="../img/icon.png">
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
@@ -209,7 +213,7 @@
         
         #mapNameDisplay {
             position: absolute;
-            top: 35px; 
+            top: 45px; 
             right: 10px;
             color: #FFF;
             font-size: 10px;
@@ -247,8 +251,9 @@
         }
         #clockDisplay {
             position: absolute;
-            top: 10px;
-            left: 160px; 
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
             color: #FFF;
             font-size: 10px;
             background-color: rgba(0,0,0,0.7);
@@ -277,6 +282,15 @@
             margin-top: 25px; 
             width: 100%;
             padding-bottom: 5px; 
+        }
+
+        #footer a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        #footer a:hover {
+            text-decoration: underline;
         }
         
         /* Virtual Controls for Mobile/Tablet */
@@ -2343,6 +2357,8 @@
     </script>
 </body>
 <div id="footer">
-        &copy; 2025 Kevin Casas. All rights reserved.
-    </div>
+  <a href="https://kevincasas-dev.github.io/" target="_blank" rel="noopener noreferrer">
+    &copy; 2025 Kevin Casas. All rights reserved.
+  </a>
+</div>
 </html>
