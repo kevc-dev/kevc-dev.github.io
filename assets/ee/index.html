@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desert Chronicles: The Arizona Artifact</title>
-    <!-- Favicon -->
     <link rel="icon" href="../img/icon.png" type="image/png">
     <link rel="apple-touch-icon" href="../img/icon.png">
 
@@ -497,7 +496,6 @@
             <p>The map hints at a lost artifact hidden somewhere in the Arizona desert - one that may hold the key to understanding the advanced astronomical knowledge of ancient native civilizations.</p>
             <p>Armed with his trusty canteen, pocket computer, and decades of field experience, the Professor embarks on one last expedition...</p>
             <button id="startButton">START ADVENTURE</button>
-            <!-- <button id="loadButton">LOAD GAME</button> -->
             <div id="loadingText" style="display: none;">Loading...</div>
             <div id="audioNote" style="color:#FFAA33; font-size:8px; margin-top:10px;">Tap anywhere for sound</div>
         </div>
@@ -505,7 +503,6 @@
         <div id="pauseScreen" style="display: none;">
             <h1>PAUSED</h1>
             <button id="resumeButton">RESUME</button>
-            <!-- <button id="saveButton">SAVE GAME</button> -->
             <button id="mainMenuButton">MAIN MENU</button>
         </div>
 
@@ -518,7 +515,6 @@
          <div id="saveNotification">Game Saved!</div>
     </div>
     
-    <!-- Virtual Controls for mobile/tablet -->
     <div id="virtualControls">
         <div id="joystickContainer">
             <div id="joystickBase"></div>
@@ -557,6 +553,7 @@
             GAME_OVER: 'GAME_OVER',
         };
 
+        // --- Manager Classes ---
         class SoundManager {
             constructor() {
                 this.sounds = {};
@@ -569,10 +566,8 @@
                 this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 this.audioContext = null;
                 
-                // Create an empty audio context for mobile that we'll resume on first interaction
                 if (this.isMobile) {
                     try {
-                        // Use AudioContext or webkitAudioContext (for Safari)
                         const AudioContext = window.AudioContext || window.webkitAudioContext;
                         this.audioContext = new AudioContext();
                     } catch (e) {
@@ -580,7 +575,6 @@
                     }
                 }
 
-                // Music
                 this.music.menuTheme = new Audio('music/menu.mp3');
                 this.music.firstScenarioTheme = new Audio('sounds/first_scenario.mp3');
                 this.music.secondScenarioTheme = new Audio('sounds/second_scenario.mp3');
@@ -592,8 +586,6 @@
                 this.music.asuLabTheme = new Audio('sounds/fourth_scenario.mp3'); 
                 this.music.chamberTheme = new Audio('sounds/chamber_theme.mp3');
 
-
-                // Sound Effects
                 this.sounds.selectOption = new Audio('sounds/select_options.mp3');
                 this.sounds.gameStart = new Audio('sounds/game_start.mp3');
                 this.sounds.nextScenario = new Audio('sounds/next_scenario.mp3');
@@ -611,13 +603,10 @@
                 this.sounds.toinkArrow = new Audio('sounds/toink_arrow.mp3');
                 this.sounds.thunder = new Audio('sounds/thunder.mp3');
 
-                // Preload all audio
                 this.preloadAudio();
                 
-                // Set initial volumes
                 Object.values(this.sounds).forEach(sound => {
                     sound.volume = this.masterVolume * this.sfxVolume;
-                    // Add event listeners to handle mobile playback issues
                     sound.addEventListener('ended', () => sound.currentTime = 0);
                     sound.addEventListener('error', (e) => console.warn(`Error with sound:`, e));
                 });
@@ -629,107 +618,74 @@
                 });
             }
             
-            // Preload all audio files to avoid delays
             preloadAudio() {
                 const preloadAudio = (audio) => {
                     if (audio && audio.src) {
                         audio.load();
                     }
                 };
-                
                 Object.values(this.sounds).forEach(preloadAudio);
                 Object.values(this.music).forEach(preloadAudio);
             }
             
-            // Initialize audio on first user interaction (for mobile)
             initializeAudio() {
                 if (this.audioInitialized) return;
-                
                 if (this.isMobile && this.audioContext && this.audioContext.state === 'suspended') {
                     this.audioContext.resume().then(() => {
                         console.log('AudioContext resumed');
-                    }).catch(e => {
-                        console.warn('Error resuming AudioContext:', e);
-                    });
+                    }).catch(e => console.warn('Error resuming AudioContext:', e));
                 }
-                
-                // Create silent audio and play it to unlock audio on iOS
                 if (this.isMobile) {
                     const silentSound = new Audio();
                     silentSound.src = 'data:audio/mp3;base64,SUQzBAAAAAABEUAAACgAZHRlYWNoZXIgdGVzdCBmaWxlIEJlZXAgdG9uZQAAAAAAAAAAAA==';
                     silentSound.play().catch(e => console.warn('Silent sound play failed:', e));
-                    
-                    // Touch-enable all audio elements
                     Object.values(this.sounds).concat(Object.values(this.music)).forEach(audio => {
                         audio.load();
-                        // iOS often requires play() even if immediately followed by pause()
                         audio.play().catch(() => {}).then(() => audio.pause());
                         audio.currentTime = 0;
                     });
                 }
-                
                 this.audioInitialized = true;
             }
 
             playSound(soundName) {
-                if (!this.audioInitialized) {
-                    this.initializeAudio();
-                }
-                
+                if (!this.audioInitialized) this.initializeAudio();
                 if (this.sounds[soundName]) {
-                    // Create a clone for overlapping sounds
                     const sound = this.sounds[soundName];
                     sound.currentTime = 0;
-                    
                     sound.play().catch(e => {
                         console.warn(`Error playing sound ${soundName}:`, e);
-                        // For iOS, we need to retry after a user interaction
                         if (e.name === 'NotAllowedError' && this.isMobile) {
-                            document.body.addEventListener('touchstart', () => {
-                                sound.play().catch(() => {});
-                            }, { once: true });
+                            document.body.addEventListener('touchstart', () => sound.play().catch(() => {}), { once: true });
                         }
                     });
-                } else {
-                    console.warn(`Sound not found: ${soundName}`);
-                }
+                } else console.warn(`Sound not found: ${soundName}`);
             }
 
             playMusic(musicName, loop = true) {
-                if (!this.audioInitialized) {
-                    this.initializeAudio();
-                }
-                
+                if (!this.audioInitialized) this.initializeAudio();
                 if (this.currentMusic && this.music[this.currentMusic]) {
                     this.music[this.currentMusic].pause();
                     this.music[this.currentMusic].currentTime = 0;
                 }
-                
                 if (this.music[musicName]) {
                     const music = this.music[musicName];
                     music.loop = loop;
                     music.play().catch(e => {
                         console.warn(`Error playing music ${musicName}:`, e);
-                        // For iOS, we need to retry after a user interaction
                         if (e.name === 'NotAllowedError' && this.isMobile) {
-                            document.body.addEventListener('touchstart', () => {
-                                music.play().catch(() => {});
-                            }, { once: true });
+                            document.body.addEventListener('touchstart', () => music.play().catch(() => {}), { once: true });
                         }
                     });
                     this.currentMusic = musicName;
-                } else {
-                     console.warn(`Music not found: ${musicName}`);
-                }
+                } else console.warn(`Music not found: ${musicName}`);
             }
 
             stopMusic(specificMusicName = null) {
                 if (specificMusicName && this.music[specificMusicName]) {
                      this.music[specificMusicName].pause();
                      this.music[specificMusicName].currentTime = 0;
-                     if (this.currentMusic === specificMusicName) {
-                         this.currentMusic = null;
-                     }
+                     if (this.currentMusic === specificMusicName) this.currentMusic = null;
                 } else if (this.currentMusic && this.music[this.currentMusic]) { 
                     this.music[this.currentMusic].pause();
                     this.music[this.currentMusic].currentTime = 0;
@@ -738,20 +694,15 @@
             }
 
             pauseCurrentMusic() {
-                if (this.currentMusic && this.music[this.currentMusic]) {
-                    this.music[this.currentMusic].pause();
-                }
+                if (this.currentMusic && this.music[this.currentMusic]) this.music[this.currentMusic].pause();
             }
 
             resumeCurrentMusic() {
                 if (this.currentMusic && this.music[this.currentMusic]) {
                     this.music[this.currentMusic].play().catch(e => {
                         console.warn(`Error resuming music ${this.currentMusic}:`, e);
-                        // For iOS, try to resume after user interaction
                         if (e.name === 'NotAllowedError' && this.isMobile) {
-                            document.body.addEventListener('touchstart', () => {
-                                this.music[this.currentMusic].play().catch(() => {});
-                            }, { once: true });
+                            document.body.addEventListener('touchstart', () => this.music[this.currentMusic].play().catch(() => {}), { once: true });
                         }
                     });
                 }
@@ -766,22 +717,18 @@
                 this.joystickDirection = { x: 0, y: 0 };
                 this.virtualControlsActive = false;
                 
-                // Keyboard input
                 window.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
                 window.addEventListener('keyup', (e) => {
                     this.keys[e.key.toLowerCase()] = false;
                     this.game.handleKeyUp(e.key.toLowerCase()); 
                 });
                 
-                // Check if mobile/tablet and set up virtual controls if needed
                 this.checkDeviceType();
                 window.addEventListener('resize', () => this.checkDeviceType());
             }
             
             checkDeviceType() {
                 const isMobile = window.innerWidth <= 1024;
-                
-                // Only set up virtual controls if we're on mobile and they haven't been set up yet
                 if (isMobile && !this.virtualControlsActive) {
                     this.setupVirtualControls();
                     this.virtualControlsActive = true;
@@ -789,7 +736,6 @@
             }
 
             setupVirtualControls() {
-                // Only set up virtual controls if they exist in the DOM
                 const joystickStick = document.getElementById('joystickStick');
                 const joystickBase = document.getElementById('joystickBase');
                 const interactButton = document.getElementById('interactButton');
@@ -799,13 +745,11 @@
                 
                 if (!joystickStick || !joystickBase) return;
                 
-                // Joystick variables
                 let baseRect = joystickBase.getBoundingClientRect();
                 let baseX = baseRect.width / 2;
                 let baseY = baseRect.height / 2;
                 let maxDistance = baseRect.width / 2 - joystickStick.clientWidth / 2;
                 
-                // Function to update joystick position reference values - call on resize or orientation change
                 const updateJoystickMeasurements = () => {
                     baseRect = joystickBase.getBoundingClientRect();
                     baseX = baseRect.width / 2;
@@ -813,49 +757,34 @@
                     maxDistance = baseRect.width / 2 - joystickStick.clientWidth / 2;
                 };
                 
-                // Update measurements on resize or orientation change
                 window.addEventListener('resize', updateJoystickMeasurements);
                 window.addEventListener('orientationchange', updateJoystickMeasurements);
                 
-                // Touch handling for joystick
                 const handleJoystickTouch = (e) => {
                     e.preventDefault();
                     const touch = e.touches[0];
-                    // Recalculate baseRect on each touch to ensure accuracy
                     baseRect = joystickBase.getBoundingClientRect();
-                    
                     const touchX = touch.clientX - baseRect.left;
                     const touchY = touch.clientY - baseRect.top;
-                    
-                    // Calculate distance from center
                     const deltaX = touchX - baseX;
                     const deltaY = touchY - baseY;
                     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
                     
                     if (distance > maxDistance) {
-                        // Normalize if distance exceeds the max
                         const angle = Math.atan2(deltaY, deltaX);
                         const limitedX = baseX + Math.cos(angle) * maxDistance;
                         const limitedY = baseY + Math.sin(angle) * maxDistance;
                         joystickStick.style.left = limitedX + 'px';
                         joystickStick.style.top = limitedY + 'px';
-                        
-                        // Calculate direction (normalized)
                         this.joystickDirection.x = Math.cos(angle);
                         this.joystickDirection.y = Math.sin(angle);
                     } else {
-                        // Use exact position if within bounds
                         joystickStick.style.left = touchX + 'px';
                         joystickStick.style.top = touchY + 'px';
-                        
-                        // Calculate direction
                         this.joystickDirection.x = deltaX / maxDistance;
                         this.joystickDirection.y = deltaY / maxDistance;
                     }
-                    
                     this.isVirtualJoystickActive = true;
-                    
-                    // Set virtual key states based on joystick direction
                     this.keys['arrowup'] = this.joystickDirection.y < -0.3;
                     this.keys['arrowdown'] = this.joystickDirection.y > 0.3;
                     this.keys['arrowleft'] = this.joystickDirection.x < -0.3;
@@ -867,83 +796,36 @@
                     joystickStick.style.top = '50%';
                     this.joystickDirection = { x: 0, y: 0 };
                     this.isVirtualJoystickActive = false;
-                    
-                    // Reset virtual key states
-                    this.keys['arrowup'] = false;
-                    this.keys['arrowdown'] = false;
-                    this.keys['arrowleft'] = false;
-                    this.keys['arrowright'] = false;
+                    this.keys['arrowup'] = false; this.keys['arrowdown'] = false;
+                    this.keys['arrowleft'] = false; this.keys['arrowright'] = false;
                 };
                 
-                // Joystick event listeners
                 joystickBase.addEventListener('touchstart', handleJoystickTouch);
                 joystickBase.addEventListener('touchmove', handleJoystickTouch);
                 joystickBase.addEventListener('touchend', resetJoystick);
                 joystickBase.addEventListener('touchcancel', resetJoystick);
                 
-                // Button event listeners
-                if (interactButton) {
-                    interactButton.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.keys['e'] = true;
-                    });
-                    interactButton.addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        this.keys['e'] = false;
-                        this.game.handleKeyUp('e');
-                    });
-                }
+                const setupButtonListener = (button, key) => {
+                    if (button) {
+                        button.addEventListener('touchstart', (e) => { e.preventDefault(); this.keys[key] = true; });
+                        button.addEventListener('touchend', (e) => { e.preventDefault(); this.keys[key] = false; this.game.handleKeyUp(key); });
+                    }
+                };
+
+                setupButtonListener(interactButton, 'e');
+                setupButtonListener(inventoryButton, 'i');
+                setupButtonListener(questButton, 'q');
+                setupButtonListener(pauseButton, 'p');
                 
-                if (inventoryButton) {
-                    inventoryButton.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.keys['i'] = true;
-                    });
-                    inventoryButton.addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        this.keys['i'] = false;
-                        this.game.handleKeyUp('i');
-                    });
-                }
-                
-                if (questButton) {
-                    questButton.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.keys['q'] = true;
-                    });
-                    questButton.addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        this.keys['q'] = false;
-                        this.game.handleKeyUp('q');
-                    });
-                }
-                
-                if (pauseButton) {
-                    pauseButton.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.keys['p'] = true;
-                    });
-                    pauseButton.addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        this.keys['p'] = false;
-                        this.game.handleKeyUp('p');
-                    });
-                }
-                
-                // Prevent default on all button touch events to avoid scrolling
                 document.querySelectorAll('.controlButton').forEach(button => {
                     button.addEventListener('touchstart', (e) => e.preventDefault());
                     button.addEventListener('touchmove', (e) => e.preventDefault());
                     button.addEventListener('touchend', (e) => e.preventDefault());
                 });
-                
-                // Initialize joystick position
                 resetJoystick();
             }
 
-            isPressed(key) {
-                return this.keys[key] || false;
-            }
+            isPressed(key) { return this.keys[key] || false; }
         }
 
         class UIManager {
@@ -959,13 +841,11 @@
                 this.clockDisplay = document.getElementById('clockDisplay');
                 this.questLogDisplay = document.getElementById('questLogDisplay');
                 this.questList = document.getElementById('questList');
-                
                 this.startScreen = document.getElementById('startScreen');
                 this.pauseScreen = document.getElementById('pauseScreen');
                 this.gameOverScreen = document.getElementById('gameOverScreen');
                 this.loadingText = document.getElementById('loadingText');
                 this.saveNotification = document.getElementById('saveNotification');
-
                 this.puzzleScreen = document.getElementById('puzzleScreen');
                 this.puzzleQuestion = document.getElementById('puzzleQuestion');
                 this.puzzleOptionA = document.getElementById('puzzleOptionA');
@@ -974,51 +854,17 @@
                 this.winScreen = document.getElementById('winScreen');
                 this.winMessage = document.getElementById('winMessage');
 
-
                 document.getElementById('startButton').addEventListener('click', () => {
-                    this.game.sound.initializeAudio(); // Initialize audio on first interaction
+                    this.game.sound.initializeAudio(); 
                     this.game.sound.stopMusic('menuTheme');
                     this.game.sound.playSound('selectOption');
                     this.game.startGame();
                 });
-                /*
-                document.getElementById('loadButton').addEventListener('click', () => {
-                    this.game.sound.initializeAudio(); // Initialize audio on first interaction
-                    this.game.sound.stopMusic('menuTheme');
-                    this.game.sound.playSound('selectOption');
-                    this.game.loadGame(true);
-                });
-                */
-                document.getElementById('resumeButton').addEventListener('click', () => {
-                    this.game.sound.initializeAudio(); // Ensure audio is initialized
-                    this.game.togglePause();
-                });
-                /*
-                document.getElementById('saveButton').addEventListener('click', () => {
-                    this.game.sound.initializeAudio(); // Ensure audio is initialized
-                    this.game.saveGame();
-                });
-                */
-                document.getElementById('mainMenuButton').addEventListener('click', () => {
-                    this.game.sound.initializeAudio(); // Ensure audio is initialized
-                    this.game.goToMainMenu();
-                });
-                document.getElementById('restartButton').addEventListener('click', () => {
-                     this.game.sound.initializeAudio(); // Ensure audio is initialized
-                     this.game.sound.playSound('selectOption');
-                     this.game.startGame(true);
-                });
-                document.getElementById('gameOverMainMenuButton').addEventListener('click', () => {
-                    this.game.sound.initializeAudio(); // Ensure audio is initialized
-                    this.game.sound.playSound('selectOption');
-                    this.game.goToMainMenu();
-                });
-                document.getElementById('winMainMenuButton').addEventListener('click', () => {
-                    this.game.sound.initializeAudio(); // Ensure audio is initialized
-                    this.game.sound.playSound('selectOption');
-                    this.game.goToMainMenu();
-                });
-
+                document.getElementById('resumeButton').addEventListener('click', () => { this.game.sound.initializeAudio(); this.game.togglePause(); });
+                document.getElementById('mainMenuButton').addEventListener('click', () => { this.game.sound.initializeAudio(); this.game.goToMainMenu(); });
+                document.getElementById('restartButton').addEventListener('click', () => { this.game.sound.initializeAudio(); this.game.sound.playSound('selectOption'); this.game.startGame(true); });
+                document.getElementById('gameOverMainMenuButton').addEventListener('click', () => { this.game.sound.initializeAudio(); this.game.sound.playSound('selectOption'); this.game.goToMainMenu(); });
+                document.getElementById('winMainMenuButton').addEventListener('click', () => { this.game.sound.initializeAudio(); this.game.sound.playSound('selectOption'); this.game.goToMainMenu(); });
                 this.puzzleOptionA.addEventListener('click', () => this.game.handlePuzzleAnswer(0));
                 this.puzzleOptionB.addEventListener('click', () => this.game.handlePuzzleAnswer(1));
                 this.puzzleOptionC.addEventListener('click', () => this.game.handlePuzzleAnswer(2));
@@ -1028,15 +874,10 @@
             hideStartScreen() { this.startScreen.style.display = 'none'; }
             showPauseScreen() { this.pauseScreen.style.display = 'flex'; }
             hidePauseScreen() { this.pauseScreen.style.display = 'none'; }
-            showGameOverScreen(message) {
-                document.getElementById('gameOverMessage').textContent = message;
-                this.gameOverScreen.style.display = 'flex';
-            }
+            showGameOverScreen(message) { document.getElementById('gameOverMessage').textContent = message; this.gameOverScreen.style.display = 'flex'; }
             hideGameOverScreen() { this.gameOverScreen.style.display = 'none'; }
-            
             showLoading() { this.loadingText.style.display = 'block';}
             hideLoading() { this.loadingText.style.display = 'none';}
-
             updateHealth(current, max) { this.hpFill.style.width = `${(current / max) * 100}%`; }
             updateHydration(current, max) { this.hydrationFill.style.width = `${(current / max) * 100}%`; }
             updateMapName(name) { this.mapNameDisplay.textContent = name; }
@@ -1051,91 +892,52 @@
                 this.clockDisplay.textContent = `Day ${day} - ${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
             }
             
-            showDialog(text, speaker) {
-                this.dialogBox.innerHTML = speaker ? `<strong>${speaker}:</strong> ${text}` : text;
-                this.dialogBox.style.display = 'block';
-            }
+            showDialog(text, speaker) { this.dialogBox.innerHTML = speaker ? `<strong>${speaker}:</strong> ${text}` : text; this.dialogBox.style.display = 'block'; }
             hideDialog() { this.dialogBox.style.display = 'none'; }
 
             showPuzzle(question, options) {
                 this.puzzleQuestion.textContent = question;
-                this.puzzleOptionA.textContent = `A. ${options[0]}`;
-                this.puzzleOptionB.textContent = `B. ${options[1]}`;
-                this.puzzleOptionC.textContent = `C. ${options[2]}`;
+                this.puzzleOptionA.textContent = `A. ${options[0]}`; this.puzzleOptionB.textContent = `B. ${options[1]}`; this.puzzleOptionC.textContent = `C. ${options[2]}`;
                 this.puzzleScreen.style.display = 'block';
             }
             hidePuzzle() { this.puzzleScreen.style.display = 'none'; }
 
-            showWinScreen(message) {
-                this.winMessage.textContent = message;
-                this.winScreen.style.display = 'block';
-            }
+            showWinScreen(message) { this.winMessage.textContent = message; this.winScreen.style.display = 'block'; }
             hideWinScreen() { this.winScreen.style.display = 'none'; }
-
 
             updateInventoryDisplay(inventory, itemTypes) {
                 this.inventoryDiv.innerHTML = '';
                 inventory.forEach(itemKey => {
-                    const item = itemTypes[itemKey];
-                    if (!item) return;
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'invItem';
-                    itemDiv.textContent = item.name.charAt(0).toUpperCase();
-                    itemDiv.title = `${item.name}: ${item.description}`;
-                    itemDiv.addEventListener('click', () => this.game.useItem(itemKey));
-                    this.inventoryDiv.appendChild(itemDiv);
+                    const item = itemTypes[itemKey]; if (!item) return;
+                    const itemDiv = document.createElement('div'); itemDiv.className = 'invItem';
+                    itemDiv.textContent = item.name.charAt(0).toUpperCase(); itemDiv.title = `${item.name}: ${item.description}`;
+                    itemDiv.addEventListener('click', () => this.game.useItem(itemKey)); this.inventoryDiv.appendChild(itemDiv);
                 });
             }
 
             updateQuestLog(quests) {
-                if (quests.length === 0) {
-                    this.questLogDisplay.style.display = 'none';
-                    return;
-                }
-                this.questLogDisplay.style.display = 'block';
-                this.questList.innerHTML = '';
+                if (quests.length === 0) { this.questLogDisplay.style.display = 'none'; return; }
+                this.questLogDisplay.style.display = 'block'; this.questList.innerHTML = '';
                 quests.forEach(quest => {
                     const li = document.createElement('li');
                     li.textContent = quest.description + (quest.completed ? " (Completed)" : "");
-                    if(quest.completed) li.style.textDecoration = "line-through";
-                    this.questList.appendChild(li);
+                    if(quest.completed) li.style.textDecoration = "line-through"; this.questList.appendChild(li);
                 });
             }
             
-            toggleQuestLog() {
-                this.questLogDisplay.style.display = this.questLogDisplay.style.display === 'none' ? 'block' : 'none';
-            }
-
-            drawInteractionIndicator(x, y) {
-                this.ctx.fillStyle = '#FFFF00';
-                this.ctx.beginPath();
-                this.ctx.arc(x, y - 35, 5, 0, Math.PI * 2);
-                this.ctx.fill();
-            }
-
-            showSaveNotification() {
-                this.saveNotification.style.display = 'block';
-                setTimeout(() => {
-                    this.saveNotification.style.display = 'none';
-                }, 1500);
-            }
+            toggleQuestLog() { this.questLogDisplay.style.display = this.questLogDisplay.style.display === 'none' ? 'block' : 'none'; }
+            drawInteractionIndicator(x, y) { this.ctx.fillStyle = '#FFFF00'; this.ctx.beginPath(); this.ctx.arc(x, y - 35, 5, 0, Math.PI * 2); this.ctx.fill(); }
+            showSaveNotification() { this.saveNotification.style.display = 'block'; setTimeout(() => { this.saveNotification.style.display = 'none'; }, 1500); }
         }
         
+        // --- Entity Classes ---
         class Entity {
             constructor(game, x, y, width, height, type = 'entity') {
-                this.game = game;
-                this.x = x;
-                this.y = y;
-                this.width = width;
-                this.height = height;
-                this.type = type;
-                this.animationFrame = 0;
-                this.spriteIndex = 0; 
+                this.game = game; this.x = x; this.y = y; this.width = width; this.height = height;
+                this.type = type; this.animationFrame = 0; this.spriteIndex = 0; 
             }
-
             draw(ctx) { /* Base draw method */ }
             update() { /* Base update method */ }
-            
             get centerX() { return this.x + this.width / 2; }
             get centerY() { return this.y + this.height / 2; }
         }
@@ -1144,1220 +946,886 @@
             constructor(game, x, y) {
                 super(game, x, y, 24, 32, 'player'); 
                 this.collisionBox = { xOffset: 4, yOffset: 16, width: 16, height: 16 }; 
-                this.speed = PLAYER_SPEED;
-                this.direction = 'down';
-                this.health = 100;
-                this.maxHealth = 100;
-                this.hydration = 100;
-                this.maxHydration = 100;
-                this.inventory = ['canteen', 'compass'];
+                this.speed = PLAYER_SPEED; this.direction = 'down'; this.health = 100; this.maxHealth = 100;
+                this.hydration = 100; this.maxHydration = 100; this.inventory = ['canteen', 'compass'];
                 this.quests = [ {id: "main_artifact", description: "Find the Arizona Artifact.", completed: false}];
                 this.isMoving = false;
             }
 
             update() {
-                this.isMoving = false;
-                let nextX = this.x;
-                let nextY = this.y;
-                let moveX = 0;
-                let moveY = 0;
+                this.isMoving = false; let nextX = this.x; let nextY = this.y;
+                let moveX = 0; let moveY = 0;
 
-                if (this.game.input.isPressed('w') || this.game.input.isPressed('arrowup')) {
-                    moveY = -this.speed; this.direction = 'up'; this.isMoving = true;
-                } else if (this.game.input.isPressed('s') || this.game.input.isPressed('arrowdown')) {
-                    moveY = this.speed; this.direction = 'down'; this.isMoving = true;
-                }
-                if (this.game.input.isPressed('a') || this.game.input.isPressed('arrowleft')) {
-                    moveX = -this.speed; this.direction = 'left'; this.isMoving = true;
-                } else if (this.game.input.isPressed('d') || this.game.input.isPressed('arrowright')) {
-                    moveX = this.speed; this.direction = 'right'; this.isMoving = true;
-                }
+                if (this.game.input.isPressed('w') || this.game.input.isPressed('arrowup')) { moveY = -this.speed; this.direction = 'up'; this.isMoving = true; } 
+                else if (this.game.input.isPressed('s') || this.game.input.isPressed('arrowdown')) { moveY = this.speed; this.direction = 'down'; this.isMoving = true; }
+                if (this.game.input.isPressed('a') || this.game.input.isPressed('arrowleft')) { moveX = -this.speed; this.direction = 'left'; this.isMoving = true; } 
+                else if (this.game.input.isPressed('d') || this.game.input.isPressed('arrowright')) { moveX = this.speed; this.direction = 'right'; this.isMoving = true; }
                 
-                nextX += moveX;
-                nextY += moveY;
+                nextX += moveX; nextY += moveY;
 
-                if (!this.game.currentMap.checkCollision(nextX + this.collisionBox.xOffset, this.y + this.collisionBox.yOffset, this.collisionBox.width, this.collisionBox.height)) {
-                    this.x = nextX;
-                }
-                if (!this.game.currentMap.checkCollision(this.x + this.collisionBox.xOffset, nextY + this.collisionBox.yOffset, this.collisionBox.width, this.collisionBox.height)) {
-                    this.y = nextY;
-                }
+                if (!this.game.currentMap.checkCollision(nextX + this.collisionBox.xOffset, this.y + this.collisionBox.yOffset, this.collisionBox.width, this.collisionBox.height)) this.x = nextX;
+                if (!this.game.currentMap.checkCollision(this.x + this.collisionBox.xOffset, nextY + this.collisionBox.yOffset, this.collisionBox.width, this.collisionBox.height)) this.y = nextY;
 
                 this.x = Math.max(0, Math.min(this.x, CANVAS_WIDTH - this.width));
                 this.y = Math.max(0, Math.min(this.y, CANVAS_HEIGHT - this.height));
 
                 this.animationFrame++;
-                if (this.animationFrame % 8 === 0 && this.isMoving) {
-                    this.spriteIndex = (this.spriteIndex + 1) % 4; 
-                } else if (!this.isMoving) {
-                    this.spriteIndex = 0; 
-                }
+                if (this.isMoving) { if (this.animationFrame % 8 === 0) this.spriteIndex = (this.spriteIndex + 1) % 4; } 
+                else this.spriteIndex = 0;
 
                 this.hydration -= HYDRATION_RATE / 60; 
                 if (this.hydration < 0) this.hydration = 0;
-                if (this.hydration === 0 && this.animationFrame % 120 === 0) { 
-                    this.takeDamage(1, "Dehydration");
-                }
+                if (this.hydration === 0 && this.animationFrame % 120 === 0) this.takeDamage(1, "Dehydration");
                 this.game.ui.updateHydration(this.hydration, this.maxHydration);
             }
 
             draw(ctx) {
-                ctx.fillStyle = '#CC3333'; // Body color
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                ctx.fillStyle = '#DDBB99'; // Head color
-                ctx.fillRect(this.x + (this.width/2) - 8, this.y - 14, 16, 16); 
-                ctx.fillStyle = '#8B4513'; // Hat color
-                ctx.fillRect(this.x + (this.width/2) - 10, this.y - 20, 20, 6);
-                // Simple leg animation
-                const legOffset = this.isMoving ? Math.sin(this.animationFrame * 0.2) * 3 : 0;
-                ctx.fillStyle = '#AA2222'; // Darker red for legs
-                ctx.fillRect(this.x + 4, this.y + this.height - 8 + legOffset, 6, 8);
-                ctx.fillRect(this.x + this.width - 10, this.y + this.height - 8 - legOffset, 6, 8);
+                const x = this.x; const y = this.y; const w = this.width; const h = this.height;
+                const hatColor = '#8B4513'; const beardColor = '#5A2D0C'; const skinColor = '#F0D8C0';
+                const eyeColor = '#000000'; const shirtColor = '#8B0000'; const pantsColor = '#4A3B31'; const shoesColor = '#2C1C0A';
+                const headHeight = 8; const hatHeight = 6; const torsoHeight = 12; const legHeight = h - hatHeight - headHeight - torsoHeight;
+                const frame = this.spriteIndex;
+
+                ctx.fillStyle = hatColor; ctx.fillRect(x + w * 0.1, y, w * 0.8, hatHeight); ctx.fillRect(x, y + hatHeight * 0.5, w, hatHeight * 0.5);
+                ctx.fillStyle = skinColor; ctx.fillRect(x + w * 0.2, y + hatHeight, w * 0.6, headHeight);
+                ctx.fillStyle = beardColor;
+                if (this.direction === 'left' || this.direction === 'right' || this.direction === 'down') {
+                    ctx.fillRect(x + w * 0.1, y + hatHeight + 2, w * 0.1, headHeight - 2); ctx.fillRect(x + w * 0.8, y + hatHeight + 2, w * 0.1, headHeight - 2);
+                    ctx.fillRect(x + w * 0.2, y + hatHeight + headHeight * 0.65, w * 0.6, headHeight * 0.35);
+                    ctx.fillRect(x + w * 0.3, y + hatHeight + headHeight * 0.45, w * 0.4, 2);
+                }
+                if (this.direction === 'up') ctx.fillRect(x + w * 0.2, y + hatHeight + headHeight * 0.6, w * 0.6, headHeight * 0.4);
+                ctx.fillStyle = eyeColor;
+                if (this.direction !== 'up') { const eyeY = y + hatHeight + headHeight * 0.3; ctx.fillRect(x + w * 0.3, eyeY, 2, 2); ctx.fillRect(x + w * 0.6, eyeY, 2, 2); }
+                const torsoTopY = y + hatHeight + headHeight; ctx.fillStyle = shirtColor; ctx.fillRect(x + w * 0.15, torsoTopY, w * 0.7, torsoHeight);
+                const armWidth = 4; const armLength = torsoHeight * 0.8;
+                if (this.direction === 'down') {
+                    if (this.isMoving) {
+                        if (frame === 0 || frame === 2) { ctx.fillRect(x, torsoTopY + 2, armWidth, armLength); ctx.fillRect(x + w - armWidth, torsoTopY + 4, armWidth, armLength); } 
+                        else { ctx.fillRect(x, torsoTopY + 4, armWidth, armLength); ctx.fillRect(x + w - armWidth, torsoTopY + 2, armWidth, armLength); }
+                    } else { ctx.fillRect(x, torsoTopY + 2, armWidth, armLength); ctx.fillRect(x + w - armWidth, torsoTopY + 2, armWidth, armLength); }
+                } else if (this.direction === 'up') { ctx.fillRect(x, torsoTopY + 2, armWidth, armLength * 0.7); ctx.fillRect(x + w - armWidth, torsoTopY + 2, armWidth, armLength * 0.7);
+                } else if (this.direction === 'left') { ctx.fillRect(x + w * 0.4, torsoTopY + 2, armWidth, armLength); if (this.isMoving) ctx.fillRect(x + w * 0.6, torsoTopY + ((frame === 0 || frame === 2) ? 4 : 2), armWidth, armLength * 0.8);
+                } else if (this.direction === 'right') { ctx.fillRect(x + w * 0.6 - armWidth, torsoTopY + 2, armWidth, armLength); if (this.isMoving) ctx.fillRect(x + w * 0.4 - armWidth, torsoTopY + ((frame === 0 || frame === 2) ? 4 : 2), armWidth, armLength * 0.8); }
+                const pantsTopY = torsoTopY + torsoHeight; ctx.fillStyle = pantsColor; const legWidth = w * 0.35; const shoeHeight = 4;
+                if (this.direction === 'down' || this.direction === 'up') {
+                    if (this.isMoving) {
+                        const legOffset = (frame === 1 || frame === 3) ? 2 : 0;
+                        ctx.fillRect(x + w * 0.1, pantsTopY + ((frame === 0 || frame === 2) ? 0 : legOffset), legWidth, legHeight - shoeHeight); ctx.fillStyle = shoesColor; ctx.fillRect(x + w * 0.1, pantsTopY + legHeight - shoeHeight + ((frame === 0 || frame === 2) ? 0 : legOffset), legWidth, shoeHeight);
+                        ctx.fillStyle = pantsColor; ctx.fillRect(x + w * 0.9 - legWidth, pantsTopY + ((frame === 1 || frame === 3) ? 0 : legOffset), legWidth, legHeight - shoeHeight); ctx.fillStyle = shoesColor; ctx.fillRect(x + w * 0.9 - legWidth, pantsTopY + legHeight - shoeHeight + ((frame === 1 || frame === 3) ? 0 : legOffset), legWidth, shoeHeight);
+                    } else {
+                        ctx.fillRect(x + w * 0.1, pantsTopY, legWidth, legHeight - shoeHeight); ctx.fillStyle = shoesColor; ctx.fillRect(x + w * 0.1, pantsTopY + legHeight - shoeHeight, legWidth, shoeHeight);
+                        ctx.fillStyle = pantsColor; ctx.fillRect(x + w * 0.9 - legWidth, pantsTopY, legWidth, legHeight - shoeHeight); ctx.fillStyle = shoesColor; ctx.fillRect(x + w * 0.9 - legWidth, pantsTopY + legHeight - shoeHeight, legWidth, shoeHeight);
+                    }
+                } else {
+                    const legX = this.direction === 'left' ? (x + w * 0.2) : (x + w * 0.45);
+                    if (this.isMoving) {
+                        const forward = (frame === 0 || frame === 2) ? 0 : 2; const back = (frame === 1 || frame === 3) ? 0 : 2;
+                        ctx.fillStyle = pantsColor; ctx.fillRect(legX + (this.direction === 'left' ? 4 : -4), pantsTopY + back, legWidth * 0.8, legHeight - shoeHeight); ctx.fillStyle = shoesColor; ctx.fillRect(legX + (this.direction === 'left' ? 4 : -4), pantsTopY + legHeight - shoeHeight + back, legWidth * 0.8, shoeHeight);
+                        ctx.fillStyle = pantsColor; ctx.fillRect(legX, pantsTopY + forward, legWidth, legHeight - shoeHeight); ctx.fillStyle = shoesColor; ctx.fillRect(legX, pantsTopY + legHeight - shoeHeight + forward, legWidth, shoeHeight);
+                    } else {
+                        ctx.fillRect(legX, pantsTopY, legWidth, legHeight - shoeHeight); ctx.fillStyle = shoesColor; ctx.fillRect(legX, pantsTopY + legHeight - shoeHeight, legWidth, shoeHeight);
+                        ctx.fillStyle = pantsColor; ctx.fillRect(legX + (this.direction === 'left' ? 4 : -4), pantsTopY, legWidth * 0.7, legHeight - shoeHeight);
+                    }
+                }
             }
 
             interact() {
-                const checkRange = 20; 
-                let checkX = this.x + this.width / 2;
-                let checkY = this.y + this.height / 2;
-
+                const checkRange = 20; let checkX = this.x + this.width / 2; let checkY = this.y + this.height / 2;
                 switch (this.direction) {
-                    case 'up': checkY -= this.height / 2 + checkRange / 2; break;
-                    case 'down': checkY += this.height / 2 + checkRange / 2; break;
-                    case 'left': checkX -= this.width / 2 + checkRange / 2; break;
-                    case 'right': checkX += this.width / 2 + checkRange / 2; break;
+                    case 'up': checkY -= this.height / 2 + checkRange / 2; break; case 'down': checkY += this.height / 2 + checkRange / 2; break;
+                    case 'left': checkX -= this.width / 2 + checkRange / 2; break; case 'right': checkX += this.width / 2 + checkRange / 2; break;
                 }
                 this.game.currentMap.tryInteraction(checkX, checkY, this);
             }
 
             addItem(itemKey) {
                 if (!this.inventory.includes(itemKey)) {
-                    this.inventory.push(itemKey);
-                    this.game.ui.updateInventoryDisplay(this.inventory, this.game.itemTypes);
-                    if (itemKey === 'artifact1' || itemKey === 'final_artifact') { 
-                        this.game.sound.playSound('getCoin');
-                    } else {
-                        this.game.sound.playSound('getItem'); 
-                    }
+                    this.inventory.push(itemKey); this.game.ui.updateInventoryDisplay(this.inventory, this.game.itemTypes);
+                    if (itemKey === 'artifact1' || itemKey === 'final_artifact') this.game.sound.playSound('getCoin');
+                    else this.game.sound.playSound('getItem'); 
                     return true;
-                }
-                return false;
+                } return false;
             }
-            
-            hasItem(itemKey) {
-                return this.inventory.includes(itemKey);
-            }
-
+            hasItem(itemKey) { return this.inventory.includes(itemKey); }
             takeDamage(amount, source = "Unknown") {
-                this.health -= amount;
-                if (this.health < 0) this.health = 0;
+                this.health -= amount; if (this.health < 0) this.health = 0;
                 this.game.ui.updateHealth(this.health, this.maxHealth);
-
                 const enemySource = source.toLowerCase();
-                if (enemySource.includes('coyote') || enemySource.includes('snake') || enemySource.includes('spider') || enemySource.includes('spirit') || source === 'Arrow') {
+                if (enemySource.includes('coyote') || enemySource.includes('snake') || enemySource.includes('spider') || enemySource.includes('spirit') || source === 'Arrow' || enemySource.includes('scorpion')) {
                     this.game.sound.playSound('playerHurt');
-                } else if (source !== "Dehydration") { 
-                     this.game.sound.playSound('playerHurt'); 
-                }
-                
-                // Screen flash effect
-                this.game.canvas.style.backgroundColor = '#FF0000'; // Flash red
-                setTimeout(() => { this.game.canvas.style.backgroundColor = ''; }, 100); // Reset background
-
-                if (this.health <= 0) {
-                    this.game.gameOver(`Defeated by ${source}.`);
-                }
+                } else if (source !== "Dehydration") this.game.sound.playSound('playerHurt'); 
+                this.game.canvas.style.backgroundColor = '#FF0000'; setTimeout(() => { this.game.canvas.style.backgroundColor = ''; }, 100);
+                if (this.health <= 0) this.game.gameOver(`Defeated by ${source}.`);
             }
-
-            heal(amount) {
-                this.health = Math.min(this.maxHealth, this.health + amount);
-                this.game.ui.updateHealth(this.health, this.maxHealth);
-            }
-
-            hydrate(amount) {
-                this.hydration = Math.min(this.maxHydration, this.hydration + amount);
-                this.game.ui.updateHydration(this.hydration, this.maxHydration);
-            }
-            
-            addQuest(quest) { 
-                if (!this.quests.find(q => q.id === quest.id)) {
-                    this.quests.push(quest);
-                    this.game.ui.updateQuestLog(this.quests);
-                }
-            }
-            
+            heal(amount) { this.health = Math.min(this.maxHealth, this.health + amount); this.game.ui.updateHealth(this.health, this.maxHealth); }
+            hydrate(amount) { this.hydration = Math.min(this.maxHydration, this.hydration + amount); this.game.ui.updateHydration(this.hydration, this.maxHydration); }
+            addQuest(quest) { if (!this.quests.find(q => q.id === quest.id)) { this.quests.push(quest); this.game.ui.updateQuestLog(this.quests); } }
             completeQuest(questId) {
                 const quest = this.quests.find(q => q.id === questId);
-                if (quest && !quest.completed) { 
-                    quest.completed = true;
-                    this.game.ui.updateQuestLog(this.quests);
-                    this.game.ui.showDialog(`Quest Completed: ${quest.description}`, "System");
-                }
+                if (quest && !quest.completed) { quest.completed = true; this.game.ui.updateQuestLog(this.quests); this.game.ui.showDialog(`Quest Completed: ${quest.description}`, "System"); }
             }
         }
         
         class NPC extends Entity {
             constructor(game, x, y, name, spriteKey, dialog) {
                 super(game, x, y, 24, 32, 'npc'); 
-                this.name = name;
-                this.spriteKey = spriteKey; // Placeholder for potential future sprite system
-                this.dialog = dialog; 
-                this.isInteractable = true;
-                if (Array.isArray(this.dialog)) { // If dialog is an array, cycle through it
-                    this.dialogIndex = 0; 
-                }
+                this.name = name; this.spriteKey = spriteKey; this.dialog = dialog; 
+                this.isInteractable = true; if (Array.isArray(this.dialog)) this.dialogIndex = 0; 
+                this.npcAnimationFrame = Math.floor(Math.random() * 100);
             }
 
             draw(ctx) {
-                // Simple NPC representation
-                ctx.fillStyle = '#5577AA'; // Blueish color for NPC
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                ctx.fillStyle = '#DDBB99'; // Head color
-                ctx.fillRect(this.x + 4, this.y - 14, 16, 16); 
-                // NPC Name Tag
-                ctx.fillStyle = '#FFFFFF'; 
-                ctx.font = '8px "Press Start 2P"';
-                ctx.textAlign = 'center';
-                ctx.fillText(this.name, this.x + this.width / 2, this.y - 20);
-                ctx.textAlign = 'left'; // Reset alignment
+                this.npcAnimationFrame++; const x = this.x; const y = this.y; const w = this.width; const h = this.height;
+                const skinColor = '#E0C0A0'; const eyeColor = '#000000';
+                const headHeight = 8; const bodyTopY = y + headHeight; const bodyHeight = h - headHeight;
+                let npcHeadColor = skinColor; let npcShirtColor = '#607D8B'; let npcTrouserColor = '#4E342E';
+                const isSpirit = this.name.toLowerCase().includes('spirit') || this.name.toLowerCase().includes('ghost');
+
+                if (isSpirit) {
+                    ctx.globalAlpha = 0.6 + Math.sin(this.npcAnimationFrame * 0.1) * 0.15; 
+                    npcHeadColor = '#ADD8E6'; npcShirtColor = '#B0E0E6'; npcTrouserColor = '#87CEEB';
+                    ctx.fillStyle = npcTrouserColor; ctx.beginPath(); ctx.moveTo(x + w * 0.2, y + h);
+                    ctx.quadraticCurveTo(x + w * 0.5, y + h - 10, x + w * 0.8, y + h); ctx.quadraticCurveTo(x + w * 0.5, y + h + 5, x + w * 0.2, y + h); ctx.fill();
+                    ctx.fillStyle = npcShirtColor; ctx.fillRect(x + w * 0.15, bodyTopY, w * 0.7, bodyHeight * 0.6); 
+                    ctx.fillStyle = npcHeadColor; ctx.fillRect(x + w * 0.25, y, w * 0.5, headHeight); 
+                    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(x + w * 0.35, y + headHeight * 0.3, 2, 2); ctx.fillRect(x + w * 0.55, y + headHeight * 0.3, 2, 2);
+                    ctx.globalAlpha = 1.0;
+                } else {
+                    if (this.name === 'Ranger Rick') { npcShirtColor = '#556B2F'; npcTrouserColor = '#8B4513'; ctx.fillStyle = '#6B4226'; ctx.fillRect(x, y, w, headHeight * 0.6); ctx.fillRect(x - 4, y + headHeight*0.4, w + 8, headHeight * 0.4); } 
+                    else if (this.name === 'Old Hermit') { npcShirtColor = '#778899'; npcTrouserColor = '#5A4D41'; ctx.fillStyle = '#A9A9A9'; ctx.fillRect(x + w * 0.2, y -2, w * 0.6, headHeight * 0.5); } 
+                    else if (this.name === 'Tired Hiker') { npcShirtColor = '#FF6347'; npcTrouserColor = '#4682B4'; ctx.fillStyle = '#2E8B57'; ctx.fillRect(x + w * 0.1, bodyTopY + 2, w * 0.8, bodyHeight * 0.5); } 
+                    else if (this.name === 'Petroglyph Researcher' || this.name === 'Grad Student') {
+                        npcShirtColor = '#4682B4'; if(this.name === 'Grad Student') npcShirtColor = '#D2691E'; npcTrouserColor = '#696969';
+                        if (this.name === 'Petroglyph Researcher') { ctx.fillStyle = '#000000'; ctx.fillRect(x + w * 0.25, y + headHeight * 0.4, w * 0.5, 2); }
+                    }
+                    ctx.fillStyle = npcTrouserColor; ctx.fillRect(x + w * 0.15, bodyTopY + bodyHeight * 0.5, w * 0.3, bodyHeight * 0.5); ctx.fillRect(x + w * 0.55, bodyTopY + bodyHeight * 0.5, w * 0.3, bodyHeight * 0.5);
+                    ctx.fillStyle = npcShirtColor; ctx.fillRect(x + w * 0.15, bodyTopY, w * 0.7, bodyHeight * 0.6); 
+                    ctx.fillStyle = npcHeadColor; ctx.fillRect(x + w * 0.25, y, w * 0.5, headHeight); 
+                    ctx.fillStyle = eyeColor;
+                    if (this.npcAnimationFrame % 100 > 5) { ctx.fillRect(x + w * 0.35, y + headHeight * 0.3, 2, 2); ctx.fillRect(x + w * 0.55, y + headHeight * 0.3, 2, 2); } 
+                    else { ctx.fillRect(x + w * 0.35, y + headHeight * 0.3 +1, 2, 1); ctx.fillRect(x + w * 0.55, y + headHeight * 0.3 +1, 2, 1); }
+                }
+                ctx.fillStyle = '#FFFFFF'; ctx.font = '8px "Press Start 2P"'; ctx.textAlign = 'center';
+                ctx.fillText(this.name.substring(0,10), this.x + this.width / 2, this.y - 8); ctx.textAlign = 'left'; 
             }
 
             onInteract(player) {
                 let currentDialog = this.dialog;
-                if (typeof this.dialog === 'function') {
-                    currentDialog = this.dialog(player, this.game); // Dynamic dialog based on player state
-                } else if (Array.isArray(this.dialog)) {
-                    currentDialog = this.dialog[this.dialogIndex];
-                    this.dialogIndex = (this.dialogIndex + 1) % this.dialog.length; // Cycle dialog
-                }
-                this.game.ui.showDialog(currentDialog, this.name); 
-                this.game.setGameState(GAME_STATE.DIALOG); 
+                if (typeof this.dialog === 'function') currentDialog = this.dialog(player, this.game); 
+                else if (Array.isArray(this.dialog)) { currentDialog = this.dialog[this.dialogIndex]; this.dialogIndex = (this.dialogIndex + 1) % this.dialog.length; }
+                this.game.ui.showDialog(currentDialog, this.name); this.game.setGameState(GAME_STATE.DIALOG); 
             }
         }
-        
+
         class Enemy extends Entity {
             constructor(game, x, y, enemyTypeData) {
                 super(game, x, y, enemyTypeData.width, enemyTypeData.height, 'enemy');
-                this.enemyType = enemyTypeData; 
-                this.health = enemyTypeData.health;
-                this.speed = enemyTypeData.speed;
-                this.damage = enemyTypeData.damage;
-                this.aggroRange = enemyTypeData.aggroRange || 150;
-                this.attackRange = enemyTypeData.attackRange || 20; 
-                this.attackCooldown = enemyTypeData.attackCooldown || 120; // Frames
-                this.currentAttackCooldown = 0;
-                this.isEthereal = enemyTypeData.isEthereal || false; // For ghosts
+                this.enemyType = enemyTypeData; // enemyTypeData now correctly has { name: 'Scorpion', ...}
+                this.health = enemyTypeData.health; this.speed = enemyTypeData.speed;
+                this.damage = enemyTypeData.damage; this.aggroRange = enemyTypeData.aggroRange || 150;
+                this.attackRange = enemyTypeData.attackRange || 20; this.attackCooldown = enemyTypeData.attackCooldown || 120;
+                this.currentAttackCooldown = 0; this.isEthereal = enemyTypeData.isEthereal || false;
+                this.solid = enemyTypeData.solid || false; this.interactive = enemyTypeData.interactive || false;
+                this.enemyAnimationFrame = Math.floor(Math.random() * 100);
             }
 
             update() {
-                if (this.currentAttackCooldown > 0) this.currentAttackCooldown--;
-
-                const player = this.game.player;
-                const distX = player.centerX - this.centerX;
-                const distY = player.centerY - this.centerY;
+                this.enemyAnimationFrame++; if (this.currentAttackCooldown > 0) this.currentAttackCooldown--;
+                const player = this.game.player; if (!player) return;
+                const distX = player.centerX - this.centerX; const distY = player.centerY - this.centerY;
                 const distanceToPlayer = Math.sqrt(distX * distX + distY * distY);
 
                 if (distanceToPlayer < this.aggroRange) {
-                    // Move towards player if not in attack range
-                    if (distanceToPlayer > this.attackRange) {
-                        this.x += (distX / distanceToPlayer) * this.speed;
-                        this.y += (distY / distanceToPlayer) * this.speed;
-                    } else if (this.currentAttackCooldown === 0) { // Attack if in range and cooldown is over
-                        player.takeDamage(this.damage, this.enemyType.name); 
-                        this.currentAttackCooldown = this.attackCooldown;
-                        this.game.sound.playSound('enemyAttack'); 
-                        // Optional: Knockback effect
-                        this.x -= (distX / distanceToPlayer) * 10; // Move back slightly
-                        this.y -= (distY / distanceToPlayer) * 10;
+                    if (distanceToPlayer > this.attackRange) { this.x += (distX / distanceToPlayer) * this.speed; this.y += (distY / distanceToPlayer) * this.speed; } 
+                    else if (this.currentAttackCooldown === 0) { 
+                        player.takeDamage(this.damage, this.enemyType.name); this.currentAttackCooldown = this.attackCooldown;
+                        this.game.sound.playSound('enemyAttack'); this.x -= (distX / distanceToPlayer) * 10; this.y -= (distY / distanceToPlayer) * 10;
                     }
                 }
             }
 
             draw(ctx) {
-                if (this.isEthereal) ctx.globalAlpha = 0.7; // Make ghosts slightly transparent
-                ctx.fillStyle = this.enemyType.color || '#FF0000'; // Default to red if no color specified
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                if (this.isEthereal) ctx.globalAlpha = 1.0; // Reset alpha
+                const x = this.x; const y = this.y; const w = this.width; const h = this.height;
+                const animFrame = this.enemyAnimationFrame;
+                if (this.isEthereal) ctx.globalAlpha = 0.5 + Math.sin(animFrame * 0.1) * 0.2;
+                // ctx.fillStyle = this.enemyType.color || '#FF0000'; // Fallback color, not strictly needed if all draw methods set their own
 
-                // Health bar above enemy
+                switch (this.enemyType.name) { // This switch will now work correctly
+                    case 'Scorpion': this.drawScorpion(ctx, x, y, w, h, animFrame); break;
+                    case 'Snake': this.drawSnake(ctx, x, y, w, h, animFrame); break;
+                    case 'Coyote': this.drawCoyote(ctx, x, y, w, h, animFrame); break;
+                    case 'Giant Spider': this.drawGiantSpider(ctx, x, y, w, h, animFrame); break;
+                    case 'Restless Spirit': this.drawRestlessSpirit(ctx, x, y, w, h, animFrame); break;
+                    default: 
+                        ctx.fillStyle = this.enemyType.color || '#FF0000'; // Default square if no specific draw method
+                        ctx.fillRect(x, y, w, h); 
+                        break;
+                }
+                if (this.isEthereal) ctx.globalAlpha = 1.0;
                 if (this.health < this.enemyType.health) {
-                    ctx.fillStyle = 'red';
-                    ctx.fillRect(this.x, this.y - 8, this.width, 4);
-                    ctx.fillStyle = 'green';
-                    ctx.fillRect(this.x, this.y - 8, this.width * (this.health / this.enemyType.health) , 4);
+                    ctx.fillStyle = 'red'; ctx.fillRect(this.x, this.y - 8, this.width, 4);
+                    ctx.fillStyle = 'green'; ctx.fillRect(this.x, this.y - 8, this.width * (this.health / this.enemyType.health), 4);
                 }
             }
+
+            drawScorpion(ctx, x, y, w, h, animFrame) {
+                const bodyColor = '#6A4F3A'; 
+                const darkBodyColor = '#4A3B2A'; 
+                const pincerColor = '#7A5F4A';
+                const stingerColor = '#3A2B1A'; 
+
+                const tailBob = Math.sin(animFrame * 0.2) * 2;
+                const pincerMove = Math.sin(animFrame * 0.15) * 2;
+
+                // Tail
+                ctx.fillStyle = bodyColor;
+                let segX = x + w * 0.5;
+                let segY = y + h * 0.8;
+                const segWidth = w * 0.2;
+                const segHeight = h * 0.25;
+                for (let i = 0; i < 4; i++) {
+                    ctx.fillRect(segX - segWidth / 2, segY - segHeight * (i + 1) + tailBob * (i * 0.3), segWidth, segHeight);
+                }
+                ctx.fillStyle = stingerColor;
+                ctx.beginPath();
+                ctx.moveTo(segX, segY - segHeight * 4 + tailBob);
+                ctx.lineTo(segX + w*0.1, segY - segHeight * 4.5 + tailBob - 2);
+                ctx.lineTo(segX - w*0.1, segY - segHeight * 4.5 + tailBob - 2);
+                ctx.closePath(); ctx.fill();
+
+                ctx.fillStyle = bodyColor;
+                ctx.fillRect(x + w * 0.1, y + h * 0.4, w * 0.8, h * 0.6); 
+                ctx.fillStyle = darkBodyColor;
+                ctx.fillRect(x + w * 0.2, y + h * 0.3, w * 0.6, h * 0.2); 
+
+                ctx.fillStyle = pincerColor;
+                ctx.fillRect(x - w * 0.1 + pincerMove, y + h * 0.2, w * 0.4, h * 0.3); 
+                ctx.fillRect(x - w * 0.2 + pincerMove, y + h * 0.1, w * 0.2, h * 0.2); 
+                ctx.fillRect(x + w * 0.7 - pincerMove, y + h * 0.2, w * 0.4, h * 0.3); 
+                ctx.fillRect(x + w * 1.0 - pincerMove, y + h * 0.1, w * 0.2, h * 0.2); // Corrected right pincer claw x
+
+                ctx.fillStyle = darkBodyColor;
+                for (let i = 0; i < 4; i++) {
+                    const legY = y + h * (0.5 + i * 0.1);
+                    const legMove = Math.sin(animFrame * 0.3 + i) * 3;
+                    ctx.fillRect(x + w*0.05, legY + legMove, w * 0.2, 2); 
+                    ctx.fillRect(x + w * 0.75, legY - legMove, w * 0.2, 2); 
+                }
+            }
+
+            drawSnake(ctx, x, y, w, h, animFrame) {
+                const bodyColor = '#556B2F'; 
+                const bellyColor = '#8FBC8F'; 
+                const eyeColor = '#FF0000'; 
+                const tongueColor = '#FF4500'; 
+
+                const segments = 8;
+                const segmentWidth = w / segments;
+                const segmentHeight = h;
+                const waveAmplitude = h * 0.3;
+                const waveSpeed = 0.15;
+
+                for (let i = 0; i < segments; i++) {
+                    const offsetY = Math.sin(animFrame * waveSpeed + i * 0.5) * waveAmplitude;
+                    const currentX = x + i * segmentWidth;
+                    
+                    ctx.fillStyle = bellyColor;
+                    ctx.fillRect(currentX, y + segmentHeight * 0.6 + offsetY, segmentWidth, segmentHeight * 0.4);
+                    ctx.fillStyle = bodyColor;
+                    ctx.fillRect(currentX, y + offsetY, segmentWidth, segmentHeight * 0.7);
+                }
+
+                const headX = x + (segments -1) * segmentWidth;
+                const headY = y + Math.sin(animFrame * waveSpeed + (segments-1) * 0.5) * waveAmplitude;
+                ctx.fillStyle = bodyColor;
+                ctx.beginPath();
+                ctx.ellipse(headX + segmentWidth/2, headY + segmentHeight/2, segmentWidth * 0.7, segmentHeight * 0.6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = eyeColor;
+                ctx.fillRect(headX + segmentWidth * 0.5, headY + segmentHeight * 0.2, 3, 3);
+                ctx.fillRect(headX + segmentWidth * 0.8, headY + segmentHeight * 0.2, 3, 3);
+                
+                if (animFrame % 60 < 15) {
+                    ctx.fillStyle = tongueColor;
+                    ctx.beginPath();
+                    ctx.moveTo(headX + segmentWidth * 1.1, headY + segmentHeight * 0.5);
+                    ctx.lineTo(headX + segmentWidth * 1.4, headY + segmentHeight * 0.4);
+                    ctx.lineTo(headX + segmentWidth * 1.4, headY + segmentHeight * 0.6);
+                    ctx.closePath(); ctx.fill();
+                }
+            }
+
+            drawCoyote(ctx, x, y, w, h, animFrame) {
+                const bodyColor = '#B8860B'; 
+                const underbellyColor = '#D2B48C'; 
+                const darkFurColor = '#8B4513'; 
+                const eyeColor = '#000000';
+
+                const legMovement = Math.sin(animFrame * 0.2) * 3;
+                const tailWag = Math.sin(animFrame * 0.15) * 4;
+
+                ctx.fillStyle = bodyColor;
+                ctx.fillRect(x + w * 0.1, y + h * 0.6, w * 0.2, h * 0.4); 
+                ctx.fillRect(x + w * 0.7, y + h * 0.6, w * 0.2, h * 0.4); 
+                ctx.fillRect(x + w * 0.2 + legMovement, y + h * 0.55, w * 0.15, h * 0.45); 
+                ctx.fillRect(x + w * 0.6 - legMovement, y + h * 0.55, w * 0.15, h * 0.45); 
+
+                ctx.fillStyle = bodyColor;
+                ctx.fillRect(x + w * 0.1, y + h * 0.2, w * 0.8, h * 0.5); 
+                ctx.fillStyle = underbellyColor;
+                ctx.fillRect(x + w * 0.2, y + h * 0.5, w * 0.6, h * 0.2); 
+
+                ctx.fillStyle = bodyColor;
+                ctx.fillRect(x + w * 0.6, y, w * 0.4, h * 0.4); 
+                ctx.fillStyle = darkFurColor;
+                ctx.beginPath(); 
+                ctx.moveTo(x + w * 0.9, y + h * 0.15);
+                ctx.lineTo(x + w * 1.1, y + h * 0.25);
+                ctx.lineTo(x + w * 0.9, y + h * 0.35);
+                ctx.closePath(); ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(x + w * 0.65, y); ctx.lineTo(x + w * 0.75, y - h * 0.15); ctx.lineTo(x + w * 0.85, y);
+                ctx.closePath(); ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(x + w * 0.8, y); ctx.lineTo(x + w * 0.9, y - h * 0.1); ctx.lineTo(x + w, y);
+                ctx.closePath(); ctx.fill();
+
+                ctx.fillStyle = eyeColor;
+                ctx.fillRect(x + w * 0.75, y + h * 0.1, 3, 3);
+                ctx.fillRect(x + w * 0.85, y + h * 0.1, 3, 3);
+
+                ctx.fillStyle = bodyColor;
+                ctx.beginPath();
+                ctx.moveTo(x + w * 0.05, y + h * 0.3);
+                ctx.quadraticCurveTo(x - w * 0.1 + tailWag, y + h * 0.5, x + w*0.05 , y + h * 0.7);
+                ctx.quadraticCurveTo(x + w * 0.15 + tailWag, y + h * 0.5, x + w * 0.05, y + h * 0.3);
+                ctx.fill();
+                ctx.fillStyle = darkFurColor; 
+                ctx.fillRect(x - w * 0.15 + tailWag , y + h * 0.65, 6, 6); // Adjusted tail tip
+            }
+
+            drawGiantSpider(ctx, x, y, w, h, animFrame) {
+                const bodyColor = '#3A3A3A'; 
+                const legColor = '#2A2A2A'; 
+                const eyeColor = '#FF0000'; 
+                const fangColor = '#E0E0E0'; 
+
+                const legMovement = Math.sin(animFrame * 0.25);
+                const bodyBob = Math.sin(animFrame * 0.1) * 2;
+
+                ctx.fillStyle = bodyColor;
+                ctx.beginPath();
+                ctx.ellipse(x + w * 0.5, y + h * 0.65 + bodyBob, w * 0.4, h * 0.35, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.ellipse(x + w * 0.5, y + h * 0.25 + bodyBob, w * 0.25, h * 0.25, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = legColor; // Use stroke for legs
+                const legWidth = 4;
+                const legLength = w * 0.5;
+                const legAngles = [-0.8, -0.4, 0.4, 0.8]; 
+
+                for (let i = 0; i < 4; i++) {
+                    const move = legMovement * (i % 2 === 0 ? 5 : -5); 
+                    // Left legs
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.4, y + h * 0.25 + bodyBob); 
+                    ctx.lineTo(x + w * 0.4 - legLength * 0.6 * Math.cos(legAngles[i]), y + h * 0.25 + bodyBob - legLength * 0.6 * Math.sin(legAngles[i]) + move/2); 
+                    ctx.lineTo(x + w * 0.4 - legLength * Math.cos(legAngles[i]) + move, y + h * 0.25 + bodyBob - legLength * Math.sin(legAngles[i]) + move); 
+                    ctx.lineWidth = legWidth; ctx.stroke();
+
+                    // Right legs
+                    ctx.beginPath();
+                    ctx.moveTo(x + w * 0.6, y + h * 0.25 + bodyBob);
+                    ctx.lineTo(x + w * 0.6 + legLength * 0.6 * Math.cos(legAngles[i]), y + h * 0.25 + bodyBob - legLength * 0.6 * Math.sin(legAngles[i]) - move/2);
+                    ctx.lineTo(x + w * 0.6 + legLength * Math.cos(legAngles[i]) - move, y + h * 0.25 + bodyBob - legLength * Math.sin(legAngles[i]) - move);
+                    ctx.lineWidth = legWidth; ctx.stroke();
+                }
+                ctx.lineWidth = 1; 
+
+                ctx.fillStyle = eyeColor;
+                ctx.fillRect(x + w * 0.45, y + h * 0.15 + bodyBob, 2, 2);
+                ctx.fillRect(x + w * 0.55, y + h * 0.15 + bodyBob, 2, 2);
+                ctx.fillRect(x + w * 0.4, y + h * 0.2 + bodyBob, 2, 2);
+                ctx.fillRect(x + w * 0.6, y + h * 0.2 + bodyBob, 2, 2);
+
+                ctx.fillStyle = fangColor;
+                ctx.beginPath();
+                ctx.moveTo(x + w * 0.48, y + h * 0.3 + bodyBob); ctx.lineTo(x + w * 0.45, y + h * 0.4 + bodyBob); ctx.lineTo(x + w * 0.5, y + h * 0.35 + bodyBob);
+                ctx.closePath(); ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(x + w * 0.52, y + h * 0.3 + bodyBob); ctx.lineTo(x + w * 0.55, y + h * 0.4 + bodyBob); ctx.lineTo(x + w * 0.5, y + h * 0.35 + bodyBob);
+                ctx.closePath(); ctx.fill();
+            }
+
+            drawRestlessSpirit(ctx, x, y, w, h, animFrame) {
+                const baseAlpha = 0.6;
+                const pulseAlpha = Math.sin(animFrame * 0.1) * 0.15;
+                // ctx.globalAlpha is set by the main draw method if isEthereal
+
+                const headColor = '#B0E0E6'; 
+                const bodyColor = '#ADD8E6'; 
+                const eyeColor = '#FFFFFF';   
+
+                ctx.fillStyle = bodyColor;
+                ctx.beginPath();
+                ctx.moveTo(x + w * 0.1, y + h);
+                for (let i = 0; i <= 5; i++) {
+                    const peakX = x + w * (0.1 + i * 0.16);
+                    const peakY = y + h - (i % 2 === 0 ? h * 0.2 : h * 0.1) - Math.sin(animFrame * 0.15 + i) * 5;
+                    ctx.lineTo(peakX, peakY);
+                }
+                ctx.lineTo(x + w * 0.9, y + h);
+                ctx.closePath(); ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(x + w * 0.1, y + h * 0.9);
+                ctx.quadraticCurveTo(x - w * 0.1, y + h * 0.5, x + w * 0.2, y + h * 0.2); 
+                ctx.quadraticCurveTo(x + w * 0.5, y - h * 0.1, x + w * 0.8, y + h * 0.2); 
+                ctx.quadraticCurveTo(x + w * 1.1, y + h * 0.5, x + w * 0.9, y + h * 0.9); 
+                ctx.closePath(); ctx.fill();
+                
+                ctx.fillStyle = headColor;
+                ctx.beginPath();
+                ctx.arc(x + w * 0.5, y + h * 0.3, w * 0.25, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = eyeColor;
+                const eyeSize = 4;
+                ctx.beginPath();
+                ctx.arc(x + w * 0.4, y + h * 0.28, eyeSize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x + w * 0.6, y + h * 0.28, eyeSize, 0, Math.PI * 2);
+                ctx.fill();
+                // globalAlpha is reset in the main draw method
+            }
+
 
             takeDamage(amount) {
-                this.health -= amount;
-                this.game.sound.playSound('enemyHit');
-                if (this.health <= 0) {
-                    this.game.currentMap.removeEnemy(this);
-                    this.game.sound.playSound('enemyDie');
-                }
+                this.health -= amount; this.game.sound.playSound('enemyHit');
+                if (this.health <= 0) { this.game.currentMap.removeEnemy(this); this.game.sound.playSound('enemyDie'); }
             }
         }
-
+        
         class Arrow extends Entity {
             constructor(game, x, y, targetX, targetY, speed, damage) {
-                super(game, x, y, 8, 4, 'projectile'); // Small arrow
-                this.speed = speed;
-                this.damage = damage;
+                super(game, x, y, 8, 4, 'projectile'); 
+                this.speed = speed; this.damage = damage;
                 const angle = Math.atan2(targetY - y, targetX - x);
-                this.dx = Math.cos(angle) * this.speed;
-                this.dy = Math.sin(angle) * this.speed;
-                this.lifeSpan = 180; // Frames before arrow disappears (3 seconds at 60fps)
+                this.dx = Math.cos(angle) * this.speed; this.dy = Math.sin(angle) * this.speed;
+                this.lifeSpan = 180; this.rotation = angle;
             }
 
             update() {
-                this.x += this.dx;
-                this.y += this.dy;
-                this.lifeSpan--;
-
-                // Check collision with player
+                this.x += this.dx; this.y += this.dy; this.lifeSpan--;
                 const player = this.game.player;
-                if (this.x < player.x + player.width &&
-                    this.x + this.width > player.x &&
-                    this.y < player.y + player.height &&
-                    this.y + this.height > player.y) {
-                    player.takeDamage(this.damage, "Arrow");
-                    this.lifeSpan = 0; // Mark for removal
+                if (this.x < player.x + player.width && this.x + this.width > player.x &&
+                    this.y < player.y + player.height && this.y + this.height > player.y) {
+                    player.takeDamage(this.damage, "Arrow"); this.lifeSpan = 0; 
                 }
-
-                // Check map boundaries
-                if (this.x < 0 || this.x > CANVAS_WIDTH || this.y < 0 || this.y > CANVAS_HEIGHT) {
-                    this.lifeSpan = 0; // Mark for removal
-                }
+                if (this.x < 0 || this.x > CANVAS_WIDTH || this.y < 0 || this.y > CANVAS_HEIGHT) this.lifeSpan = 0;
             }
 
             draw(ctx) {
-                ctx.fillStyle = '#CD853F'; // Brownish color for arrow
-                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.save(); ctx.translate(this.x + this.width / 2, this.y + this.height / 2); ctx.rotate(this.rotation);
+                ctx.fillStyle = '#CD853F'; ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+                ctx.fillStyle = '#A9A9A9'; ctx.beginPath(); ctx.moveTo(this.width / 2, 0); 
+                ctx.lineTo(this.width / 2 - 4, -this.height/2 -1); ctx.lineTo(this.width / 2 - 4, this.height/2 + 1);
+                ctx.closePath(); ctx.fill(); ctx.restore();
             }
         }
-
 
         class InteractiveObject extends Entity {
             constructor(game, x, y, objData) {
                 super(game, x, y, objData.width, objData.height, objData.type);
-                this.objData = JSON.parse(JSON.stringify(objData)); // Deep copy to prevent shared state
+                this.objData = JSON.parse(JSON.stringify(objData)); 
                 this.isInteractable = this.objData.interactive || this.objData.portal || this.objData.portalOnInteract || this.objData.triggersPuzzle;
-                
-                // Skull Turret specific properties
                 if (this.type === 'skull_turret') {
-                    this.attackCooldown = 180; // Shoots every 3 seconds
-                    this.currentAttackCooldown = Math.random() * this.attackCooldown; // Stagger initial shots
-                    this.arrowSpeed = 3;
-                    this.arrowDamage = 10;
-                    this.aggroRange = 200;
+                    this.attackCooldown = 180; this.currentAttackCooldown = Math.random() * this.attackCooldown; 
+                    this.arrowSpeed = 3; this.arrowDamage = 10; this.aggroRange = 200;
                 }
             }
             
-            // Specific update for skull turret, called by GameMap
             updateTurret() {
                 if (this.type !== 'skull_turret' || this.game.gameState !== GAME_STATE.PLAYING) return;
-
-                this.currentAttackCooldown--;
-                const player = this.game.player;
-                const distX = player.centerX - this.centerX;
-                const distY = player.centerY - this.centerY;
+                this.currentAttackCooldown--; const player = this.game.player;
+                const distX = player.centerX - this.centerX; const distY = player.centerY - this.centerY;
                 const distanceToPlayer = Math.sqrt(distX * distX + distY * distY);
-
                 if (distanceToPlayer < this.aggroRange && this.currentAttackCooldown <= 0) {
                     this.game.currentMap.addProjectile(new Arrow(this.game, this.centerX, this.centerY, player.centerX, player.centerY, this.arrowSpeed, this.arrowDamage));
-                    this.game.sound.playSound('toinkArrow'); // Sound should play here
-                    this.currentAttackCooldown = this.attackCooldown;
+                    this.game.sound.playSound('toinkArrow'); this.currentAttackCooldown = this.attackCooldown;
                 }
             }
 
-
             draw(ctx) {
-                ctx.fillStyle = this.objData.color || '#888888'; // Default color
+                ctx.fillStyle = this.objData.color || '#888888';
                 if (this.type === 'cactus') {
-                    ctx.fillStyle = '#2D7D40'; ctx.fillRect(this.x + 8, this.y, 16, 32); ctx.fillRect(this.x, this.y + 8, 32, 16);
+                    const cactusGreen = '#2D7D40'; const darkCactusGreen = '#1E532D';
+                    ctx.fillStyle = cactusGreen; ctx.fillRect(this.x + this.width * 0.3, this.y, this.width * 0.4, this.height);
+                    ctx.fillRect(this.x, this.y + this.height * 0.2, this.width * 0.4, this.height * 0.2); 
+                    ctx.fillRect(this.x, this.y + this.height * 0.2, this.width * 0.2, this.height * 0.5); 
+                    ctx.fillRect(this.x + this.width * 0.6, this.y + this.height * 0.3, this.width * 0.4, this.height * 0.2); 
+                    ctx.fillRect(this.x + this.width * 0.8, this.y + this.height * 0.3, this.width * 0.2, this.height * 0.5); 
+                    ctx.fillStyle = darkCactusGreen; for(let i=0; i < 3; i++) ctx.fillRect(this.x + this.width * 0.3 + i*4, this.y, 2, this.height);
                 } else if (this.type === 'rock') {
-                    ctx.fillStyle = '#7D7064'; ctx.beginPath(); ctx.arc(this.x + 16, this.y + 16, 16, 0, Math.PI * 2); ctx.fill();
+                    const rockColor = '#7D7064'; const darkRockColor = '#5F534B';
+                    ctx.fillStyle = rockColor; ctx.beginPath(); ctx.moveTo(this.x + this.width * 0.2, this.y + this.height);
+                    ctx.quadraticCurveTo(this.x, this.y + this.height * 0.5, this.x + this.width * 0.3, this.y + this.height * 0.2);
+                    ctx.quadraticCurveTo(this.x + this.width * 0.5, this.y, this.x + this.width * 0.8, this.y + this.height * 0.3);
+                    ctx.quadraticCurveTo(this.x + this.width, this.y + this.height * 0.7, this.x + this.width * 0.7, this.y + this.height);
+                    ctx.closePath(); ctx.fill(); ctx.fillStyle = darkRockColor; ctx.beginPath();
+                    ctx.moveTo(this.x + this.width * 0.3, this.y + this.height); ctx.quadraticCurveTo(this.x + this.width *0.5, this.y + this.height*0.7, this.x + this.width * 0.7, this.y + this.height); ctx.fill();
                 } else if (this.type === 'chest') {
-                    ctx.fillStyle = this.objData.opened ? '#654321' : '#8B4513'; // Opened/Closed chest
-                    ctx.fillRect(this.x, this.y + 10, this.width, this.height - 10);
-                    ctx.fillStyle = '#DAA520'; ctx.fillRect(this.x + this.width/2 - 2, this.y + this.height/2, 4, 10); // Lock
+                    const chestBaseColor = this.objData.opened ? '#654321' : '#8B4513'; const chestBandColor = '#DAA520';
+                    ctx.fillStyle = chestBaseColor; ctx.fillRect(this.x, this.y + 4, this.width, this.height - 4); 
+                    ctx.fillStyle = '#5D3A1A'; ctx.fillRect(this.x, this.y, this.width, 4);
+                     if (!this.objData.opened) ctx.fillRect(this.x-2, this.y, this.width+4, 6);
+                     else { ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(-0.8); ctx.fillRect(0,0,this.width, 6); ctx.restore(); }
+                    ctx.fillStyle = chestBandColor; ctx.fillRect(this.x, this.y + this.height * 0.3, this.width, 4);
+                    ctx.fillRect(this.x, this.y + this.height * 0.6, this.width, 4); ctx.fillRect(this.x + this.width/2 - 3, this.y + this.height/2 -3, 6, 6);
                 } else if (this.type === 'sign' || this.type === 'interactive_point' || this.type === 'petroglyph_panel' || this.type === 'ancient_symbol') {
-                    ctx.fillStyle = '#8B4513'; ctx.fillRect(this.x + this.width/2 - 4, this.y + this.height/2, 8, this.height/2); // Post
-                    ctx.fillStyle = '#DAA520'; ctx.fillRect(this.x, this.y, this.width, this.height/2); // Signboard
-                    if (this.type === 'petroglyph_panel') { ctx.fillStyle = '#4A2A0A'; ctx.font = '6px "Press Start 2P"'; ctx.fillText("PETRO", this.x+2, this.y+8);}
-                    if (this.type === 'ancient_symbol') { ctx.fillStyle = '#E0E0E0'; ctx.font = '10px "Press Start 2P"'; ctx.fillText("?", this.x+this.width/2-5, this.y+this.height/2+5);}
+                    ctx.fillStyle = '#8B4513'; ctx.fillRect(this.x + this.width/2 - 4, this.y + this.height/2, 8, this.height/2); 
+                    ctx.fillStyle = '#DAA520'; ctx.fillRect(this.x, this.y, this.width, this.height/2); 
+                    if (this.type === 'petroglyph_panel') { ctx.fillStyle = '#4A2A0A'; ctx.font = '6px "Press Start 2P"'; ctx.fillText("PETRO", this.x+2, this.y+8); ctx.fillRect(this.x + 6, this.y + 12, 4,8); ctx.beginPath(); ctx.arc(this.x + 20, this.y+10, 5,0, Math.PI); ctx.stroke(); }
+                    if (this.type === 'ancient_symbol') { ctx.fillStyle = '#E0E0E0'; ctx.font = '10px "Press Start 2P"'; ctx.fillText("?", this.x+this.width/2-5, this.y+this.height/2+5); ctx.strokeStyle = '#333333'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(this.x+this.width/2, this.y+this.height/4, this.width/4, 0, Math.PI*1.5); ctx.stroke(); }
                 } else if (this.type === 'water_source') {
                     ctx.fillStyle = '#3377CC'; ctx.fillRect(this.x, this.y, this.width, this.height);
-                    ctx.fillStyle = '#66AADD'; ctx.fillRect(this.x + 4, this.y + 4, this.width - 8, this.height - 8); // Inner water
+                    ctx.fillStyle = '#66AADD'; ctx.fillRect(this.x + 4, this.y + 4, this.width - 8, this.height - 8); 
+                    if(this.game.animationFrame % 60 < 10) { ctx.fillStyle = '#FFFFFF'; ctx.fillRect(this.x + 8 + (this.game.animationFrame % 5)*2, this.y + 8, 2,2); }
                 } else if (this.type === 'doorway' || (this.type === 'secret_panel' && this.objData.isNowPortal)) {
                     ctx.fillStyle = '#555555'; ctx.fillRect(this.x, this.y, this.width, this.height);
-                     if (this.objData.text) { // Display text above doorway if available
-                        ctx.fillStyle = '#FFFFFF'; ctx.font = '8px "Press Start 2P"'; ctx.textAlign = 'center';
-                        ctx.fillText(this.objData.text.substring(0,10)+"...", this.x + this.width/2, this.y - 5);
-                        ctx.textAlign = 'left';
-                    }
+                    ctx.fillStyle = '#333333'; ctx.fillRect(this.x+4, this.y+2, this.width-8, this.height-4); 
+                     if (this.objData.text) { ctx.fillStyle = '#FFFFFF'; ctx.font = '8px "Press Start 2P"'; ctx.textAlign = 'center'; ctx.fillText(this.objData.text.substring(0,10)+"...", this.x + this.width/2, this.y - 5); ctx.textAlign = 'left'; }
                 } else if (this.type === 'computer_terminal') {
                     ctx.fillStyle = '#222'; ctx.fillRect(this.x, this.y, this.width, this.height);
-                    ctx.fillStyle = '#3F3'; ctx.fillRect(this.x+2, this.y+2, this.width-4, this.height-4); // Screen
-                } else if (this.type === 'lab_bench') {
-                    ctx.fillStyle = '#777'; ctx.fillRect(this.x, this.y, this.width, this.height);
-                } else if (this.type === 'server_rack') {
+                    ctx.fillStyle = (this.game.animationFrame % 40 < 20) ? '#2F5F2F' : '#3F7F3F'; 
+                    ctx.fillRect(this.x+2, this.y+2, this.width-4, this.height-8); 
+                    ctx.fillStyle = '#444'; ctx.fillRect(this.x+2, this.y+this.height-6, this.width-4, 4); 
+                } else if (this.type === 'lab_bench') { ctx.fillStyle = '#777'; ctx.fillRect(this.x, this.y, this.width, this.height); ctx.fillStyle = '#555'; ctx.fillRect(this.x, this.y, this.width, 4);  } 
+                else if (this.type === 'server_rack') {
                     ctx.fillStyle = '#333'; ctx.fillRect(this.x, this.y, this.width, this.height);
-                    for(let i=0; i<4; i++) { ctx.fillStyle = i%2==0 ? '#0F0':'#0A0'; ctx.fillRect(this.x+4, this.y+4 + i*8, 8, 4); } // Blinky lights
-                } else if (this.type === 'secret_panel' && !this.objData.isNowPortal) {
-                     ctx.fillStyle = '#6B5B4B'; ctx.fillRect(this.x, this.y, this.width, this.height);
-                } else if (this.type === 'pedestal') {
-                    ctx.fillStyle = '#8888AA'; ctx.fillRect(this.x, this.y, this.width, this.height);
-                    if (!this.objData.opened && (!this.game.player || !this.game.player.hasItem('final_artifact'))) { // Show artifact if not taken
-                         ctx.fillStyle = '#FFD700'; 
-                         ctx.fillRect(this.x + this.width/4, this.y + this.height/4, this.width/2, this.height/2);
-                    }
-                } else if (this.type === 'hohokam_canal') {
-                    ctx.fillStyle = '#658EA9'; ctx.fillRect(this.x, this.y, this.width, this.height); 
-                } else if (this.type === 'platform_mound') {
-                    ctx.fillStyle = '#B08D57'; ctx.fillRect(this.x, this.y, this.width, this.height); 
-                } else if (this.type === 'sky_hole_wall') {
-                    ctx.fillStyle = '#A08C78'; ctx.fillRect(this.x, this.y, this.width, this.height); 
-                    ctx.fillStyle = '#000020'; ctx.beginPath(); ctx.arc(this.x + this.width/2, this.y + this.height/2, 4, 0, Math.PI*2); ctx.fill(); // Sky hole
-                } else if (this.type === 'phoenix_statue') {
-                    ctx.fillStyle = '#FF8C00'; // Orange
-                    ctx.beginPath(); 
-                    ctx.moveTo(this.x + this.width/2, this.y); // Top point
-                    ctx.lineTo(this.x, this.y + this.height * 0.75); // Left wing tip
-                    ctx.lineTo(this.x + this.width/2, this.y + this.height * 0.5); // Body center
-                    ctx.lineTo(this.x + this.width, this.y + this.height * 0.75); // Right wing tip
-                    ctx.closePath(); ctx.fill();
+                    for(let i=0; i<4; i++) { ctx.fillStyle = (this.game.animationFrame + i*10) % 40 < 5 ? '#0F0': ( (this.game.animationFrame + i*10) % 40 < 10 ? '#0A0' : '#222' ); ctx.fillRect(this.x+4 + (i%2 * 16), this.y+4 + Math.floor(i/2)*12, 8, 4); } 
+                } else if (this.type === 'secret_panel' && !this.objData.isNowPortal) { ctx.fillStyle = '#6B5B4B'; ctx.fillRect(this.x, this.y, this.width, this.height); ctx.fillStyle = '#5A4D41'; ctx.fillRect(this.x+2, this.y+2, this.width-4, this.height-4); } 
+                else if (this.type === 'pedestal') {
+                    ctx.fillStyle = '#8888AA'; ctx.fillRect(this.x, this.y + this.height*0.2, this.width, this.height*0.8); 
+                    ctx.fillStyle = '#777799'; ctx.fillRect(this.x-2, this.y + this.height*0.1, this.width+4, this.height*0.2); 
+                    if (!this.objData.opened && (!this.game.player || !this.game.player.hasItem('final_artifact'))) {  ctx.fillStyle = '#FFD700'; ctx.fillRect(this.x + this.width/4, this.y - this.height/4, this.width/2, this.height/2); if(this.game.animationFrame % 30 < 5) { ctx.fillStyle = '#FFFFFF'; ctx.fillRect(this.x + this.width/2 -1, this.y - this.height/4 -2, 2,2); } }
+                } else if (this.type === 'hohokam_canal') { ctx.fillStyle = '#A0522D'; ctx.fillRect(this.x, this.y, this.width, this.height); ctx.fillStyle = '#658EA9'; ctx.fillRect(this.x, this.y + this.height*0.2, this.width, this.height*0.6);  } 
+                else if (this.type === 'platform_mound') { ctx.fillStyle = '#B08D57'; ctx.fillRect(this.x, this.y, this.width, this.height); ctx.fillStyle = '#9A7B4F'; ctx.fillRect(this.x, this.y, this.width, 6);  } 
+                else if (this.type === 'sky_hole_wall') { ctx.fillStyle = '#A08C78'; ctx.fillRect(this.x, this.y, this.width, this.height); ctx.fillStyle = '#000020'; ctx.beginPath(); ctx.arc(this.x + this.width/2, this.y + this.height/2, 6, 0, Math.PI*2); ctx.fill();  } 
+                else if (this.type === 'phoenix_statue') {
+                    const mainColor = '#FF8C00'; const accentColor = '#FF4500'; 
+                    ctx.fillStyle = mainColor; ctx.beginPath(); ctx.moveTo(this.x + this.width/2, this.y + this.height*0.2); ctx.lineTo(this.x, this.y + this.height * 0.5); ctx.lineTo(this.x + this.width*0.1, this.y + this.height * 0.1); ctx.closePath(); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(this.x + this.width/2, this.y + this.height*0.2); ctx.lineTo(this.x + this.width, this.y + this.height * 0.5); ctx.lineTo(this.x + this.width*0.9, this.y + this.height * 0.1); ctx.closePath(); ctx.fill();
+                    ctx.fillStyle = accentColor; ctx.fillRect(this.x + this.width*0.4, this.y + this.height*0.1, this.width*0.2, this.height*0.8); 
+                    ctx.beginPath(); ctx.arc(this.x + this.width/2, this.y + this.height*0.1, this.width*0.15, 0, Math.PI*2); ctx.fill();
                 } else if (this.type === 'fire_pit') {
-                    ctx.fillStyle = '#A0522D'; // Base of fire pit
-                    ctx.fillRect(this.x, this.y + this.height * 0.6, this.width, this.height * 0.4);
-                    // Flames (animated slightly)
-                    const flameHeight = this.height * 0.7;
-                    const flameWidth = this.width * 0.8;
-                    const flameX = this.x + this.width * 0.1;
-                    const flameY = this.y + this.height * 0.1;
-                    ctx.fillStyle = (this.game.animationFrame % 20 < 10) ? '#FF4500' : '#FFA500'; // Orange/Red flicker
-                    ctx.beginPath();
-                    ctx.moveTo(flameX, flameY + flameHeight);
-                    ctx.quadraticCurveTo(flameX + flameWidth/2, flameY - Math.random()*10, flameX + flameWidth, flameY + flameHeight);
-                    ctx.quadraticCurveTo(flameX + flameWidth*0.7, flameY + flameHeight*0.5, flameX + flameWidth*0.5, flameY + flameHeight);
-                    ctx.quadraticCurveTo(flameX + flameWidth*0.3, flameY + flameHeight*0.5, flameX, flameY + flameHeight);
-                    ctx.closePath();
-                    ctx.fill();
+                    ctx.fillStyle = '#A0522D'; ctx.fillRect(this.x, this.y + this.height * 0.6, this.width, this.height * 0.4);
+                    const flameHeight = this.height * 0.7; const flameWidth = this.width * 0.8; const flameX = this.x + this.width * 0.1;
+                    const flameYBase = this.y + this.height * 0.1; const flicker = Math.sin(this.game.animationFrame * 0.3) * 5;
+                    ctx.fillStyle = (this.game.animationFrame % 20 < 10) ? '#FF4500' : '#FFA500'; ctx.beginPath();
+                    ctx.moveTo(flameX, flameYBase + flameHeight); ctx.quadraticCurveTo(flameX + flameWidth/2, flameYBase - flicker, flameX + flameWidth, flameYBase + flameHeight);
+                    ctx.quadraticCurveTo(flameX + flameWidth*0.7, flameYBase + flameHeight*0.5 + flicker/2, flameX + flameWidth*0.5, flameYBase + flameHeight);
+                    ctx.quadraticCurveTo(flameX + flameWidth*0.3, flameYBase + flameHeight*0.5 - flicker/2, flameX, flameYBase + flameHeight);
+                    ctx.closePath(); ctx.fill();
                 } else if (this.type === 'skull_turret') {
-                    // Simple skull representation
-                    ctx.fillStyle = '#E0E0E0'; // Light grey for skull
-                    ctx.beginPath();
-                    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = '#000000'; // Eye sockets
-                    ctx.beginPath();
-                    ctx.arc(this.x + this.width * 0.3, this.y + this.height * 0.4, this.width * 0.1, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(this.x + this.width * 0.7, this.y + this.height * 0.4, this.width * 0.1, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (this.type === 'crater') { // NEW: Crater drawing
-                    ctx.fillStyle = '#5B3A29'; // Dark brown for crater depression
-                    ctx.beginPath();
-                    ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 2.5, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = '#40281C'; // Even darker for the center
-                    ctx.beginPath();
-                    ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 3, this.height / 4, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                 } else {
-                    ctx.fillRect(this.x, this.y, this.width, this.height);
-                }
+                    const skullColor = '#E0E0E0'; const socketColor = '#000000';
+                    ctx.fillStyle = skullColor; ctx.beginPath(); ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2.2, Math.PI * 0.1, Math.PI * 0.9, true); 
+                    ctx.rect(this.x + this.width*0.1, this.y + this.height/2, this.width*0.8, this.height*0.4); ctx.fill();
+                    ctx.fillStyle = socketColor; ctx.beginPath(); ctx.arc(this.x + this.width * 0.3, this.y + this.height * 0.4, this.width * 0.15, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(this.x + this.width * 0.7, this.y + this.height * 0.4, this.width * 0.15, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(this.x+this.width/2, this.y+this.height*0.5); ctx.lineTo(this.x+this.width*0.4, this.y+this.height*0.65); ctx.lineTo(this.x+this.width*0.6, this.y+this.height*0.65); ctx.closePath(); ctx.fill();
+                    ctx.fillRect(this.x + this.width*0.2, this.y + this.height*0.8, this.width*0.6, 2);
+                } else if (this.type === 'crater') { ctx.fillStyle = '#5B3A29'; ctx.beginPath(); ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#40281C'; ctx.beginPath(); ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 3, this.height / 4, 0, 0, Math.PI * 2); ctx.fill(); } 
+                else ctx.fillRect(this.x, this.y, this.width, this.height);
             }
 
             onInteract(player) {
-                if (this.objData.triggersPuzzle && (!this.game.player || !this.game.player.hasItem('final_artifact')) && !this.objData.opened) {
-                    this.game.startPuzzle(this.objData.puzzleDetails);
-                    // this.objData.opened = true; // Mark puzzle as attempted only after it's shown, not on interact if effects are playing
-                    return;
-                }
-
+                if (this.objData.triggersPuzzle && (!this.game.player || !this.game.player.hasItem('final_artifact')) && !this.objData.opened) { this.game.startPuzzle(this.objData.puzzleDetails); return; }
                 if (this.objData.portalOnInteract && this.objData.toMap && !this.objData.isNowPortal) {
                     if(this.objData.interactionText) {
                         this.game.ui.showDialog(this.objData.interactionText, (this.objData.name || this.type).toUpperCase());
-                        this.game.setGameState(GAME_STATE.DIALOG);
-                        this.game.pendingPortal = { mapName: this.objData.toMap, toX: this.objData.toX, toY: this.objData.toY };
-                        this.objData.isNowPortal = true; 
-                        this.objData.text = "The passage is open."; 
-                    } else {
-                        this.game.changeMap(this.objData.toMap, this.objData.toX, this.objData.toY);
-                    }
+                        this.game.setGameState(GAME_STATE.DIALOG); this.game.pendingPortal = { mapName: this.objData.toMap, toX: this.objData.toX, toY: this.objData.toY };
+                        this.objData.isNowPortal = true; this.objData.text = "The passage is open."; 
+                    } else this.game.changeMap(this.objData.toMap, this.objData.toX, this.objData.toY);
                     return;
                 }
-
-                if (this.objData.portal && this.objData.toMap) {
-                    this.game.changeMap(this.objData.toMap, this.objData.toX, this.objData.toY);
-                    return;
-                }
-
+                if (this.objData.portal && this.objData.toMap) { this.game.changeMap(this.objData.toMap, this.objData.toX, this.objData.toY); return; }
                 if ((this.type === 'chest') && this.objData.contains && !this.objData.opened) {
                     if (player.addItem(this.objData.contains)) {
                         this.game.ui.showDialog(this.objData.text || `You found a ${this.game.itemTypes[this.objData.contains].name}!`, this.type.toUpperCase());
-                        this.objData.opened = true; 
-                        if (this.objData.questComplete) { 
-                            player.completeQuest(this.objData.questComplete);
-                        }
-                    } else {
-                         this.game.ui.showDialog("The container is empty or you already have this item.", this.type.toUpperCase());
-                    }
-                     this.game.setGameState(GAME_STATE.DIALOG);
-                     return;
+                        this.objData.opened = true; if (this.objData.questComplete) player.completeQuest(this.objData.questComplete);
+                    } else this.game.ui.showDialog("The container is empty or you already have this item.", this.type.toUpperCase());
+                     this.game.setGameState(GAME_STATE.DIALOG); return;
                 }
-                
-                // For general interactive objects (like signs, or the modified chamber exit)
-                if (this.objData.text && !this.objData.opened && this.type !== 'pedestal') { 
-                    this.game.ui.showDialog(this.objData.text, (this.objData.name || this.type).toUpperCase());
-                    this.game.setGameState(GAME_STATE.DIALOG);
-                    // Do not mark as 'opened' if it's a repeatable message (like the chamber exit)
-                    // unless specifically intended. For the chamber exit, we want it to always show the message.
-                }
-
+                if (this.objData.text && !this.objData.opened && this.type !== 'pedestal') { this.game.ui.showDialog(this.objData.text, (this.objData.name || this.type).toUpperCase()); this.game.setGameState(GAME_STATE.DIALOG); }
                 if (this.type === 'water_source') {
-                    if (player.hydration < player.maxHydration) {
-                        player.hydrate(player.maxHydration); 
-                        this.game.ui.showDialog("You refill your canteen and take a long drink. You feel refreshed.", "Water Source");
-                        this.game.sound.playSound('drink');
-                    } else {
-                        this.game.ui.showDialog("Your canteen is already full.", "Water Source");
-                    }
-                    this.game.setGameState(GAME_STATE.DIALOG);
-                    return;
+                    if (player.hydration < player.maxHydration) { player.hydrate(player.maxHydration); this.game.ui.showDialog("You refill your canteen and take a long drink. You feel refreshed.", "Water Source"); this.game.sound.playSound('drink'); } 
+                    else this.game.ui.showDialog("Your canteen is already full.", "Water Source");
+                    this.game.setGameState(GAME_STATE.DIALOG); return;
                 }
-
                 if (this.objData.questTrigger) { 
-                    player.addQuest(this.objData.questTrigger);
-                     this.game.ui.showDialog(this.objData.questTrigger.startText || `New Quest: ${this.objData.questTrigger.description}`, "INFO");
-                     this.game.setGameState(GAME_STATE.DIALOG);
-                     delete this.objData.questTrigger; // Trigger only once
-                     return;
+                    player.addQuest(this.objData.questTrigger); this.game.ui.showDialog(this.objData.questTrigger.startText || `New Quest: ${this.objData.questTrigger.description}`, "INFO");
+                     this.game.setGameState(GAME_STATE.DIALOG); delete this.objData.questTrigger; return;
                 }
-
                  if (this.objData.requiredItem && this.objData.questComplete) {
-                    if (player.hasItem(this.objData.requiredItem)) {
-                        player.completeQuest(this.objData.questComplete);
-                        if(this.objData.rewardText) this.game.ui.showDialog(this.objData.rewardText, "System");
-                        this.isInteractable = false; // Make non-interactable after completion
-                    } else {
-                        this.game.ui.showDialog(this.objData.needItemText || "You seem to be missing something...", "System");
-                    }
-                    this.game.setGameState(GAME_STATE.DIALOG);
-                    return;
+                    if (player.hasItem(this.objData.requiredItem)) { player.completeQuest(this.objData.questComplete); if(this.objData.rewardText) this.game.ui.showDialog(this.objData.rewardText, "System"); this.isInteractable = false;  } 
+                    else this.game.ui.showDialog(this.objData.needItemText || "You seem to be missing something...", "System");
+                    this.game.setGameState(GAME_STATE.DIALOG); return;
                 }
             }
         }
         
+        // --- Map Class ---
         class GameMap {
             constructor(game, mapData) {
-                this.game = game;
-                this.name = mapData.name;
-                this.background = mapData.background;
-                this.objects = [];
-                this.npcs = [];
-                this.enemies = [];
-                this.projectiles = []; // For arrows
-                
+                this.game = game; this.name = mapData.name; this.background = mapData.background;
+                this.objects = []; this.npcs = []; this.enemies = []; this.projectiles = []; 
                 this.loadEntities(mapData);
             }
 
             loadEntities(mapData) {
-                this.objects = [];
-                this.npcs = []; 
-                this.enemies = [];
-                this.projectiles = [];
-
-                (mapData.objects || []).forEach(objData => {
-                    const baseObjectType = this.game.objectTypes[objData.type] || {};
-                    const instanceData = JSON.parse(JSON.stringify({ ...baseObjectType, ...objData })); // Deep copy
-                    this.objects.push(new InteractiveObject(this.game, instanceData.x, instanceData.y, instanceData));
-                });
-
-                (mapData.npcs || []).forEach(npcData => {
-                    this.npcs.push(new NPC(this.game, npcData.x, npcData.y, npcData.name, npcData.sprite, npcData.dialog));
-                });
-
-                (mapData.enemies || []).forEach(enemyData => {
-                    const baseEnemyType = {...this.game.enemyTypes[enemyData.type]}; // Shallow copy is fine here
-                    this.enemies.push(new Enemy(this.game, enemyData.x, enemyData.y, {...baseEnemyType, name: enemyData.type})); // Add name for damage source
+                this.objects = []; this.npcs = []; this.enemies = []; this.projectiles = [];
+                (mapData.objects || []).forEach(objData => { const baseObjectType = this.game.objectTypes[objData.type] || {}; const instanceData = JSON.parse(JSON.stringify({ ...baseObjectType, ...objData })); this.objects.push(new InteractiveObject(this.game, instanceData.x, instanceData.y, instanceData)); });
+                (mapData.npcs || []).forEach(npcData => this.npcs.push(new NPC(this.game, npcData.x, npcData.y, npcData.name, npcData.sprite, npcData.dialog)));
+                
+                // Corrected Enemy Loading:
+                (mapData.enemies || []).forEach(enemyData => { 
+                    const enemyDefinition = this.game.enemyTypes[enemyData.type]; 
+                    if (enemyDefinition) {
+                        this.enemies.push(new Enemy(this.game, enemyData.x, enemyData.y, enemyDefinition));
+                    } else {
+                        console.warn(`Enemy type "${enemyData.type}" not found in definitions.`);
+                    }
                 });
             }
 
-            addProjectile(projectile) {
-                this.projectiles.push(projectile);
-            }
-
+            addProjectile(projectile) { this.projectiles.push(projectile); }
             update() {
                 if (this.game.gameState !== GAME_STATE.PLAYING) return;
-                this.npcs.forEach(npc => npc.update());
-                [...this.enemies].forEach(enemy => enemy.update()); // Iterate over a copy if enemies can be removed during update
-
-                // Update skull turrets (which are InteractiveObjects)
-                this.objects.forEach(obj => {
-                    if (obj.type === 'skull_turret' && typeof obj.updateTurret === 'function') {
-                        obj.updateTurret();
-                    }
-                });
-
-                // Update projectiles
-                for (let i = this.projectiles.length - 1; i >= 0; i--) {
-                    this.projectiles[i].update();
-                    if (this.projectiles[i].lifeSpan <= 0) {
-                        this.projectiles.splice(i, 1);
-                    }
-                }
+                this.npcs.forEach(npc => npc.update()); [...this.enemies].forEach(enemy => enemy.update()); 
+                this.objects.forEach(obj => { if (obj.type === 'skull_turret' && typeof obj.updateTurret === 'function') obj.updateTurret(); });
+                for (let i = this.projectiles.length - 1; i >= 0; i--) { this.projectiles[i].update(); if (this.projectiles[i].lifeSpan <= 0) this.projectiles.splice(i, 1); }
             }
 
             draw(ctx) {
-                ctx.fillStyle = this.background;
-                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-                // Night time overlay
-                if (!this.game.dayTime) {
-                    ctx.fillStyle = 'rgba(0, 0, 30, 0.65)'; // Dark blueish overlay for night
-                    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-                }
-
-                // Combine all drawable entities and sort by Y for pseudo-3D effect
+                ctx.fillStyle = this.background; ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                if (!this.game.dayTime) { ctx.fillStyle = 'rgba(0, 0, 30, 0.65)'; ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); }
                 const allDrawableEntities = [...this.objects, ...this.npcs, ...this.enemies, ...this.projectiles];
-                if (this.game.player) {
-                    allDrawableEntities.push(this.game.player);
-                }
-                
+                if (this.game.player) allDrawableEntities.push(this.game.player);
                 allDrawableEntities.sort((a, b) => (a.y + a.height) - (b.y + b.height));
-                
-                allDrawableEntities.forEach(entity => {
-                    if (entity && typeof entity.draw === 'function') { // Check if entity exists and has draw method
-                         entity.draw(ctx); 
-                    }
-                });
+                allDrawableEntities.forEach(entity => { if (entity && typeof entity.draw === 'function') entity.draw(ctx); });
             }
 
             checkCollision(x, y, width, height) {
-                // Check map boundaries
-                if (x < 0 || x + width > CANVAS_WIDTH || y < 0 || y + height > CANVAS_HEIGHT) {
-                    return true;
-                }
-                // Check collision with solid objects
-                for (const obj of this.objects) {
-                    if (obj.objData.solid && 
-                        x < obj.x + obj.width && x + width > obj.x &&
-                        y < obj.y + obj.height && y + height > obj.y) {
-                        return true;
-                    }
-                }
+                if (x < 0 || x + width > CANVAS_WIDTH || y < 0 || y + height > CANVAS_HEIGHT) return true;
+                for (const obj of this.objects) { if (obj.objData.solid && x < obj.x + obj.width && x + width > obj.x && y < obj.y + obj.height && y + height > obj.y) return true; }
                 return false;
             }
 
             tryInteraction(checkX, checkY, player) {
-                let interactionTarget = null;
-                let minDistance = Infinity;
-
-                // Check NPCs and Objects for interaction
+                let interactionTarget = null; let minDistance = Infinity;
                 const checkInteraction = (entity) => {
                     if (!entity.isInteractable) return;
-                    // Simple distance check to the center of the entity
                     const dist = Math.sqrt(Math.pow(entity.centerX - checkX, 2) + Math.pow(entity.centerY - checkY, 2));
-                    // Allow interaction if within half the entity's average dimension + a small buffer
-                    if (dist < (entity.width + entity.height) / 2 + 10 && dist < minDistance) { 
-                        minDistance = dist;
-                        interactionTarget = entity;
-                    }
+                    if (dist < (entity.width + entity.height) / 2 + 10 && dist < minDistance) { minDistance = dist; interactionTarget = entity; }
                 };
                 [...this.objects, ...this.npcs].forEach(checkInteraction);
-
-
-                if (interactionTarget) {
-                    this.game.interactionTarget = interactionTarget; // For drawing indicator
-                    interactionTarget.onInteract(player);
-                } else {
-                    this.game.interactionTarget = null;
-                }
+                if (interactionTarget) { this.game.interactionTarget = interactionTarget; interactionTarget.onInteract(player); } 
+                else this.game.interactionTarget = null;
             }
-            
-            removeEnemy(enemyInstance) {
-                this.enemies = this.enemies.filter(e => e !== enemyInstance);
-            }
+            removeEnemy(enemyInstance) { this.enemies = this.enemies.filter(e => e !== enemyInstance); }
         }
 
+        // --- Game Class ---
         class Game {
             constructor() {
-                this.canvas = document.getElementById('gameCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.gameState = GAME_STATE.START_SCREEN;
-                this.animationFrame = 0; // Global animation frame counter for effects
-                
-                this.sound = new SoundManager(); 
-                this.ui = new UIManager(this);
-                this.input = new InputHandler(this);
-
-                this.player = null;
-                this.currentMap = null;
-                this.interactionTarget = null; // Object player is facing for interaction
-                this.pendingPortal = null; // For dialogs that lead to portals
-                this.currentPuzzle = null; 
-
-                this.gameTime = 8 * 3600; // Start at 8:00 AM on Day 1
-                this.dayTime = true;
-                this.lastFrameTime = 0;
-
+                this.canvas = document.getElementById('gameCanvas'); this.ctx = this.canvas.getContext('2d');
+                this.gameState = GAME_STATE.START_SCREEN; this.animationFrame = 0; 
+                this.sound = new SoundManager(); this.ui = new UIManager(this); this.input = new InputHandler(this);
+                this.player = null; this.currentMap = null; this.interactionTarget = null; 
+                this.pendingPortal = null; this.currentPuzzle = null; 
+                this.gameTime = 8 * 3600; this.dayTime = true; this.lastFrameTime = 0;
                 this.defineGameData(); 
-
-                this.ui.showStartScreen();
-                this.sound.playMusic('menuTheme');
+                this.ui.showStartScreen(); this.sound.playMusic('menuTheme');
             }
 
             defineGameData() {
                 this.objectTypes = { 
-                    // Visual & Obstacle Objects
-                    cactus: { width: 32, height: 48, solid: true, color: '#2D7D40' },
-                    rock: { width: 32, height: 32, solid: true, color: '#7D7064' },
-                    crater: { name: "Impact Crater", width: 80, height: 40, solid: false, interactive: true, text: "A strange, smooth crater. It looks recent.", color: '#5B3A29' }, // NEW
-                    
-                    // Interactive & Functional Objects
-                    chest: { width: 32, height: 32, solid: true, interactive: true, color: '#8B4513', opened: false }, 
+                    cactus: { width: 32, height: 48, solid: true, color: '#2D7D40' }, rock: { width: 32, height: 32, solid: true, color: '#7D7064' }, 
+                    crater: { name: "Impact Crater", width: 80, height: 40, solid: false, interactive: true, text: "A strange, smooth crater. It looks recent.", color: '#5B3A29' },
+                    chest: { width: 32, height: 32, solid: true, interactive: true, color: '#8B4513', opened: false },  
                     sign: { width: 32, height: 32, solid: false, interactive: true, color: '#DAA520' }, 
                     interactive_point: {width: 32, height: 32, solid: false, interactive: true, color: '#DAA520'}, 
-                    petroglyph_panel: { name: "Petroglyphs", width: 48, height: 48, solid: false, interactive: true, color: '#8B4513'},
-                    ancient_symbol: { name: "Ancient Symbol", width: 32, height: 32, solid: false, interactive: true, color: '#DAA520'},
-                    doorway: { width: 48, height: 16, solid: false, portal: true, color: '#555555', interactive: true }, 
-                    water_source: { width: 32, height: 32, solid: false, interactive: true, color: '#3377CC'},
-                    
-                    // Lab & Tech Objects
-                    computer_terminal: { name: "Computer", width: 32, height: 32, solid: true, interactive: true, color: '#222222'},
-                    lab_bench: { name: "Lab Bench", width: 96, height: 32, solid: true, interactive: false, color: '#777777'},
-                    server_rack: { name: "Server Rack", width: 48, height: 128, solid: true, interactive: true, color: '#333333', text: "Humming servers... data unknown."},
-                    
-                    // Story & Puzzle Objects
-                    secret_panel: { name: "Loose Panel", width: 32, height: 48, solid:true, interactive: true, color: '#6B5B4B'}, 
-                    pedestal: { name: "Artifact Pedestal", width: 32, height: 32, solid: true, interactive: true, color: '#8888AA', opened: false, triggersPuzzle: true, 
-                        puzzleDetails: {
-                            question: "What are the first 5 digits of Pi?",
-                            options: ["3.1415", "3.1459", "3.1419"],
-                            correctAnswerIndex: 0 
-                        }
-                    },
-                    
-                    // Hohokam & Ancient Site Objects
-                    hohokam_canal: { name: "Ancient Canal", width: 128, height: 32, solid: false, interactive: true, color: '#658EA9', text: "A segment of an ancient Hohokam canal. Remarkably preserved."},
-                    platform_mound: { name: "Platform Mound", width: 96, height: 48, solid: true, interactive: true, color: '#B08D57', text: "This earthen mound likely held important structures."},
-                    sky_hole_wall: { name: "Observatory Wall", width: 32, height: 96, solid: true, interactive: true, color: '#A08C78', text: "A precisely placed aperture in this wall seems to align with celestial events."},
-                    phoenix_statue: { name: "Phoenix Statue", width: 48, height: 48, solid: true, interactive: true, color: '#FF8C00', text: "A statue of a Phoenix, symbol of rebirth. It feels warm to the touch."},
-                    fire_pit: { name: "Sacred Fire", width: 48, height: 32, solid:true, interactive: true, color: '#A0522D', text: "An eternal flame flickers here." },
-                    skull_turret: { name: "Guardian Skull", width: 32, height: 32, solid: true, interactive: false, color: '#E0E0E0' } // Not directly interactive by player, but updates
+                    petroglyph_panel: { name: "Petroglyphs", width: 48, height: 48, solid: false, interactive: true, color: '#8B4513'}, 
+                    ancient_symbol: { name: "Ancient Symbol", width: 32, height: 32, solid: false, interactive: true, color: '#DAA520'}, 
+                    doorway: { width: 48, height: 16, solid: false, portal: true, color: '#555555', interactive: true },  
+                    water_source: { width: 32, height: 32, solid: false, interactive: true, color: '#3377CC'}, 
+                    computer_terminal: { name: "Computer", width: 32, height: 32, solid: true, interactive: true, color: '#222222'}, 
+                    lab_bench: { name: "Lab Bench", width: 96, height: 32, solid: true, interactive: false, color: '#777777'}, 
+                    server_rack: { name: "Server Rack", width: 48, height: 128, solid: true, interactive: true, color: '#333333', text: "Humming servers... data unknown."}, 
+                    secret_panel: { name: "Loose Panel", width: 32, height: 48, solid:true, interactive: true, color: '#6B5B4B'},  
+                    pedestal: { name: "Artifact Pedestal", width: 32, height: 32, solid: true, interactive: true, color: '#8888AA', opened: false, triggersPuzzle: true, puzzleDetails: { question: "What are the first 5 digits of Pi?", options: ["3.1415", "3.1459", "3.1419"], correctAnswerIndex: 0 } },
+                    hohokam_canal: { name: "Ancient Canal", width: 128, height: 32, solid: false, interactive: true, color: '#658EA9', text: "A segment of an ancient Hohokam canal. Remarkably preserved."}, 
+                    platform_mound: { name: "Platform Mound", width: 96, height: 48, solid: true, interactive: true, color: '#B08D57', text: "This earthen mound likely held important structures."}, 
+                    sky_hole_wall: { name: "Observatory Wall", width: 32, height: 96, solid: true, interactive: true, color: '#A08C78', text: "A precisely placed aperture in this wall seems to align with celestial events."}, 
+                    phoenix_statue: { name: "Phoenix Statue", width: 48, height: 48, solid: true, interactive: true, color: '#FF8C00', text: "A statue of a Phoenix, symbol of rebirth. It feels warm to the touch."}, 
+                    fire_pit: { name: "Sacred Fire", width: 48, height: 32, solid:true, interactive: true, color: '#A0522D', text: "An eternal flame flickers here." }, 
+                    skull_turret: { name: "Guardian Skull", width: 32, height: 32, solid: true, interactive: false, color: '#E0E0E0' } 
                 };
-                this.enemyTypes = {
-                    scorpion: { name: 'Scorpion', width: 24, height: 24, damage: 5, speed: 0.8, health: 30, color: '#663300' },
-                    snake: { name: 'Snake', width: 32, height: 16, damage: 8, speed: 1.2, health: 20, color: '#AA7722' },
-                    coyote: { name: 'Coyote', width: 40, height: 24, damage: 10, speed: 1.5, health: 50, color: '#AA8855' },
-                    spider: { name: 'Giant Spider', width: 32, height: 32, damage: 7, speed: 1.1, health: 40, color: '#3A3A3A', attackCooldown: 90 },
-                    attacking_ghost: { name: 'Restless Spirit', width: 24, height: 32, damage: 6, speed: 1.3, health: 35, color: '#A0B0D0', isEthereal: true, aggroRange: 180 }
+                this.enemyTypes = { // Ensure names here are used in the switch statement in Enemy.draw
+                    scorpion: { name: 'Scorpion', width: 32, height: 28, damage: 5, speed: 0.8, health: 30, color: '#704214', solid: true, interactive: true },
+                    snake: { name: 'Snake', width: 40, height: 12, damage: 8, speed: 1.2, health: 20, color: '#006400', solid: false, interactive: true },
+                    coyote: { name: 'Coyote', width: 40, height: 28, damage: 10, speed: 1.5, health: 50, color: '#B8860B', solid: true, interactive: true },
+                    spider: { name: 'Giant Spider', width: 36, height: 32, damage: 7, speed: 1.1, health: 40, color: '#3A3A3A', solid: true, interactive: false },
+                    attacking_ghost: { name: 'Restless Spirit', width: 24, height: 32, damage: 6, speed: 1.3, health: 35, color: '#A0B0D0', isEthereal: true, aggroRange: 180, solid: false, interactive: true },
                 };
                 this.itemTypes = {
-                    canteen: { name: 'Canteen', description: 'Keeps you hydrated. Refill at water sources.', useFunc: (game) => {
-                        if (game.player.hydration < game.player.maxHydration) {
-                            game.player.hydrate(HYDRATION_PER_DRINK);
-                            game.ui.showDialog("You take a drink of water.", "Canteen");
-                            game.sound.playSound('drink');
-                        } else {
-                             game.ui.showDialog("You're not thirsty right now.", "Canteen");
-                        }
-                        game.setGameState(GAME_STATE.DIALOG);
-                    }},
+                    canteen: { name: 'Canteen', description: 'Keeps you hydrated. Refill at water sources.', useFunc: (game) => { if (game.player.hydration < game.player.maxHydration) { game.player.hydrate(HYDRATION_PER_DRINK); game.ui.showDialog("You take a drink of water.", "Canteen"); game.sound.playSound('drink'); } else game.ui.showDialog("You're not thirsty right now.", "Canteen"); game.setGameState(GAME_STATE.DIALOG); }},
                     compass: { name: 'Compass', description: 'Helps you navigate.' },
                     journal: { name: 'Journal', description: 'Contains research notes and quests.', useFunc: (game) => game.ui.toggleQuestLog() },
                     artifact1: { name: 'Stone Tablet', description: 'Part of an ancient artifact set.' },
                     final_artifact: { name: 'Arizona Artifact', description: 'The legendary treasure! Its power is immense.'},
                 };
-                 this.maps = { // Order: desert, canyon, camelback, hohokam_site, casa_grande, sky_people_shrine, white_tanks_petroglyphs, asu_lab, artifact_chamber
-                    desert: { 
-                        name: 'Sonoran Desert Outskirts', background: '#E2C9A1',
-                        objects: [
-                            { type: 'cactus', x: 100, y: 100 }, { type: 'cactus', x: 400, y: 150 }, { type: 'rock', x: 250, y: 200 }, 
-                            { type: 'sign', x: 150, y: 240, text: "Caution: Desert conditions ahead!" }, { type: 'water_source', x: 50, y: 300},
-                            { type: 'doorway', x: CANVAS_WIDTH - 48, y: 232, toMap: 'canyon', toX: 50, toY: 240, text: "To Canyon"}
-                        ],
-                        npcs: [ { name: 'Ranger Rick', x: 200, y: 300, dialog: ["Howdy, Professor! Dehydration is no joke.", "Strange lights in the sky lately..."] } ],
-                        enemies: [ { type: 'scorpion', x: 300, y: 400 }, { type: 'snake', x: 450, y: 100 } ]
-                    },
-                    canyon: { 
-                        name: 'Red Rock Canyon', background: '#BC6C25',
-                        objects: [
-                            { type: 'rock', x: 100, y: 100 }, { type: 'chest', x: 400, y: 200, contains: 'artifact1', text: "You found an ancient stone tablet!" },
-                            { type: 'doorway', x: 0, y: 232, toMap: 'desert', toX: CANVAS_WIDTH - 70, toY: 240, text:"To Desert"},
-                            { type: 'doorway', x: CANVAS_WIDTH - 48, y: 100, toMap: 'camelback', toX: 50, toY: 100, text:"To Mt."},
-                            // ADDED VISUALS FOR RED ROCK CANYON
-                            { type: 'crater', x: 300, y: 350, width: 100, height: 50 }, // Added crater
-                            { type: 'rock', x: 150, y: 350, width: 60, height: 40, solid: true, color: '#6B4226' }, 
-                            { type: 'cactus', x: 500, y: 80 },
-                        ],
-                        npcs: [ { name: 'Old Hermit', x: 250, y: 150, dialog: "The earth groans under the weight of secrets. Some are best left buried... or are they?"}], // Corrected dialog
-                        enemies: [ { type: 'coyote', x: 350, y: 100 } ]
-                    },
-                    camelback: { 
-                        name: 'Camelback Mountain Trail', background: '#A0B084',
-                        objects: [
-                            { type: 'sign', x: 50, y: 400, text: "Echo Canyon Trailhead" }, { type: 'rock', x: 150, y: 350 },
-                            { type: 'interactive_point', x: 320, y: 50, text: "Scenic Overlook: A breathtaking view of Scottsdale." },
-                            { type: 'doorway', x: 0, y: 100, toMap: 'canyon', toX: CANVAS_WIDTH - 70, toY: 100, text:"To Canyon"},
-                            { type: 'doorway', x: CANVAS_WIDTH-48, y: 200, toMap: 'hohokam_site', toX: 50, toY: 240, text:"Ancient Path"}
-                        ],
-                        npcs: [ { name: 'Tired Hiker', x: 450, y: 280, dialog: ["Almost... at the top... Need water!", "Watch out for loose rocks."]} ],
-                        enemies: [ { type: 'snake', x: 200, y: 150 } ]
-                    },
-                    hohokam_site: {
-                        name: "Hohokam Settlement Ruins", background: "#D2B48C", 
-                        objects: [
-                            {type: "platform_mound", x: 300, y: 100, width:120, height:60}, {type: "platform_mound", x: 100, y: 350, width:80, height:40},
-                            {type: "hohokam_canal", x: 50, y: 250, width:540, height:40}, 
-                            // {type: "hohokam_canal", x: 400, y: 50, width:40, height:180}, // REMOVED this water feature
-                            {type: "interactive_point", x:100, y:50, text: "The remains of a vast canal system..."}, {type: "rock", x:500, y:400},
-                            {type: "doorway", x:0, y:232, toMap: 'camelback', toX: CANVAS_WIDTH - 70, toY: 200, text:"Back Trail"},
-                            {type: "doorway", x: CANVAS_WIDTH - 48, y: 150, toMap: 'casa_grande', toX: 50, toY: 240, text:"To Great House"}
-                        ],
-                        npcs: [{name: "Hohokam Spirit", x: 350, y: 180, dialog: ["We followed the water... and the stars.", "Why we vanished... even the desert keeps that secret."]}],
-                        enemies: [
-                            {type: 'scorpion', x:450, y:350},
-                            {type: 'coyote', x: 150, y: 150}, // ADDED animal
-                            {type: 'snake', x: 400, y: 300}   // ADDED animal
-                        ]
-                    },
-                    casa_grande: {
-                        name: "Casa Grande Ruins", background: "#C19A6B", 
-                        objects: [
-                            {type: "sky_hole_wall", x: 200, y: 100, width:32, height:120},
-                            {type: "sky_hole_wall", x: 400, y: 100, width:32, height:120},
-                            {type: "sign", x:300, y:300, text:"The Great House - An ancient astronomical observatory."},
-                            {type: "doorway", x:0, y:232, toMap: 'hohokam_site', toX: CANVAS_WIDTH - 70, toY: 150, text:"To Settlement"},
-                            {type: "doorway", x: CANVAS_WIDTH - 48, y: 180, toMap: 'sky_people_shrine', toX: 50, toY: 240, text:"Spiritual Path"}
-                        ],
-                        npcs: [{name: "Astronomer's Ghost", x: 300, y: 200, dialog: ["The sun, moon, Venus... they all danced for us.", "These walls tracked their movements, marking time."]}],
-                        enemies: [
-                            {type: 'spider', x: 100, y: 350}, {type: 'spider', x: 500, y: 100},
-                            {type: 'attacking_ghost', x: 320, y: 150}
-                        ]
-                    },
-                    sky_people_shrine: {
-                        name: "Sky People's Shrine", background: "#483D8B", 
-                        objects: [
-                            {type: "ancient_symbol", x: 150, y: 150, text: "A depiction of the Sipapu, the Hopi emergence portal."},
-                            {type: "ancient_symbol", x: 450, y: 150, text: "Symbols resembling Kachinas, star spirits."},
-                            {type: "fire_pit", x: CANVAS_WIDTH/2 - 24, y: 200},
-                            {type: "skull_turret", x: 100, y: 300}, {type: "skull_turret", x: CANVAS_WIDTH - 132, y: 300},
-                            {type: "interactive_point", x:320, y:50, text:"This place feels sacred, humming with ancient energy."},
-                            {type: "doorway", x:0, y:232, toMap: 'casa_grande', toX: CANVAS_WIDTH - 70, toY: 180, text:"To Ruins"},
-                            {type: "doorway", x: CANVAS_WIDTH - 48, y: 200, toMap: 'white_tanks_petroglyphs', toX: 50, toY: 240, text:"To Petroglyphs"}
-                        ],
-                        npcs: [{name: "Tribal Elder Spirit", x:300, y:350, dialog: ["Our ancestors came from the stars.", "They taught us to live in balance with the cosmos."]}],
-                        enemies: []
-                    },
-                    white_tanks_petroglyphs: {
-                        name: "White Tank Mountains Petroglyphs", background: "#D2691E", 
-                        objects: [
-                            {type: "petroglyph_panel", x:100, y:100, width:64, height:64, text:"Spirals and strange figures..."},
-                            {type: "petroglyph_panel", x:400, y:250, width:64, height:64, text:"Humanoids with large heads?"},
-                            {type: "rock", x:250, y:150},
-                            {type: "doorway", x:0, y:232, toMap: 'sky_people_shrine', toX: CANVAS_WIDTH - 70, toY: 200, text:"To Shrine"},
-                            {type: "doorway", x: CANVAS_WIDTH - 48, y: 120, toMap: 'asu_lab', toX: 50, toY: 240, text:"To ASU"},
-                            // ADDED VISUALS FOR WHITE TANKS
-                            { type: 'rock', x: 50, y: 200, width: 40, height: 40, solid: true, color: '#8A7967' },
-                            { type: 'cactus', x: 300, y: 50 },
-                            { type: 'interactive_point', x: 200, y: 350, text: "The air is unusually still here. The rocks seem to watch."},
-                        ],
-                        npcs: [{name: "Petroglyph Researcher", x:500, y:100, dialog: ["These symbols are thousands of years old.", "Some say they depict star charts... or even visitors."]}],
-                        enemies: [{type: 'coyote', x:150, y:350}]
-                    },
-                    asu_lab: { 
-                        name: 'ASU Engineering Lab', background: '#4A4A52',
-                        objects: [
-                            { type: 'computer_terminal', x: 100, y: 100, text: "System Offline. Project PHOENIX data corrupted." },
-                            { type: 'lab_bench', x: 200, y: 150}, { type: 'server_rack', x: 500, y: 80},
-                            { type: 'phoenix_statue', x: 300, y: 50},
-                            { type: 'secret_panel', x: 300, y: 400, 
-                                portalOnInteract: true, toMap: 'artifact_chamber', toX: CANVAS_WIDTH/2 - 16, toY: CANVAS_HEIGHT - 80, 
-                                interactionText: "You push the Phoenix statue. A panel slides open!" },
-                            { type: 'doorway', x: 0, y: 232, toMap: 'white_tanks_petroglyphs', toX: CANVAS_WIDTH - 70, toY: 120, text:"Exit"}
-                        ],
-                        npcs: [ {name: "Grad Student", x: 400, y: 300, dialog: ["Working on my thesis... don't mind the mess.", "Heard whispers of a hidden chamber related to Project Phoenix."]}],
-                        enemies: [] 
-                    },
-                    artifact_chamber: {
-                        name: 'Hidden Artifact Chamber', background: '#301020', // Darker, more ominous
-                        objects: [
-                            { type: 'pedestal', x: CANVAS_WIDTH/2 - 16, y: CANVAS_HEIGHT/2 - 16 }, 
-                            // MODIFIED "EXIT"
-                            { 
-                                type: 'interactive_point', 
-                                x: CANVAS_WIDTH/2 - 24, y: CANVAS_HEIGHT - 48, 
-                                width: 48, height: 16, // Match typical doorway size
-                                solid: true, // Player cannot pass
-                                interactive: true, 
-                                color: '#3E2731', // Dark, sealed-off color
-                                text: "You never had a choice. You just thought you did. Hope wasn't invited." // Creepy message
-                            }
-                        ],
-                        npcs: [], enemies: []
-                    }
+                 this.maps = { 
+                    desert: { name: 'Sonoran Desert Outskirts', background: '#E2C9A1', objects: [ { type: 'cactus', x: 100, y: 100 }, { type: 'cactus', x: 400, y: 150 }, { type: 'rock', x: 250, y: 200 }, { type: 'sign', x: 150, y: 240, text: "Caution: Desert conditions ahead!" }, { type: 'water_source', x: 50, y: 300}, { type: 'doorway', x: CANVAS_WIDTH - 48, y: 232, toMap: 'canyon', toX: 50, toY: 240, text: "To Canyon"} ], npcs: [ { name: 'Ranger Rick', x: 200, y: 300, dialog: ["Howdy, Professor! Dehydration is no joke.", "Strange lights in the sky lately..."] } ], enemies: [ { type: 'scorpion', x: 300, y: 400 }, { type: 'snake', x: 450, y: 100 } ] },
+                    canyon: { name: 'Red Rock Canyon', background: '#BC6C25', objects: [ { type: 'rock', x: 100, y: 100 }, { type: 'chest', x: 400, y: 200, contains: 'artifact1', text: "You found an ancient stone tablet!" }, { type: 'doorway', x: 0, y: 232, toMap: 'desert', toX: CANVAS_WIDTH - 70, toY: 240, text:"To Desert"}, { type: 'doorway', x: CANVAS_WIDTH - 48, y: 100, toMap: 'camelback', toX: 50, toY: 100, text:"To Mt."}, { type: 'crater', x: 300, y: 350, width: 100, height: 50 }, { type: 'rock', x: 150, y: 350, width: 60, height: 40, solid: true, color: '#6B4226' }, { type: 'cactus', x: 500, y: 80 }, ], npcs: [ { name: 'Old Hermit', x: 250, y: 150, dialog: "The earth groans under the weight of secrets. Some are best left buried... or are they?"}], enemies: [ { type: 'coyote', x: 350, y: 100 } ] },
+                    camelback: { name: 'Camelback Mountain Trail', background: '#A0B084', objects: [ { type: 'sign', x: 50, y: 400, text: "Echo Canyon Trailhead" }, { type: 'rock', x: 150, y: 350 }, { type: 'interactive_point', x: 320, y: 50, text: "Scenic Overlook: A breathtaking view of Scottsdale." }, { type: 'doorway', x: 0, y: 100, toMap: 'canyon', toX: CANVAS_WIDTH - 70, toY: 100, text:"To Canyon"}, { type: 'doorway', x: CANVAS_WIDTH-48, y: 200, toMap: 'hohokam_site', toX: 50, toY: 240, text:"Ancient Path"} ], npcs: [ { name: 'Tired Hiker', x: 450, y: 280, dialog: ["Almost... at the top... Need water!", "Watch out for loose rocks."]} ], enemies: [ { type: 'snake', x: 200, y: 150 } ] },
+                    hohokam_site: { name: "Hohokam Settlement Ruins", background: "#D2B48C", objects: [ {type: "platform_mound", x: 300, y: 100, width:120, height:60}, {type: "platform_mound", x: 100, y: 350, width:80, height:40}, {type: "hohokam_canal", x: 50, y: 250, width:540, height:40}, {type: "interactive_point", x:100, y:50, text: "The remains of a vast canal system..."}, {type: "rock", x:500, y:400}, {type: "doorway", x:0, y:232, toMap: 'camelback', toX: CANVAS_WIDTH - 70, toY: 200, text:"Back Trail"}, {type: "doorway", x: CANVAS_WIDTH - 48, y: 150, toMap: 'casa_grande', toX: 50, toY: 240, text:"To Great House"} ], npcs: [{name: "Hohokam Spirit", x: 350, y: 180, dialog: ["We followed the water... and the stars.", "Why we vanished... even the desert keeps that secret."]}], enemies: [ {type: 'scorpion', x:450, y:350}, {type: 'coyote', x: 150, y: 150}, {type: 'snake', x: 400, y: 300} ] },
+                    casa_grande: { name: "Casa Grande Ruins", background: "#C19A6B", objects: [ {type: "sky_hole_wall", x: 200, y: 100, width:32, height:120}, {type: "sky_hole_wall", x: 400, y: 100, width:32, height:120}, {type: "sign", x:300, y:300, text:"The Great House - An ancient astronomical observatory."}, {type: "doorway", x:0, y:232, toMap: 'hohokam_site', toX: CANVAS_WIDTH - 70, toY: 150, text:"To Settlement"}, {type: "doorway", x: CANVAS_WIDTH - 48, y: 180, toMap: 'sky_people_shrine', toX: 50, toY: 240, text:"Spiritual Path"} ], npcs: [{name: "Astronomer's Ghost", x: 300, y: 200, dialog: ["The sun, moon, Venus... they all danced for us.", "These walls tracked their movements, marking time."]}], enemies: [ {type: 'spider', x: 100, y: 350}, {type: 'spider', x: 500, y: 100}, {type: 'attacking_ghost', x: 320, y: 150} ] },
+                    sky_people_shrine: { name: "Sky People's Shrine", background: "#483D8B", objects: [ {type: "ancient_symbol", x: 150, y: 150, text: "A depiction of the Sipapu, the Hopi emergence portal."}, {type: "ancient_symbol", x: 450, y: 150, text: "Symbols resembling Kachinas, star spirits."}, {type: "fire_pit", x: CANVAS_WIDTH/2 - 24, y: 200}, {type: "skull_turret", x: 100, y: 300}, {type: "skull_turret", x: CANVAS_WIDTH - 132, y: 300}, {type: "interactive_point", x:320, y:50, text:"This place feels sacred, humming with ancient energy."}, {type: "doorway", x:0, y:232, toMap: 'casa_grande', toX: CANVAS_WIDTH - 70, toY: 180, text:"To Ruins"}, {type: "doorway", x: CANVAS_WIDTH - 48, y: 200, toMap: 'white_tanks_petroglyphs', toX: 50, toY: 240, text:"To Petroglyphs"} ], npcs: [{name: "Tribal Elder Spirit", x:300, y:350, dialog: ["Our ancestors came from the stars.", "They taught us to live in balance with the cosmos."]}], enemies: [] },
+                    white_tanks_petroglyphs: { name: "White Tank Mountains Petroglyphs", background: "#D2691E", objects: [ {type: "petroglyph_panel", x:100, y:100, width:64, height:64, text:"Spirals and strange figures..."}, {type: "petroglyph_panel", x:400, y:250, width:64, height:64, text:"Humanoids with large heads?"}, {type: "rock", x:250, y:150}, {type: "doorway", x:0, y:232, toMap: 'sky_people_shrine', toX: CANVAS_WIDTH - 70, toY: 200, text:"To Shrine"}, {type: "doorway", x: CANVAS_WIDTH - 48, y: 120, toMap: 'asu_lab', toX: 50, toY: 240, text:"To ASU"}, { type: 'rock', x: 50, y: 200, width: 40, height: 40, solid: true, color: '#8A7967' }, { type: 'cactus', x: 300, y: 50 }, { type: 'interactive_point', x: 200, y: 350, text: "The air is unusually still here. The rocks seem to watch."}, ], npcs: [{name: "Petroglyph Researcher", x:500, y:100, dialog: ["These symbols are thousands of years old.", "Some say they depict star charts... or even visitors."]}], enemies: [{type: 'coyote', x:150, y:350}] },
+                    asu_lab: { name: 'ASU Engineering Lab', background: '#4A4A52', objects: [ { type: 'computer_terminal', x: 100, y: 100, text: "System Offline. Project PHOENIX data corrupted." }, { type: 'lab_bench', x: 200, y: 150}, { type: 'server_rack', x: 500, y: 80}, { type: 'phoenix_statue', x: 300, y: 50}, { type: 'secret_panel', x: 300, y: 400, portalOnInteract: true, toMap: 'artifact_chamber', toX: CANVAS_WIDTH/2 - 16, toY: CANVAS_HEIGHT - 80, interactionText: "You push the Phoenix statue. A panel slides open!" }, { type: 'doorway', x: 0, y: 232, toMap: 'white_tanks_petroglyphs', toX: CANVAS_WIDTH - 70, toY: 120, text:"Exit"} ], npcs: [ {name: "Grad Student", x: 400, y: 300, dialog: ["Working on my thesis... don't mind the mess.", "Heard whispers of a hidden chamber related to Project Phoenix."]}], enemies: [] },
+                    artifact_chamber: { name: 'Hidden Artifact Chamber', background: '#301020', objects: [ { type: 'pedestal', x: CANVAS_WIDTH/2 - 16, y: CANVAS_HEIGHT/2 - 16 }, { type: 'interactive_point', x: CANVAS_WIDTH/2 - 24, y: CANVAS_HEIGHT - 48, width: 48, height: 16, solid: true, interactive: true, color: '#3E2731', text: "You never had a choice. You just thought you did. Hope wasn't invited." } ], npcs: [], enemies: [] }
                 };
             }
             
             setGameState(newState) {
-                const oldState = this.gameState;
-                this.gameState = newState;
-                
-                // Hide all screens by default, then show the relevant one
-                if (newState !== GAME_STATE.START_SCREEN) this.ui.hideStartScreen();
-                if (newState !== GAME_STATE.PAUSED) this.ui.hidePauseScreen();
-                if (newState !== GAME_STATE.GAME_OVER) this.ui.hideGameOverScreen();
-                if (newState !== GAME_STATE.PUZZLE) this.ui.hidePuzzle();
-                if (newState !== GAME_STATE.WIN) this.ui.hideWinScreen();
-                
-                if (newState !== GAME_STATE.DIALOG) { // Hide dialog unless explicitly in dialog state
-                    this.ui.hideDialog();
-                }
-
+                const oldState = this.gameState; this.gameState = newState;
+                if (newState !== GAME_STATE.START_SCREEN) this.ui.hideStartScreen(); if (newState !== GAME_STATE.PAUSED) this.ui.hidePauseScreen();
+                if (newState !== GAME_STATE.GAME_OVER) this.ui.hideGameOverScreen(); if (newState !== GAME_STATE.PUZZLE) this.ui.hidePuzzle();
+                if (newState !== GAME_STATE.WIN) this.ui.hideWinScreen(); if (newState !== GAME_STATE.DIALOG) this.ui.hideDialog();
                 switch(newState) {
-                    case GAME_STATE.START_SCREEN: 
-                        this.ui.showStartScreen(); this.sound.playMusic('menuTheme'); break;
-                    case GAME_STATE.PLAYING: 
-                        if (oldState === GAME_STATE.PAUSED || oldState === GAME_STATE.PUZZLE) this.sound.resumeCurrentMusic();
-                        break; 
-                    case GAME_STATE.PAUSED: 
-                        this.ui.showPauseScreen(); this.sound.pauseCurrentMusic(); break;
-                    case GAME_STATE.DIALOG: break; // Dialog is shown by interaction logic
-                    case GAME_STATE.PUZZLE: 
-                        this.sound.pauseCurrentMusic(); 
-                        this.ui.showPuzzle(this.currentPuzzle.question, this.currentPuzzle.options); 
-                        break;
-                    case GAME_STATE.WIN:
-                        this.sound.stopMusic(); this.sound.playSound('winGame');
-                        this.ui.showWinScreen("You solved the puzzle and claim the Arizona Artifact!");
-                        break;
-                    case GAME_STATE.GAME_OVER: 
-                        this.sound.stopMusic(); this.sound.playSound('gameOver'); 
-                        // Game over screen is shown by the gameOver method itself
-                        break;
+                    case GAME_STATE.START_SCREEN: this.ui.showStartScreen(); this.sound.playMusic('menuTheme'); break;
+                    case GAME_STATE.PLAYING: if (oldState === GAME_STATE.PAUSED || oldState === GAME_STATE.PUZZLE) this.sound.resumeCurrentMusic(); break; 
+                    case GAME_STATE.PAUSED: this.ui.showPauseScreen(); this.sound.pauseCurrentMusic(); break;
+                    case GAME_STATE.PUZZLE: this.sound.pauseCurrentMusic(); this.ui.showPuzzle(this.currentPuzzle.question, this.currentPuzzle.options); break;
+                    case GAME_STATE.WIN: this.sound.stopMusic(); this.sound.playSound('winGame'); this.ui.showWinScreen("You solved the puzzle and claim the Arizona Artifact!"); break;
+                    case GAME_STATE.GAME_OVER: this.sound.stopMusic(); this.sound.playSound('gameOver'); break;
                 }
             }
 
             startGame(isRestart = false) {
-                this.ui.hideStartScreen(); 
-                this.ui.showLoading();
-                
+                this.ui.hideStartScreen(); this.ui.showLoading();
                 setTimeout(() => {
-                    this.player = new Player(this, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-                    this.gameTime = 8 * 3600; // Reset game time
-                    this.defineGameData(); // Re-initialize map data to reset chests, etc.
-                    this.currentMap = null; // Ensure map is freshly loaded
-                    this.changeMap('desert', this.player.x, this.player.y); 
-                    
-                    this.ui.updateHealth(this.player.health, this.player.maxHealth);
-                    this.ui.updateHydration(this.player.hydration, this.player.maxHydration);
-                    this.ui.updateInventoryDisplay(this.player.inventory, this.itemTypes);
-                    this.ui.updateQuestLog(this.player.quests);
-                    
-                    this.setGameState(GAME_STATE.PLAYING); 
-                    this.ui.hideLoading();
-                    if (!isRestart || this.lastFrameTime === 0) { // Start game loop if not already running
-                         this.gameLoop(0); 
-                    }
-                }, 500); // Simulate loading time
+                    this.player = new Player(this, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2); this.gameTime = 8 * 3600; 
+                    this.defineGameData(); this.currentMap = null; this.changeMap('desert', this.player.x, this.player.y); 
+                    this.ui.updateHealth(this.player.health, this.player.maxHealth); this.ui.updateHydration(this.player.hydration, this.player.maxHydration);
+                    this.ui.updateInventoryDisplay(this.player.inventory, this.itemTypes); this.ui.updateQuestLog(this.player.quests);
+                    this.setGameState(GAME_STATE.PLAYING); this.ui.hideLoading();
+                    if (!isRestart || this.lastFrameTime === 0) this.gameLoop(0); 
+                }, 500); 
             }
             
-            goToMainMenu() {
-                this.sound.stopMusic(); // Stop any current game music
-                this.setGameState(GAME_STATE.START_SCREEN); // Transition to start screen
-            }
+            goToMainMenu() { this.sound.stopMusic(); this.setGameState(GAME_STATE.START_SCREEN); }
 
             changeMap(mapName, playerX, playerY) {
-                const isInitialLoad = !this.currentMap; // Check if this is the very first map load
-                this.sound.stopMusic(); // Stop current map's music
-                if (!isInitialLoad) this.sound.playSound('nextScenario'); // Play transition sound
-
+                const isInitialLoad = !this.currentMap; this.sound.stopMusic(); 
+                if (!isInitialLoad) this.sound.playSound('nextScenario'); 
                 if (this.maps[mapName]) {
-                    const mapData = this.maps[mapName];
-                    // IMPORTANT: Create a deep copy of mapData to ensure objects (like chests) reset their state if the player revisits a map after a game restart.
-                    // For a persistent world within a single playthrough, a shallow copy or direct use might be intended, but for full resets on new games, deep copy is safer.
-                    const freshMapData = JSON.parse(JSON.stringify(mapData)); 
-                    this.currentMap = new GameMap(this, freshMapData); // Load map with fresh data
-                    
+                    const mapData = this.maps[mapName]; const freshMapData = JSON.parse(JSON.stringify(mapData)); 
+                    this.currentMap = new GameMap(this, freshMapData); 
                     if (this.player) { this.player.x = playerX; this.player.y = playerY; }
                     this.ui.updateMapName(this.currentMap.name); 
-
-                    // Delay music start to allow transition sound to play
                     const musicDelay = isInitialLoad ? 0 : (this.sound.sounds.nextScenario.duration && isFinite(this.sound.sounds.nextScenario.duration) ? this.sound.sounds.nextScenario.duration * 1000 : 200);
-
                     setTimeout(() => {
-                        // Check if still in a valid game state and on the correct map before playing music
                         if ((this.gameState !== GAME_STATE.PLAYING && this.gameState !== GAME_STATE.DIALOG) || !this.currentMap || this.currentMap.name !== mapData.name) return; 
-
-                        // Play map-specific music
-                        if (mapName === 'desert') {
-                            if (isInitialLoad) { // Special handling for initial game start sound
-                                this.sound.playSound('gameStart');
-                                const gameStartDuration = this.sound.sounds.gameStart.duration;
-                                setTimeout(() => {
-                                    if (this.gameState === GAME_STATE.PLAYING && this.currentMap && this.currentMap.name === 'Sonoran Desert Outskirts') {
-                                        this.sound.playMusic('firstScenarioTheme', true);
-                                    }
-                                }, gameStartDuration && isFinite(gameStartDuration) ? gameStartDuration * 1000 : 500);
-                            } else this.sound.playMusic('firstScenarioTheme', true);
-                        } else if (mapName === 'canyon') this.sound.playMusic('secondScenarioTheme', true);
-                        else if (mapName === 'camelback') this.sound.playMusic('thirdScenarioTheme', true);
-                        else if (mapName === 'hohokam_site') this.sound.playMusic('hohokamTheme', true);
-                        else if (mapName === 'casa_grande') this.sound.playMusic('casaGrandeTheme', true);
-                        else if (mapName === 'sky_people_shrine') this.sound.playMusic('skyPeopleTheme', true);
-                        else if (mapName === 'white_tanks_petroglyphs') this.sound.playMusic('whiteTanksTheme', true);
-                        else if (mapName === 'asu_lab') this.sound.playMusic('asuLabTheme', true);
-                        else if (mapName === 'artifact_chamber') this.sound.playMusic('chamberTheme', true);
+                        if (mapName === 'desert') { if (isInitialLoad) { this.sound.playSound('gameStart'); const gameStartDuration = this.sound.sounds.gameStart.duration; setTimeout(() => { if (this.gameState === GAME_STATE.PLAYING && this.currentMap && this.currentMap.name === 'Sonoran Desert Outskirts') this.sound.playMusic('firstScenarioTheme', true); }, gameStartDuration && isFinite(gameStartDuration) ? gameStartDuration * 1000 : 500); } else this.sound.playMusic('firstScenarioTheme', true); } 
+                        else if (mapName === 'canyon') this.sound.playMusic('secondScenarioTheme', true); else if (mapName === 'camelback') this.sound.playMusic('thirdScenarioTheme', true);
+                        else if (mapName === 'hohokam_site') this.sound.playMusic('hohokamTheme', true); else if (mapName === 'casa_grande') this.sound.playMusic('casaGrandeTheme', true);
+                        else if (mapName === 'sky_people_shrine') this.sound.playMusic('skyPeopleTheme', true); else if (mapName === 'white_tanks_petroglyphs') this.sound.playMusic('whiteTanksTheme', true);
+                        else if (mapName === 'asu_lab') this.sound.playMusic('asuLabTheme', true); else if (mapName === 'artifact_chamber') this.sound.playMusic('chamberTheme', true);
                     }, musicDelay);
                 } else console.error(`Map ${mapName} not found!`);
             }
 
             startPuzzle(puzzleDetails) {
-                this.currentPuzzle = puzzleDetails; // Store the puzzle details
-                this.sound.playSound('thunder');
-                
-                // Screen Shake Effect
-                const gameContainer = document.getElementById('gameContainer');
-                let shakes = 0;
-                const shakeDuration = 500; // Total duration of shake in ms
-                const shakeIntervalTime = 50; // Interval time for each shake movement
-                const numShakes = shakeDuration / shakeIntervalTime;
-
+                this.currentPuzzle = puzzleDetails; this.sound.playSound('thunder');
+                const gameContainer = document.getElementById('gameContainer'); let shakes = 0;
+                const shakeDuration = 500; const shakeIntervalTime = 50; const numShakes = shakeDuration / shakeIntervalTime;
                 const interval = setInterval(() => {
-                    const x = (Math.random() - 0.5) * 10; // Max 5px shake horizontally
-                    const y = (Math.random() - 0.5) * 10; // Max 5px shake vertically
-                    gameContainer.style.transform = `translate(${x}px, ${y}px)`;
-                    shakes++;
-                    if (shakes >= numShakes) {
-                        clearInterval(interval);
-                        gameContainer.style.transform = 'translate(0,0)';
-                        // Mark pedestal as "opened" to prevent re-triggering puzzle immediately if player closes dialog
-                        const pedestal = this.currentMap.objects.find(obj => obj.objData.triggersPuzzle);
-                        if(pedestal) pedestal.objData.opened = true;
-                        
-                        this.setGameState(GAME_STATE.PUZZLE); // Show puzzle UI AFTER effects
-                    }
+                    const x = (Math.random() - 0.5) * 10; const y = (Math.random() - 0.5) * 10; 
+                    gameContainer.style.transform = `translate(${x}px, ${y}px)`; shakes++;
+                    if (shakes >= numShakes) { clearInterval(interval); gameContainer.style.transform = 'translate(0,0)'; const pedestal = this.currentMap.objects.find(obj => obj.objData.triggersPuzzle); if(pedestal) pedestal.objData.opened = true; this.setGameState(GAME_STATE.PUZZLE); }
                 }, shakeIntervalTime);
             }
 
-
             handlePuzzleAnswer(answerIndex) {
-                if (!this.currentPuzzle) return;
-                this.ui.hidePuzzle();
-
-                if (answerIndex === this.currentPuzzle.correctAnswerIndex) {
-                    this.sound.playSound('puzzleCorrect');
-                    this.player.addItem('final_artifact');
-                    this.player.completeQuest('main_artifact'); 
-                    setTimeout(() => { // Slight delay before win screen
-                        this.setGameState(GAME_STATE.WIN);
-                    }, 500); 
-                } else {
-                    this.sound.playSound('puzzleIncorrect');
-                    this.gameOver("Incorrect. The artifact's secrets remain elusive.");
-                }
-                this.currentPuzzle = null; // Clear current puzzle
+                if (!this.currentPuzzle) return; this.ui.hidePuzzle();
+                if (answerIndex === this.currentPuzzle.correctAnswerIndex) { this.sound.playSound('puzzleCorrect'); this.player.addItem('final_artifact'); this.player.completeQuest('main_artifact'); setTimeout(() => { this.setGameState(GAME_STATE.WIN); }, 500); } 
+                else { this.sound.playSound('puzzleIncorrect'); this.gameOver("Incorrect. The artifact's secrets remain elusive."); }
+                this.currentPuzzle = null; 
             }
 
-
             gameLoop(timestamp) {
-                this.animationFrame++; // Increment global animation frame
-                const deltaTime = (timestamp - this.lastFrameTime) / 1000; // Time since last frame in seconds
-                this.lastFrameTime = timestamp;
-
-                if (this.gameState === GAME_STATE.PLAYING) {
-                    this.update(deltaTime);
-                }
-                this.draw();
-                
-                requestAnimationFrame((ts) => this.gameLoop(ts)); // Continue the loop
+                this.animationFrame++; const deltaTime = (timestamp - this.lastFrameTime) / 1000; this.lastFrameTime = timestamp;
+                if (this.gameState === GAME_STATE.PLAYING) this.update(deltaTime);
+                this.draw(); requestAnimationFrame((ts) => this.gameLoop(ts)); 
             }
 
             update(deltaTime) {
                 if (!this.player || !this.currentMap) return;
-
-                this.player.update();
-                this.currentMap.update(); // This will update enemies, skull turrets, and projectiles
-                this.interactionTarget = null; // Reset interaction target each frame
-
-                // Update game time and day/night cycle
+                this.player.update(); this.currentMap.update(); this.interactionTarget = null; 
                 this.gameTime += deltaTime * GAME_TIME_MULTIPLIER;
                 const currentHour = Math.floor((this.gameTime % (24 * 3600)) / 3600);
-                this.dayTime = currentHour >= 6 && currentHour < 20; // Day from 6 AM to 8 PM
-                this.ui.updateClock(this.gameTime);
-
-                // Check for potential interaction targets in front of the player
-                let checkX = this.player.x + this.player.width / 2;
-                let checkY = this.player.y + this.player.height / 2;
-                const checkRange = 20; // How far in front to check
+                this.dayTime = currentHour >= 6 && currentHour < 20; this.ui.updateClock(this.gameTime);
+                let checkX = this.player.x + this.player.width / 2; let checkY = this.player.y + this.player.height / 2;
+                const checkRange = 20; 
                  switch (this.player.direction) {
-                    case 'up': checkY -= this.player.height / 2 + checkRange / 2; break;
-                    case 'down': checkY += this.player.height / 2 + checkRange / 2; break;
-                    case 'left': checkX -= this.player.width / 2 + checkRange / 2; break;
-                    case 'right': checkX += this.player.width / 2 + checkRange / 2; break;
+                    case 'up': checkY -= this.player.height / 2 + checkRange / 2; break; case 'down': checkY += this.player.height / 2 + checkRange / 2; break;
+                    case 'left': checkX -= this.player.width / 2 + checkRange / 2; break; case 'right': checkX += this.player.width / 2 + checkRange / 2; break;
                 }
                 const potentialTargets = [...this.currentMap.objects, ...this.currentMap.npcs];
-                for (const entity of potentialTargets) {
-                    if (entity.isInteractable && 
-                        Math.abs(entity.centerX - checkX) < (entity.width/2 + 10) && // Check X overlap
-                        Math.abs(entity.centerY - checkY) < (entity.height/2 + 10)) { // Check Y overlap
-                        this.interactionTarget = entity;
-                        break; // Interact with the first one found
-                    }
-                }
+                for (const entity of potentialTargets) { if (entity.isInteractable && Math.abs(entity.centerX - checkX) < (entity.width/2 + 10) && Math.abs(entity.centerY - checkY) < (entity.height/2 + 10)) { this.interactionTarget = entity; break; } }
             }
 
             draw() {
-                this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // Clear canvas
+                this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); 
                 if (this.gameState === GAME_STATE.PLAYING || this.gameState === GAME_STATE.DIALOG || this.gameState === GAME_STATE.PAUSED) {
-                    if (this.currentMap && this.player) { // Ensure map and player exist
-                        this.currentMap.draw(this.ctx);
-                        // Player is drawn as part of currentMap's sorted entities
-                    }
-                    // Draw interaction indicator if a target is present and game is playing
-                    if (this.interactionTarget && this.gameState === GAME_STATE.PLAYING) {
-                        this.ui.drawInteractionIndicator(this.interactionTarget.centerX, this.interactionTarget.y);
-                    }
+                    if (this.currentMap && this.player) this.currentMap.draw(this.ctx);
+                    if (this.interactionTarget && this.gameState === GAME_STATE.PLAYING) this.ui.drawInteractionIndicator(this.interactionTarget.centerX, this.interactionTarget.y);
                 }
-                // Other game states (start, game over, win) are handled by HTML elements overlaying the canvas
             }
             
             handleKeyUp(key) {
                 if (this.gameState === GAME_STATE.PLAYING) {
-                    if (key === 'e' || key === ' ') this.player.interact();
-                    else if (key === 'p') this.togglePause();
-                    else if (key === 'i') { // Show inventory as dialog
-                        this.ui.showDialog("Inventory: " + this.player.inventory.map(itemKey => this.itemTypes[itemKey].name).join(', '), "System");
-                        this.setGameState(GAME_STATE.DIALOG); 
-                    } else if (key === 'q') this.ui.toggleQuestLog();
+                    if (key === 'e' || key === ' ') this.player.interact(); else if (key === 'p') this.togglePause();
+                    else if (key === 'i') { this.ui.showDialog("Inventory: " + this.player.inventory.map(itemKey => this.itemTypes[itemKey].name).join(', '), "System"); this.setGameState(GAME_STATE.DIALOG); } 
+                    else if (key === 'q') this.ui.toggleQuestLog();
                 } else if (this.gameState === GAME_STATE.DIALOG) {
-                    if (key === 'e' || key === ' ' || key === 'enter') { // Close dialog
-                        this.ui.hideDialog(); 
-                        if (this.pendingPortal) { // If dialog was for a portal, change map
-                            this.changeMap(this.pendingPortal.mapName, this.pendingPortal.toX, this.pendingPortal.toY);
-                            this.pendingPortal = null; // Clear pending portal
-                        } else this.setGameState(GAME_STATE.PLAYING); // Return to playing state
-                    }
-                } else if (this.gameState === GAME_STATE.PAUSED) {
-                     if (key === 'p') this.togglePause(); // Unpause
-                } 
-                // No key handling needed for START_SCREEN, GAME_OVER, WIN, PUZZLE as they use UI buttons
+                    if (key === 'e' || key === ' ' || key === 'enter') { this.ui.hideDialog(); if (this.pendingPortal) { this.changeMap(this.pendingPortal.mapName, this.pendingPortal.toX, this.pendingPortal.toY); this.pendingPortal = null; } else this.setGameState(GAME_STATE.PLAYING); }
+                } else if (this.gameState === GAME_STATE.PAUSED) { if (key === 'p') this.togglePause(); } 
             }
 
-            togglePause() {
-                if (this.gameState === GAME_STATE.PLAYING) this.setGameState(GAME_STATE.PAUSED);
-                else if (this.gameState === GAME_STATE.PAUSED) this.setGameState(GAME_STATE.PLAYING);
-            }
-
+            togglePause() { if (this.gameState === GAME_STATE.PLAYING) this.setGameState(GAME_STATE.PAUSED); else if (this.gameState === GAME_STATE.PAUSED) this.setGameState(GAME_STATE.PLAYING); }
             useItem(itemKey) {
-                if (this.gameState !== GAME_STATE.PLAYING && this.gameState !== GAME_STATE.DIALOG) return; // Can use items while playing or in dialog
+                if (this.gameState !== GAME_STATE.PLAYING && this.gameState !== GAME_STATE.DIALOG) return; 
                 const item = this.itemTypes[itemKey];
-                if (item && item.useFunc) item.useFunc(this); // Call item's use function
-                else if (item) { // If no useFunc, just show description
-                    this.ui.showDialog(`${item.name}: ${item.description}`, "Item");
-                    this.setGameState(GAME_STATE.DIALOG);
-                }
+                if (item && item.useFunc) item.useFunc(this); 
+                else if (item) { this.ui.showDialog(`${item.name}: ${item.description}`, "Item"); this.setGameState(GAME_STATE.DIALOG); }
             }
-
-            saveGame() {
-                if (!this.player || !this.currentMap) {
-                    console.warn("Cannot save: game not fully initialized.");
-                    this.ui.showDialog("Cannot save game state yet.", "System"); return;
-                }
-                // Create a savable representation of map objects' states (e.g., opened chests)
-                const savableObjects = this.currentMap.objects.map(obj => ({ 
-                    type: obj.type, x: obj.x, y: obj.y, 
-                    opened: obj.objData.opened, isNowPortal: obj.objData.isNowPortal 
-                    // Add any other properties that need to be saved per object
-                }));
-                const saveData = {
-                    player: {
-                        x: this.player.x, y: this.player.y, health: this.player.health, hydration: this.player.hydration,
-                        inventory: this.player.inventory, quests: this.player.quests, direction: this.player.direction,
-                    },
-                    currentMapName: this.currentMap.name, gameTime: this.gameTime, mapObjectsState: savableObjects 
-                };
-                try {
-                    localStorage.setItem('desertChroniclesSave', JSON.stringify(saveData));
-                    this.ui.showSaveNotification();
-                    if(this.gameState === GAME_STATE.PAUSED) this.ui.showDialog("Game Saved!", "System"); // Show dialog if paused
-                } catch (e) {
-                    console.error('Error saving game:', e);
-                     if(this.gameState === GAME_STATE.PAUSED) this.ui.showDialog("Error saving game.", "System");
-                }
-            }
-
-            loadGame(fromStartScreen = false) {
-                if (fromStartScreen) { this.ui.hideStartScreen(); this.ui.showLoading(); }
-                try {
-                    const savedDataJSON = localStorage.getItem('desertChroniclesSave');
-                    if (!savedDataJSON) {
-                        if (fromStartScreen) {
-                            this.ui.hideLoading(); this.ui.showStartScreen(); 
-                            alert("No save data found!"); this.sound.playMusic('menuTheme'); 
-                        } return false;
-                    }
-                    const saveData = JSON.parse(savedDataJSON);
-
-                    // Initialize player if not already (e.g., if loading from a running game, player might exist)
-                    if (!this.player) this.player = new Player(this, saveData.player.x, saveData.player.y);
-                    else { this.player.x = saveData.player.x; this.player.y = saveData.player.y; }
-
-                    // Restore player state
-                    this.player.health = saveData.player.health; this.player.hydration = saveData.player.hydration;
-                    this.player.inventory = saveData.player.inventory; 
-                    this.player.quests = saveData.player.quests || [{id: "main_artifact", description: "Find the Arizona Artifact.", completed: false}]; // Default quests if not in save
-                    this.player.direction = saveData.player.direction; this.gameTime = saveData.gameTime;
-                    
-                    this.currentMap = null; // Ensure map is reloaded
-                    this.changeMap(saveData.currentMapName, this.player.x, this.player.y);
-                    
-                    // Restore map object states
-                    if (saveData.mapObjectsState && this.currentMap) {
-                        this.currentMap.objects.forEach(gameObj => {
-                            const savedObj = saveData.mapObjectsState.find(s => s.x === gameObj.x && s.y === gameObj.y && s.type === gameObj.type);
-                            if (savedObj) {
-                                if (savedObj.opened !== undefined) gameObj.objData.opened = savedObj.opened;
-                                if (savedObj.isNowPortal !== undefined) gameObj.objData.isNowPortal = savedObj.isNowPortal;
-                                // Restore other saved properties here
-                            }
-                        });
-                    }
-                    // Update UI
-                    this.ui.updateHealth(this.player.health, this.player.maxHealth);
-                    this.ui.updateHydration(this.player.hydration, this.player.maxHydration);
-                    this.ui.updateInventoryDisplay(this.player.inventory, this.itemTypes);
-                    this.ui.updateQuestLog(this.player.quests);
-                    
-                    this.setGameState(GAME_STATE.PLAYING);
-                    if (fromStartScreen) {
-                        this.ui.hideLoading();
-                        if (this.lastFrameTime === 0) this.gameLoop(0); // Start game loop if not already running
-                    } return true;
-                } catch (e) {
-                    console.error('Error loading game:', e);
-                    if (fromStartScreen) {
-                        this.ui.hideLoading(); this.ui.showStartScreen(); 
-                        alert("Error loading save data. It might be corrupted."); this.sound.playMusic('menuTheme'); 
-                    } return false;
-                }
-            }
-            
-            gameOver(message) {
-                this.setGameState(GAME_STATE.GAME_OVER); 
-                this.ui.showGameOverScreen(message); // Display game over message
-            }
+            gameOver(message) { this.setGameState(GAME_STATE.GAME_OVER); this.ui.showGameOverScreen(message); }
         }
 
         // --- Initialize Game ---
         document.addEventListener('DOMContentLoaded', () => {
             const game = new Game();
         });
-
     </script>
 </body>
 <div id="footer">
