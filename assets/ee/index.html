@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Desert Chronicles: The Arizona Artifact</title>
     <link rel="icon" href="img/icon.jpg" type="image/jpg">
     <link rel="apple-touch-icon" href="img/icon.jpg">
@@ -27,6 +27,15 @@
             font-family: 'Press Start 2P', monospace;
             overflow: hidden;
             color: #FFF;
+        }
+
+        /* Ensure font is loaded before displaying content */
+        .font-loading {
+            visibility: hidden;
+        }
+        
+        .font-loaded {
+            visibility: visible;
         }
         
         #gameContainer {
@@ -493,11 +502,11 @@
             <h1>DESERT CHRONICLES</h1>
             <h2>The Arizona Artifact</h2>
             <p>The year is 1986. Professor James Walker, retired archaeologist and computer enthusiast, finds himself drawn back into adventure when he discovers an ancient petroglyph map in his Scottsdale home.</p>
-            <p>The map hints at a lost artifact hidden somewhere in the Arizona desert - one that may hold the key to understanding the advanced astronomical knowledge of ancient native civilizations.</p>
+            <p>The map hints at a lost artifact hidden somewhere in the Arizona desert, one that may hold the key to understanding the advanced astronomical knowledge of ancient native civilizations.</p>
             <p>Armed with his trusty canteen, pocket computer, and decades of field experience, the Professor embarks on one last expedition...</p>
-            <button id="startButton">START ADVENTURE</button>
+            <button id="startButton">START</button>
             <div id="loadingText" style="display: none;">Loading...</div>
-            <div id="audioNote" style="color:#FFAA33; font-size:8px; margin-top:10px;">Tap anywhere for sound</div>
+            <!-- <div id="audioNote" style="color:#FFAA33; font-size:8px; margin-top:10px;">Tap anywhere for sound</div> -->
         </div>
 
         <div id="pauseScreen" style="display: none;">
@@ -533,6 +542,71 @@
     </div>
 
     <script>
+        // Fix iOS viewport height issues
+        function setVH() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        
+        // Set initial viewport height
+        setVH();
+        
+        // Update on resize and orientation change
+        window.addEventListener('resize', setVH);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(setVH, 100);
+        });
+        
+        // Font loading detection
+        function checkFontLoaded() {
+            const testElement = document.createElement('div');
+            testElement.style.fontFamily = '"Press Start 2P", monospace';
+            testElement.style.fontSize = '16px';
+            testElement.style.position = 'absolute';
+            testElement.style.left = '-9999px';
+            testElement.innerHTML = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            document.body.appendChild(testElement);
+            
+            const originalWidth = testElement.offsetWidth;
+            testElement.style.fontFamily = 'monospace';
+            const fallbackWidth = testElement.offsetWidth;
+            
+            document.body.removeChild(testElement);
+            
+            if (originalWidth !== fallbackWidth) {
+                document.body.classList.remove('font-loading');
+                document.body.classList.add('font-loaded');
+                return true;
+            }
+            return false;
+        }
+        
+        // Check font loading with timeout
+        function waitForFont() {
+            if (checkFontLoaded()) {
+                return;
+            }
+            
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max wait
+            
+            const checkInterval = setInterval(() => {
+                attempts++;
+                if (checkFontLoaded() || attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    document.body.classList.remove('font-loading');
+                    document.body.classList.add('font-loaded');
+                }
+            }, 100);
+        }
+        
+        // Initialize font loading check
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForFont);
+        } else {
+            waitForFont();
+        }
+
         // --- Core Game Constants ---
         const CANVAS_WIDTH = 640;
         const CANVAS_HEIGHT = 480;
@@ -723,16 +797,24 @@
                     this.game.handleKeyUp(e.key.toLowerCase()); 
                 });
                 
+                // Initialize mobile controls immediately if needed
                 this.checkDeviceType();
                 window.addEventListener('resize', () => this.checkDeviceType());
             }
             
             checkDeviceType() {
-                const isMobile = window.innerWidth <= 1024;
+                const isMobile = window.innerWidth <= 1024 || this.isMobileDevice();
                 if (isMobile && !this.virtualControlsActive) {
-                    this.setupVirtualControls();
+                    // Delay setup slightly to ensure DOM is ready
+                    setTimeout(() => this.setupVirtualControls(), 100);
                     this.virtualControlsActive = true;
                 }
+            }
+            
+            isMobileDevice() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                       ('ontouchstart' in window) ||
+                       (navigator.maxTouchPoints > 0);
             }
 
             setupVirtualControls() {
@@ -758,7 +840,9 @@
                 };
                 
                 window.addEventListener('resize', updateJoystickMeasurements);
-                window.addEventListener('orientationchange', updateJoystickMeasurements);
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(updateJoystickMeasurements, 100);
+                });
                 
                 const handleJoystickTouch = (e) => {
                     e.preventDefault();
@@ -800,15 +884,22 @@
                     this.keys['arrowleft'] = false; this.keys['arrowright'] = false;
                 };
                 
-                joystickBase.addEventListener('touchstart', handleJoystickTouch);
-                joystickBase.addEventListener('touchmove', handleJoystickTouch);
+                joystickBase.addEventListener('touchstart', handleJoystickTouch, { passive: false });
+                joystickBase.addEventListener('touchmove', handleJoystickTouch, { passive: false });
                 joystickBase.addEventListener('touchend', resetJoystick);
                 joystickBase.addEventListener('touchcancel', resetJoystick);
                 
                 const setupButtonListener = (button, key) => {
                     if (button) {
-                        button.addEventListener('touchstart', (e) => { e.preventDefault(); this.keys[key] = true; });
-                        button.addEventListener('touchend', (e) => { e.preventDefault(); this.keys[key] = false; this.game.handleKeyUp(key); });
+                        button.addEventListener('touchstart', (e) => { 
+                            e.preventDefault(); 
+                            this.keys[key] = true; 
+                        }, { passive: false });
+                        button.addEventListener('touchend', (e) => { 
+                            e.preventDefault(); 
+                            this.keys[key] = false; 
+                            this.game.handleKeyUp(key); 
+                        }, { passive: false });
                     }
                 };
 
@@ -817,11 +908,6 @@
                 setupButtonListener(questButton, 'q');
                 setupButtonListener(pauseButton, 'p');
                 
-                document.querySelectorAll('.controlButton').forEach(button => {
-                    button.addEventListener('touchstart', (e) => e.preventDefault());
-                    button.addEventListener('touchmove', (e) => e.preventDefault());
-                    button.addEventListener('touchend', (e) => e.preventDefault());
-                });
                 resetJoystick();
             }
 
