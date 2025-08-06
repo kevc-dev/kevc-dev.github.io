@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener("DOMContentLoaded", function () {
   const typewriterElement = document.querySelector(".typewriter");
   const typewriterContainer = document.querySelector(".typewriter-container");
-  const text = "kevincasas-dev";
+  const text = "kevc-dev";
 
   // Calculate the width of the full text once
   typewriterElement.textContent = text;
