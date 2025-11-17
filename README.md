@@ -8,7 +8,7 @@ Software Engineer with 6+ years of experience building full stack solutions for 
 
 ## Work Experience
 
-### Software Engineer II, MiCamp Solutions — Scottsdale, Arizona
+### Senior Software Engineer, MiCamp Solutions — Scottsdale, Arizona
 *Nov 2024 — Present*
 
 - Lead development of payment transaction systems, integrating custom APIs and CRM systems for merchants needs
