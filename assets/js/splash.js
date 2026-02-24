@@ -1,65 +1,52 @@
 /**
- * Splash Screen — Payment Transaction Intro Animation
+ * Splash Screen — POS Terminal + Tap to Pay + Receipt
  *
  * Flow:
- * 1. Business card fades in (0.3s delay, 0.8s animation)
- * 2. Terminal slides down beneath card (after 1.6s)
- * 3. Transaction lines type in one by one
- * 4. Progress bar fills during "processing"
- * 5. APPROVED result appears
- * 6. Gold flash transition → main site revealed
+ * 1. POS terminal fades in
+ * 2. Screen shows "TAP TO PAY" with blinking cursor
+ * 3. Business card floats down from above, hovers over NFC zone
+ * 4. Card gently lowers to tap — NFC zone lights up gold
+ * 5. Card lifts away and fades out
+ * 6. Screen shows "READING CARD..." then transaction details
+ * 7. Progress bar fills during processing
+ * 8. Screen shows APPROVED, NFC zone turns green
+ * 9. Receipt prints out from terminal
+ * 10. Receipt shows APPROVED stamp
+ * 11. Gold flash → main site
  */
 
 (function () {
     'use strict';
 
-    // ===== CONFIG =====
-    const TIMING = {
-        cardSettled: 1400,       // ms after page load before terminal appears
-        terminalLineDelay: 250,  // ms between each terminal line
-        processingStart: 400,    // ms after last line before progress starts
-        processingDuration: 1800,// ms for progress bar to fill
-        approvedDelay: 400,      // ms after bar full before APPROVED shows
-        exitDelay: 1000,         // ms after APPROVED before transition starts
-        flashDuration: 800,      // ms for gold flash
+    // ===== TIMING =====
+    const T = {
+        terminalReady: 800,
+        cardAppear: 1600,         // card floats down from above
+        cardHoverPause: 700,      // card hovers before tapping
+        cardTapDuration: 400,     // card lowers to touch
+        tapContactHold: 500,      // card stays in contact
+        cardLiftDuration: 700,    // card lifts away
+        readingDelay: 300,        // after lift, "READING CARD..."
+        lineDelay: 200,
+        processingDuration: 1600,
+        approvedDelay: 350,
+        receiptDelay: 500,
+        receiptStamp: 1400,
+        exitDelay: 1000,
+        flashDuration: 800,
     };
 
-    // ===== QR CODE (lightweight, same approach as business card) =====
-    function generateQR(canvas, text, size) {
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = function () {
-            ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(img, 0, 0, size, size);
-        };
-        img.onerror = function () {
-            ctx.fillStyle = '#0f172a';
-            const s = size / 13;
-            for (let i = 0; i < 13; i++) {
-                for (let j = 0; j < 13; j++) {
-                    if ((i + j) % 2 === 0 || (i < 3 && j < 3) || (i < 3 && j > 9) || (i > 9 && j < 3)) {
-                        ctx.fillRect(i * s, j * s, s, s);
-                    }
-                }
-            }
-        };
-        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&margin=0&color=0f172a`;
+    // ===== HELPERS =====
+    function randomCode(len, chars) {
+        let s = '';
+        for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
+        return s;
     }
 
-    // ===== RANDOM HELPERS =====
-    function randomAuthCode() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-        return code;
-    }
+    const authCode = randomCode(6, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
+    const txnId = 'TXN-' + Date.now().toString(36).toUpperCase().slice(-8);
 
-    function randomTxnId() {
-        return 'TXN-' + Date.now().toString(36).toUpperCase().slice(-8);
-    }
-
-    // ===== SKIP / EXIT =====
+    // ===== EXIT =====
     let hasExited = false;
 
     function exitSplash() {
@@ -72,87 +59,157 @@
 
         if (skipBtn) skipBtn.style.display = 'none';
 
-        // Trigger gold flash
-        if (flash) {
-            flash.classList.add('active');
-        }
+        if (flash) flash.classList.add('active');
 
-        // After flash peaks, hide the overlay
         setTimeout(() => {
             if (overlay) overlay.classList.add('hidden');
             document.body.classList.remove('splash-active');
         }, 300);
 
-        // Clean up DOM after transition
         setTimeout(() => {
             if (overlay) overlay.remove();
             if (flash) flash.remove();
-        }, TIMING.flashDuration + 200);
+        }, T.flashDuration + 200);
     }
 
-    // ===== ANIMATION SEQUENCE =====
+    // ===== SCREEN LINE HELPER =====
+    function showLine(step) {
+        const el = document.querySelector(`.screen-line[data-step="${step}"]`);
+        if (el) el.classList.add('visible');
+        return el;
+    }
+
+    function hideLine(step) {
+        const el = document.querySelector(`.screen-line[data-step="${step}"]`);
+        if (el) { el.style.opacity = '0'; el.style.transform = 'translateY(4px)'; }
+    }
+
+    // ===== MAIN SEQUENCE =====
     function runSequence() {
-        const terminal = document.querySelector('.splash-terminal');
-        const lines = document.querySelectorAll('.terminal-line');
-        const dividers = document.querySelectorAll('.terminal-divider');
-        const statusDot = document.querySelector('.terminal-status-dot');
-        const progress = document.querySelector('.terminal-progress');
-        const progressFill = document.querySelector('.terminal-progress-fill');
-        const result = document.querySelector('.terminal-result');
-        const progressLabel = document.querySelector('.terminal-progress-label');
+        const cursor = document.querySelector('.screen-cursor');
+        const card = document.querySelector('.swipe-card');
+        const tapZone = document.querySelector('.pos-tap-zone');
+        const statusLed = document.querySelector('.pos-led.status');
+        const progress = document.querySelector('.screen-progress');
+        const progressFill = document.querySelector('.screen-progress-fill');
+        const receipt = document.querySelector('.pos-receipt');
+        const approvedStamp = document.querySelector('.receipt-line.approved-stamp');
 
-        // Step 1: Show terminal
+        let t = 0;
+
+        // Step 1: Screen header
+        t += T.terminalReady;
+        setTimeout(() => showLine('header'), t);
+
+        // Step 2: "TAP TO PAY"
+        t += 400;
         setTimeout(() => {
-            if (terminal) terminal.classList.add('active');
-        }, TIMING.cardSettled);
+            showLine('insert');
+            if (cursor) cursor.style.display = 'inline-block';
+        }, t);
 
-        // Step 2: Show lines one by one
-        const allItems = document.querySelectorAll('.terminal-line, .terminal-divider');
-        let lineStartTime = TIMING.cardSettled + 500;
+        // Step 3: Card floats down from above and hovers
+        t += T.cardAppear - 400;
+        setTimeout(() => {
+            if (card) card.classList.add('animate-hover');
+        }, t);
 
-        allItems.forEach((item, i) => {
+        // Step 4: After hover animation completes + pause, card taps down
+        t += 800 + T.cardHoverPause;
+        setTimeout(() => {
+            if (card) {
+                // Lock the hover end-state into inline styles before swapping animation
+                card.style.top = '-20px';
+                card.style.opacity = '1';
+                card.classList.remove('animate-hover');
+                // Force reflow so the browser registers the class removal
+                void card.offsetHeight;
+                card.classList.add('animate-tap');
+            }
+            if (tapZone) tapZone.classList.add('active');
+            if (cursor) cursor.style.display = 'none';
+            if (statusLed) statusLed.classList.add('status-active');
+        }, t);
+
+        // Step 5: Card holds contact, then lifts away
+        t += T.cardTapDuration + T.tapContactHold;
+        setTimeout(() => {
+            if (card) {
+                // Lock the tap end-state before swapping to lift
+                card.style.top = '0px';
+                card.style.opacity = '1';
+                card.classList.remove('animate-tap');
+                void card.offsetHeight;
+                card.classList.add('animate-lift');
+            }
+        }, t);
+
+        // Step 6: "READING CARD..."
+        t += T.readingDelay + 200;
+        setTimeout(() => {
+            hideLine('insert');
+            showLine('reading');
+        }, t);
+
+        // Step 7: Show transaction info lines
+        t += 600;
+        const infoSteps = ['merchant', 'txn', 'item', 'card', 'total'];
+        infoSteps.forEach((step, i) => {
             setTimeout(() => {
-                item.classList.add('visible');
-            }, lineStartTime + (i * TIMING.terminalLineDelay));
+                if (i === 0) hideLine('reading');
+                showLine(step);
+            }, t + (i * T.lineDelay));
         });
 
-        const totalLineTime = lineStartTime + (allItems.length * TIMING.terminalLineDelay);
+        t += infoSteps.length * T.lineDelay + 300;
 
-        // Step 3: Start processing
-        const processingStartTime = totalLineTime + TIMING.processingStart;
-
+        // Step 8: Processing bar
         setTimeout(() => {
-            if (statusDot) statusDot.classList.add('processing');
+            showLine('processing');
             if (progress) progress.classList.add('visible');
-            if (progressLabel) progressLabel.textContent = 'Processing...';
 
-            // Animate progress bar
             let startTs = null;
             function animateBar(ts) {
                 if (!startTs) startTs = ts;
                 const elapsed = ts - startTs;
-                const pct = Math.min((elapsed / TIMING.processingDuration) * 100, 100);
+                const pct = Math.min((elapsed / T.processingDuration) * 100, 100);
                 if (progressFill) progressFill.style.width = pct + '%';
 
                 if (pct < 100) {
                     requestAnimationFrame(animateBar);
                 } else {
-                    // Step 4: Show APPROVED
+                    // Step 9: APPROVED
                     setTimeout(() => {
-                        if (statusDot) {
-                            statusDot.classList.remove('processing');
-                            statusDot.classList.add('approved');
+                        if (statusLed) {
+                            statusLed.classList.remove('status-active');
+                            statusLed.classList.add('status-approved');
                         }
-                        if (progressLabel) progressLabel.textContent = 'Complete';
-                        if (result) result.classList.add('visible');
+                        if (tapZone) {
+                            tapZone.classList.remove('active');
+                            tapZone.classList.add('success');
+                        }
+                        hideLine('processing');
+                        if (progress) progress.style.opacity = '0';
+                        showLine('approved');
+                        setTimeout(() => showLine('auth'), 100);
 
-                        // Step 5: Exit after pause
-                        setTimeout(exitSplash, TIMING.exitDelay);
-                    }, TIMING.approvedDelay);
+                        // Step 10: Print receipt
+                        setTimeout(() => {
+                            if (receipt) receipt.classList.add('printing');
+
+                            // Step 11: Stamp on receipt
+                            setTimeout(() => {
+                                if (approvedStamp) approvedStamp.classList.add('visible');
+
+                                // Step 12: Exit
+                                setTimeout(exitSplash, T.exitDelay);
+                            }, T.receiptStamp);
+                        }, T.receiptDelay);
+                    }, T.approvedDelay);
                 }
             }
             requestAnimationFrame(animateBar);
-        }, processingStartTime);
+        }, t);
     }
 
     // ===== INIT =====
@@ -160,7 +217,7 @@
         const overlay = document.getElementById('splash-overlay');
         if (!overlay) return;
 
-        // Check if user has seen the splash this session
+        // Skip if seen this session
         if (sessionStorage.getItem('splash-seen')) {
             overlay.remove();
             const flash = document.getElementById('splash-flash');
@@ -169,29 +226,24 @@
             return;
         }
 
-        // Mark as seen
         sessionStorage.setItem('splash-seen', '1');
-
-        // Lock scroll
         document.body.classList.add('splash-active');
 
-        // Generate QR code
-        const qrCanvas = document.getElementById('splash-qr-canvas');
-        if (qrCanvas) generateQR(qrCanvas, 'https://kev-c.dev', 56);
-
         // Set dynamic values
-        const txnIdEl = document.getElementById('splash-txn-id');
-        const authCodeEl = document.getElementById('splash-auth-code');
-        if (txnIdEl) txnIdEl.textContent = randomTxnId();
-        if (authCodeEl) authCodeEl.textContent = 'AUTH: ' + randomAuthCode();
+        const txnEl = document.getElementById('splash-txn-id');
+        const authEl = document.getElementById('splash-auth-code');
+        const receiptTxnEl = document.getElementById('receipt-txn-id');
+        const receiptAuthEl = document.getElementById('receipt-auth-code');
 
-        // Wire up skip button
+        if (txnEl) txnEl.textContent = txnId;
+        if (authEl) authEl.textContent = 'AUTH: ' + authCode;
+        if (receiptTxnEl) receiptTxnEl.textContent = txnId;
+        if (receiptAuthEl) receiptAuthEl.textContent = 'AUTH CODE: ' + authCode;
+
+        // Skip button
         const skipBtn = document.querySelector('.splash-skip');
-        if (skipBtn) {
-            skipBtn.addEventListener('click', exitSplash);
-        }
+        if (skipBtn) skipBtn.addEventListener('click', exitSplash);
 
-        // Start animation sequence
         runSequence();
     });
 })();

@@ -1,11 +1,10 @@
 /* ============================================
-   SPLASH SCREEN — Payment Transaction Intro
+   SPLASH SCREEN — POS Terminal + Card Swipe + Receipt
+   Colors aligned to site: black (#000) / gold (#ffb800)
    ============================================ */
 
-/* Fonts for splash */
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
-/* Lock body scroll during splash */
 body.splash-active {
     overflow: hidden;
 }
@@ -15,7 +14,7 @@ body.splash-active {
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: #0a0f1a;
+    background: #000000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -29,137 +28,473 @@ body.splash-active {
     pointer-events: none;
 }
 
-/* Ambient glow */
+/* Subtle ambient gold glow */
 #splash-overlay::before {
     content: '';
     position: absolute;
-    top: -200px;
-    right: -200px;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+    top: -150px;
+    right: -150px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(255,184,0,0.04) 0%, transparent 70%);
     pointer-events: none;
 }
 #splash-overlay::after {
     content: '';
     position: absolute;
-    bottom: -200px;
-    left: -200px;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(96,165,250,0.04) 0%, transparent 70%);
+    bottom: -150px;
+    left: -150px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,184,0,0.03) 0%, transparent 70%);
     pointer-events: none;
 }
 
-/* ===== SPLASH STAGE (card + terminal wrapper) ===== */
+/* ===== SPLASH STAGE ===== */
 .splash-stage {
     position: relative;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 0;
+    justify-content: center;
+    width: 100%;
+    max-width: 700px;
+    min-height: 420px;
 }
 
-/* ===== BUSINESS CARD ===== */
-.splash-card {
-    --navy: #0f172a;
-    --navy-mid: #1e293b;
-    --navy-light: #334155;
-    --blue: #3b82f6;
-    --blue-light: #60a5fa;
-    --text-white: #f8fafc;
-    --text-muted: #94a3b8;
+/* ===== POS TERMINAL DEVICE ===== */
+.pos-terminal {
+    position: relative;
+    width: 320px;
+    background: #111111;
+    border-radius: 20px;
+    border: 2px solid #222222;
+    box-shadow:
+        0 20px 60px rgba(0,0,0,0.8),
+        0 2px 8px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    overflow: visible;
+    z-index: 2;
 
-    width: 420px;
-    height: 240px;
-    border-radius: 12px;
-    background: var(--navy);
+    /* Entry */
+    opacity: 0;
+    transform: translateY(30px);
+    animation: terminalEnter 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+
+@keyframes terminalEnter {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Terminal top bezel with brand */
+.pos-top-bezel {
+    padding: 16px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.pos-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #444444;
+    font-weight: 500;
+}
+
+.pos-led-row {
+    display: flex;
+    gap: 6px;
+}
+
+.pos-led {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.pos-led.power {
+    background: #ffb800;
+    box-shadow: 0 0 6px rgba(255,184,0,0.3);
+}
+
+.pos-led.status-active {
+    background: #ffb800;
+    box-shadow: 0 0 8px rgba(255,184,0,0.4);
+    animation: ledPulse 1.2s ease infinite;
+}
+
+.pos-led.status-approved {
+    background: #34d399;
+    box-shadow: 0 0 10px rgba(52,211,153,0.5);
+}
+
+@keyframes ledPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* ===== TERMINAL SCREEN ===== */
+.pos-screen {
+    margin: 12px 16px;
+    background: #0a0a0a;
+    border-radius: 8px;
+    border: 1px solid #1a1a1a;
+    padding: 16px;
+    min-height: 100px;
+    font-family: 'JetBrains Mono', monospace;
     position: relative;
     overflow: hidden;
+}
+
+/* Scanline effect on screen */
+.pos-screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.008) 2px,
+        rgba(255,255,255,0.008) 4px
+    );
+    pointer-events: none;
+}
+
+.screen-line {
+    font-size: 0.65rem;
+    color: #ffb800;
+    margin-bottom: 6px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.screen-line.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.screen-line.dim {
+    color: #666666;
+}
+
+.screen-line.bright {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.screen-line.gold {
+    color: #ffb800;
+    font-weight: 700;
+}
+
+.screen-line.success {
+    color: #34d399;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    text-align: center;
+    margin-top: 8px;
+}
+
+/* Blinking cursor on screen */
+.screen-cursor {
+    display: inline-block;
+    width: 7px;
+    height: 12px;
+    background: #ffb800;
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: cursorBlink 0.8s step-end infinite;
+}
+
+@keyframes cursorBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Progress bar on screen */
+.screen-progress {
+    margin-top: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.screen-progress.visible {
+    opacity: 1;
+}
+
+.screen-progress-bar {
+    width: 100%;
+    height: 3px;
+    background: #1a1a1a;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.screen-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ffb800, #ffcc44);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+}
+
+/* ===== TAP-TO-PAY ZONE ===== */
+.pos-tap-zone {
+    position: relative;
+    height: 48px;
+    margin: 8px 16px 4px;
+    background: #0a0a0a;
+    border-radius: 8px;
+    border: 1px solid #1a1a1a;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pos-tap-zone.active {
+    border-color: #ffb800;
+    box-shadow: 0 0 12px rgba(255,184,0,0.15);
+}
+
+.pos-tap-zone.success {
+    border-color: #34d399;
+    box-shadow: 0 0 16px rgba(52,211,153,0.2);
+}
+
+/* NFC wave icon (CSS-only) */
+.nfc-icon {
+    position: relative;
+    width: 18px;
+    height: 18px;
+}
+
+.nfc-wave {
+    position: absolute;
+    border: 1.5px solid #333333;
+    border-radius: 50%;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    transform: rotate(-45deg);
+    transition: border-color 0.3s ease;
+}
+
+.nfc-wave-1 {
+    width: 8px;
+    height: 8px;
+    bottom: 0;
+    left: 0;
+}
+
+.nfc-wave-2 {
+    width: 13px;
+    height: 13px;
+    bottom: 0;
+    left: 0;
+}
+
+.nfc-wave-3 {
+    width: 18px;
+    height: 18px;
+    bottom: 0;
+    left: 0;
+}
+
+.pos-tap-zone.active .nfc-wave {
+    border-color: #ffb800;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    animation: nfcPulse 1s ease infinite;
+}
+
+.pos-tap-zone.success .nfc-wave {
+    border-color: #34d399;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    animation: none;
+}
+
+@keyframes nfcPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.nfc-wave-2 { animation-delay: 0.15s; }
+.nfc-wave-3 { animation-delay: 0.3s; }
+
+.pos-tap-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.45rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #333333;
+    transition: color 0.3s ease;
+}
+
+.pos-tap-zone.active .pos-tap-label {
+    color: #ffb800;
+}
+
+.pos-tap-zone.success .pos-tap-label {
+    color: #34d399;
+}
+
+/* ===== BUSINESS CARD (tap to pay) ===== */
+.swipe-card {
+    position: absolute;
+    width: 260px;
+    height: 150px;
+    border-radius: 8px;
+    background: #111111;
+    border: 1px solid #222222;
     box-shadow:
-        0 4px 24px rgba(0,0,0,0.4),
-        0 1px 3px rgba(0,0,0,0.3),
+        0 4px 20px rgba(0,0,0,0.6),
         inset 0 1px 0 rgba(255,255,255,0.03);
     font-family: 'DM Sans', sans-serif;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 24px 26px 22px 28px;
-    z-index: 2;
+    padding: 14px 16px 12px 18px;
+    z-index: 10;
+    overflow: hidden;
 
-    /* Entry animation */
+    /* Start position: above the terminal, centered, invisible */
+    left: 50%;
+    top: -180px;
+    transform: translateX(-50%);
     opacity: 0;
-    transform: translateY(40px) scale(0.95);
-    animation: cardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
 }
 
-@keyframes cardEnter {
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* Left accent bar */
-.splash-card::before {
+/* Gold left accent */
+.swipe-card::before {
     content: '';
     position: absolute;
     left: 0;
     top: 0;
-    width: 4px;
+    width: 3px;
     height: 100%;
-    background: linear-gradient(180deg, var(--blue) 0%, var(--blue-light) 100%);
+    background: linear-gradient(180deg, #ffb800 0%, #cc8500 100%);
 }
 
-/* Grid pattern */
-.splash-card::after {
+/* Subtle grid */
+.swipe-card::after {
     content: '';
     position: absolute;
     inset: 0;
     background-image:
-        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-    background-size: 20px 20px;
+        linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
+    background-size: 16px 16px;
     pointer-events: none;
 }
 
-.splash-card-top {
-    position: relative;
-    z-index: 1;
+/* Card floats down into view above terminal */
+.swipe-card.animate-hover {
+    animation: cardHoverIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.splash-card-name {
-    font-size: 1.3rem;
+@keyframes cardHoverIn {
+    0% {
+        top: -180px;
+        opacity: 0;
+    }
+    40% {
+        opacity: 1;
+    }
+    100% {
+        top: -20px;
+        opacity: 1;
+    }
+}
+
+/* Card lowers gently to tap the NFC zone */
+.swipe-card.animate-tap {
+    animation: cardTapDown 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes cardTapDown {
+    0% {
+        top: -20px;
+    }
+    70% {
+        top: 6px;
+    }
+    100% {
+        top: 0px;
+    }
+}
+
+/* Gold pulse ripple on tap contact */
+.swipe-card.tap-contact::after {
+    background-image: none !important;
+    background: radial-gradient(circle, rgba(255,184,0,0.3) 0%, transparent 70%) !important;
+    animation: tapRipple 0.6s ease-out forwards;
+}
+
+@keyframes tapRipple {
+    0% { opacity: 1; transform: scale(0.8); }
+    100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* Card lifts away and fades out */
+.swipe-card.animate-lift {
+    animation: cardLiftAway 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardLiftAway {
+    0% {
+        top: 0px;
+        opacity: 1;
+    }
+    100% {
+        top: -120px;
+        opacity: 0;
+    }
+}
+
+.card-name {
+    font-size: 0.85rem;
     font-weight: 700;
-    color: var(--text-white);
+    color: #ffffff;
     letter-spacing: 0.3px;
     line-height: 1;
-}
-
-.splash-card-title {
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--blue-light);
-    margin-top: 6px;
-    letter-spacing: 0.5px;
-}
-
-.splash-card-tagline {
-    font-size: 0.62rem;
-    color: var(--text-muted);
-    margin-top: 4px;
-    font-weight: 400;
-}
-
-.splash-card-divider {
-    width: 140px;
-    height: 1px;
-    background: var(--navy-light);
     position: relative;
     z-index: 1;
 }
 
-.splash-card-bottom {
+.card-title {
+    font-size: 0.5rem;
+    font-weight: 500;
+    color: #ffb800;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+}
+
+.card-tagline {
+    font-size: 0.42rem;
+    color: #666666;
+    margin-top: 2px;
+    font-weight: 400;
+    position: relative;
+    z-index: 1;
+}
+
+.card-bottom-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -167,266 +502,198 @@ body.splash-active {
     z-index: 1;
 }
 
-.splash-contact-list {
+.card-contact {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
-.splash-contact-row {
+.card-contact-line {
+    font-size: 0.4rem;
+    color: #999999;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.6rem;
-    color: var(--text-white);
-    font-weight: 400;
+    gap: 5px;
 }
 
-.splash-contact-row .icon {
+.card-contact-line .ci {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.52rem;
-    color: var(--blue-light);
-    width: 16px;
+    font-size: 0.36rem;
+    color: #ffb800;
+    width: 12px;
     text-align: center;
-    font-weight: 500;
 }
 
-.splash-contact-row.website-row {
+.card-contact-line.card-web {
     font-weight: 700;
+    color: #ffffff;
 }
 
-.splash-qr-block {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
-
-.splash-qr-frame {
-    background: white;
-    border-radius: 4px;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.splash-qr-frame canvas {
-    display: block;
-}
-
-.splash-qr-location {
-    font-size: 0.48rem;
-    color: var(--text-muted);
-    font-weight: 400;
-    letter-spacing: 0.3px;
-}
-
-
-/* ===== PAYMENT TERMINAL ===== */
-.splash-terminal {
-    width: 340px;
-    background: #1e293b;
-    border-radius: 0 0 16px 16px;
-    border-top: 3px solid #334155;
-    padding: 20px 24px 24px;
-    font-family: 'JetBrains Mono', monospace;
+.card-chip {
+    width: 28px;
+    height: 20px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, #ffb800 0%, #cc8500 50%, #ffcc44 100%);
     position: relative;
-    z-index: 1;
-    box-shadow:
-        0 8px 32px rgba(0,0,0,0.5),
-        inset 0 1px 0 rgba(255,255,255,0.02);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2);
+}
 
-    /* Starts hidden, slides down */
-    opacity: 0;
-    transform: translateY(-20px);
+/* Chip contact lines */
+.card-chip::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 3px;
+    right: 3px;
+    height: 1px;
+    background: rgba(0,0,0,0.15);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.15), 0 8px 0 rgba(0,0,0,0.15);
+}
+
+.card-chip::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    width: 1px;
+    height: 14px;
+    background: rgba(0,0,0,0.1);
+}
+
+
+/* ===== RECEIPT ===== */
+.pos-receipt-area {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.pos-receipt {
+    background: #f5f0e8;
+    margin: 0 30px;
+    padding: 0;
     max-height: 0;
     overflow: hidden;
     transition: none;
+    position: relative;
+    border-radius: 0 0 2px 2px;
+    /* Torn paper top edge */
+    mask-image: linear-gradient(to bottom, transparent 0px, black 3px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 3px);
 }
 
-.splash-terminal.active {
-    animation: terminalSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.pos-receipt.printing {
+    animation: receiptPrint 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-@keyframes terminalSlideDown {
-    from {
-        opacity: 0;
+@keyframes receiptPrint {
+    0% {
         max-height: 0;
-        transform: translateY(-20px);
-        padding: 0 24px;
+        padding: 0 14px;
     }
-    to {
-        opacity: 1;
-        max-height: 300px;
-        transform: translateY(0);
-        padding: 20px 24px 24px;
+    100% {
+        max-height: 400px;
+        padding: 12px 14px 16px;
     }
 }
 
-.terminal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
+/* Torn bottom edge */
+.pos-receipt::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(135deg, #f5f0e8 33.33%, transparent 33.33%) 0 0,
+                linear-gradient(225deg, #f5f0e8 33.33%, transparent 33.33%) 0 0;
+    background-size: 6px 6px;
+    background-position: bottom;
 }
 
-.terminal-title {
-    font-size: 0.6rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #64748b;
-    font-weight: 500;
-}
-
-.terminal-status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #334155;
-    transition: background 0.3s ease;
-}
-
-.terminal-status-dot.processing {
-    background: #fbbf24;
-    box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
-    animation: pulse-dot 1s ease infinite;
-}
-
-.terminal-status-dot.approved {
-    background: #34d399;
-    box-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
-}
-
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-}
-
-/* Terminal lines */
-.terminal-lines {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.terminal-line {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.65rem;
-    color: #94a3b8;
-    opacity: 0;
-    transform: translateX(-10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.terminal-line.visible {
-    opacity: 1;
-    transform: translateX(0);
-}
-
-.terminal-line .label {
-    color: #64748b;
-}
-
-.terminal-line .value {
-    color: #e2e8f0;
-}
-
-/* Divider line in terminal */
-.terminal-divider {
-    width: 100%;
-    height: 1px;
-    background: #334155;
-    margin: 4px 0;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.terminal-divider.visible {
-    opacity: 1;
-}
-
-/* Total line */
-.terminal-line.total .label {
-    color: #94a3b8;
-    font-weight: 700;
-}
-
-.terminal-line.total .value {
-    color: #f8fafc;
-    font-weight: 700;
-    font-size: 0.75rem;
-}
-
-/* Processing bar */
-.terminal-progress {
-    margin-top: 14px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.terminal-progress.visible {
-    opacity: 1;
-}
-
-.terminal-progress-label {
+.receipt-line {
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.55rem;
-    color: #64748b;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
+    color: #333333;
+    margin-bottom: 3px;
+    letter-spacing: 0.3px;
 }
 
-.terminal-progress-bar {
-    width: 100%;
-    height: 3px;
-    background: #0f172a;
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.terminal-progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
-    border-radius: 2px;
-    transition: width 0.1s linear;
-}
-
-/* Approval result */
-.terminal-result {
-    margin-top: 14px;
+.receipt-line.center {
     text-align: center;
+}
+
+.receipt-line.bold {
+    font-weight: 700;
+    color: #000000;
+}
+
+.receipt-line.big {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #000000;
+    letter-spacing: 1px;
+}
+
+.receipt-line.gold-text {
+    color: #996b00;
+    font-weight: 700;
+}
+
+.receipt-divider {
+    border: none;
+    border-top: 1px dashed #bbbbbb;
+    margin: 6px 0;
+}
+
+.receipt-line.approved-stamp {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1a7a3a;
+    letter-spacing: 4px;
+    text-align: center;
+    margin-top: 6px;
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.8);
     transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.terminal-result.visible {
+.receipt-line.approved-stamp.visible {
     opacity: 1;
     transform: scale(1);
 }
 
-.terminal-result-text {
-    font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 4px;
-    text-transform: uppercase;
+
+/* ===== TERMINAL BOTTOM ===== */
+.pos-bottom-bezel {
+    padding: 14px 20px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
-.terminal-result-text.approved {
-    color: #34d399;
-    text-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+/* Decorative keypad dots */
+.pos-keypad-dots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
 }
 
-.terminal-auth-code {
-    font-size: 0.5rem;
-    color: #64748b;
-    margin-top: 4px;
-    letter-spacing: 1px;
+.pos-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    border: 1px solid #222222;
 }
+
+.pos-dot.gold {
+    background: #ffb800;
+    border-color: #cc8500;
+    box-shadow: 0 0 4px rgba(255,184,0,0.2);
+}
+
 
 /* ===== SKIP BUTTON ===== */
 .splash-skip {
@@ -438,9 +705,9 @@ body.splash-active {
     font-size: 0.65rem;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #475569;
+    color: #444444;
     background: none;
-    border: 1px solid #1e293b;
+    border: 1px solid #222222;
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
@@ -450,8 +717,8 @@ body.splash-active {
 }
 
 .splash-skip:hover {
-    color: #94a3b8;
-    border-color: #334155;
+    color: #ffb800;
+    border-color: #ffb800;
 }
 
 @keyframes fadeIn {
@@ -481,24 +748,41 @@ body.splash-active {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 500px) {
-    .splash-card {
-        width: 320px;
-        height: 190px;
-        padding: 18px 20px 16px 22px;
+    .pos-terminal {
+        width: 280px;
     }
 
-    .splash-card-name { font-size: 1.05rem; }
-    .splash-card-title { font-size: 0.6rem; }
-    .splash-card-tagline { font-size: 0.52rem; }
-    .splash-contact-row { font-size: 0.52rem; }
+    .swipe-card {
+        width: 220px;
+        height: 130px;
+        padding: 12px 14px 10px 16px;
+    }
 
-    .splash-terminal {
-        width: 280px;
-        padding: 16px 18px 18px;
+    .card-name { font-size: 0.75rem; }
+    .card-title { font-size: 0.44rem; }
+    .card-contact-line { font-size: 0.36rem; }
+
+    .pos-receipt {
+        margin: 0 24px;
+    }
+
+    .pos-tap-zone {
+        height: 40px;
+        margin: 6px 16px 4px;
     }
 
     .splash-skip {
         bottom: 20px;
         right: 20px;
+    }
+}
+
+@media (max-width: 380px) {
+    .pos-terminal {
+        width: 260px;
+    }
+    .swipe-card {
+        width: 200px;
+        height: 120px;
     }
 }
