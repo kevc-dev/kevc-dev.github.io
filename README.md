@@ -1,8 +1,8 @@
-## Software Engineer
+## Senior Software Engineer
 
-Software Engineer with 6+ years of experience building full stack solutions for financial services, payment processing, and banking systems. Proficient in Java, Kotlin, and Python with expertise in developing secure transaction software for Clover, Pax, and Dejavoo terminals. Currently integrating AI language models to enhance payment processing systems.
+Senior Software Engineer with 6+ years of experience building full stack solutions for financial services, payment processing, and banking systems. Proficient in Java, Kotlin, and Python with expertise in developing secure transaction software for Clover, Pax, and Dejavoo terminals. Currently integrating AI language models to enhance payment processing systems.
 
-👋 [Email](mailto:kc.py@icloud.com) | 🔗 [LinkedIn](https://www.linkedin.com/in/kevincasas-dev/) | 📍 Scottsdale, Arizona
+👋 [Email](mailto:kc.py@icloud.com) | 🔗 [LinkedIn](https://www.linkedin.com/in/kevc-dev/) | 📍 Scottsdale, Arizona
 
 ---
 

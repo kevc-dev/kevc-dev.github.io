@@ -1,5 +1,5 @@
-# robots.txt for kevincasas-dev.github.io
-# Last updated: May 2, 2025
+# robots.txt for kev-c.dev
+# Last updated: February 24, 2026
 
 # Allow all well-behaved bots by default
 User-agent: *
@@ -65,4 +65,4 @@ User-agent: ia_archiver
 Disallow: /
 
 # Specify your sitemap location
-Sitemap: https://kevincasas-dev.github.io/sitemap.xml
+Sitemap: https://kev-c.dev/sitemap.xml
