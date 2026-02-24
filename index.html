@@ -138,11 +138,15 @@
 
                 <!-- Tap to Pay NFC zone -->
                 <div class="pos-tap-zone">
-                    <div class="nfc-icon">
-                        <div class="nfc-wave nfc-wave-1"></div>
-                        <div class="nfc-wave nfc-wave-2"></div>
-                        <div class="nfc-wave nfc-wave-3"></div>
-                    </div>
+                    <svg class="nfc-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Standard EMV Contactless Indicator Symbol -->
+                        <g transform="rotate(136 12 12)">
+                            <circle class="nfc-dot" cx="18" cy="18" r="1.6"/>
+                            <path class="nfc-arc nfc-arc-1" d="M18 14 A4 4 0 0 0 14 18" fill="none" stroke-width="1.8" stroke-linecap="round"/>
+                            <path class="nfc-arc nfc-arc-2" d="M18 10.5 A7.5 7.5 0 0 0 10.5 18" fill="none" stroke-width="1.8" stroke-linecap="round"/>
+                            <path class="nfc-arc nfc-arc-3" d="M18 7 A11 11 0 0 0 7 18" fill="none" stroke-width="1.8" stroke-linecap="round"/>
+                        </g>
+                    </svg>
                     <span class="pos-tap-label">Tap to Pay</span>
                 </div>
 

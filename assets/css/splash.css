@@ -275,55 +275,40 @@ body.splash-active {
     box-shadow: 0 0 16px rgba(52,211,153,0.2);
 }
 
-/* NFC wave icon (CSS-only) */
+/* NFC contactless payment icon (SVG) */
 .nfc-icon {
-    position: relative;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
 }
 
-.nfc-wave {
-    position: absolute;
-    border: 1.5px solid #333333;
-    border-radius: 50%;
-    border-left-color: transparent;
-    border-bottom-color: transparent;
-    transform: rotate(-45deg);
-    transition: border-color 0.3s ease;
+.nfc-dot {
+    fill: #333333;
+    transition: fill 0.3s ease;
 }
 
-.nfc-wave-1 {
-    width: 8px;
-    height: 8px;
-    bottom: 0;
-    left: 0;
+.nfc-arc {
+    stroke: #333333;
+    transition: stroke 0.3s ease, opacity 0.3s ease;
 }
 
-.nfc-wave-2 {
-    width: 13px;
-    height: 13px;
-    bottom: 0;
-    left: 0;
+.pos-tap-zone.active .nfc-dot {
+    fill: #ffb800;
 }
 
-.nfc-wave-3 {
-    width: 18px;
-    height: 18px;
-    bottom: 0;
-    left: 0;
-}
-
-.pos-tap-zone.active .nfc-wave {
-    border-color: #ffb800;
-    border-left-color: transparent;
-    border-bottom-color: transparent;
+.pos-tap-zone.active .nfc-arc {
+    stroke: #ffb800;
     animation: nfcPulse 1s ease infinite;
 }
 
-.pos-tap-zone.success .nfc-wave {
-    border-color: #34d399;
-    border-left-color: transparent;
-    border-bottom-color: transparent;
+.pos-tap-zone.active .nfc-arc-2 { animation-delay: 0.1s; }
+.pos-tap-zone.active .nfc-arc-3 { animation-delay: 0.2s; }
+
+.pos-tap-zone.success .nfc-dot {
+    fill: #34d399;
+}
+
+.pos-tap-zone.success .nfc-arc {
+    stroke: #34d399;
     animation: none;
 }
 
@@ -331,9 +316,6 @@ body.splash-active {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
 }
-
-.nfc-wave-2 { animation-delay: 0.15s; }
-.nfc-wave-3 { animation-delay: 0.3s; }
 
 .pos-tap-label {
     font-family: 'JetBrains Mono', monospace;
