@@ -78,11 +78,103 @@
         .container{max-width:1200px;margin:0 auto;padding:0 20px}
         header{background-color:var(--black);padding:20px 0;position:fixed;width:100%;top:0;z-index:1000}
     </style>
+    <!-- Splash screen CSS -->
+    <link rel="stylesheet" href="assets/css/splash.css">
     <!-- Link to external CSS file -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
-<body>
+<body class="splash-active">
+
+    <!-- ===== SPLASH SCREEN ===== -->
+    <div id="splash-overlay">
+        <div class="splash-stage">
+
+            <!-- Business Card -->
+            <div class="splash-card">
+                <div class="splash-card-top">
+                    <div class="splash-card-name">Kevin C.</div>
+                    <div class="splash-card-title">Senior Software Engineer</div>
+                    <div class="splash-card-tagline">AI/ML &bull; Payment Systems &bull; Full-Stack</div>
+                </div>
+
+                <div class="splash-card-divider"></div>
+
+                <div class="splash-card-bottom">
+                    <div class="splash-contact-list">
+                        <div class="splash-contact-row">
+                            <span class="icon">&#9993;</span> kc.py@icloud.com
+                        </div>
+                        <div class="splash-contact-row">
+                            <span class="icon">in</span> linkedin.com/in/kevc-dev
+                        </div>
+                        <div class="splash-contact-row">
+                            <span class="icon">&lt;/&gt;</span> github.com/kevc-dev
+                        </div>
+                        <div class="splash-contact-row website-row">
+                            <span class="icon">&#8962;</span> kev-c.dev
+                        </div>
+                    </div>
+                    <div class="splash-qr-block">
+                        <div class="splash-qr-frame">
+                            <canvas id="splash-qr-canvas" width="56" height="56"></canvas>
+                        </div>
+                        <div class="splash-qr-location">Scottsdale, Arizona</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Terminal -->
+            <div class="splash-terminal">
+                <div class="terminal-header">
+                    <span class="terminal-title">Payment Terminal</span>
+                    <span class="terminal-status-dot"></span>
+                </div>
+                <div class="terminal-lines">
+                    <div class="terminal-line">
+                        <span class="label">Merchant</span>
+                        <span class="value">KEV-C.DEV</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="label">TXN ID</span>
+                        <span class="value" id="splash-txn-id">TXN-00000000</span>
+                    </div>
+                    <div class="terminal-divider"></div>
+                    <div class="terminal-line">
+                        <span class="label">Item</span>
+                        <span class="value">Portfolio Access</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="label">Card</span>
+                        <span class="value">**** **** **** 2026</span>
+                    </div>
+                    <div class="terminal-divider"></div>
+                    <div class="terminal-line total">
+                        <span class="label">TOTAL</span>
+                        <span class="value">$0.00</span>
+                    </div>
+                </div>
+                <div class="terminal-progress">
+                    <div class="terminal-progress-label">Initializing...</div>
+                    <div class="terminal-progress-bar">
+                        <div class="terminal-progress-fill"></div>
+                    </div>
+                </div>
+                <div class="terminal-result">
+                    <div class="terminal-result-text approved">Approved</div>
+                    <div class="terminal-auth-code" id="splash-auth-code">AUTH: 000000</div>
+                </div>
+            </div>
+
+        </div>
+
+        <button class="splash-skip">Skip</button>
+    </div>
+
+    <!-- Gold flash transition layer -->
+    <div id="splash-flash" class="splash-flash"></div>
+    <!-- ===== END SPLASH SCREEN ===== -->
+
     <header>
         <div class="container nav-container">
             <a href="/" class="logo">
@@ -345,6 +437,8 @@
         </div>
     </footer>
 
+    <!-- Splash screen JS (loads before main) -->
+    <script src="assets/js/splash.js"></script>
     <!-- Link to external JS -->
     <script src="assets/js/main.js" defer></script>
 </body>

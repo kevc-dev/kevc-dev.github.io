@@ -1,0 +1,504 @@
+/* ============================================
+   SPLASH SCREEN — Payment Transaction Intro
+   ============================================ */
+
+/* Fonts for splash */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* Lock body scroll during splash */
+body.splash-active {
+    overflow: hidden;
+}
+
+/* ===== OVERLAY ===== */
+#splash-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #0a0f1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+#splash-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Ambient glow */
+#splash-overlay::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+    pointer-events: none;
+}
+#splash-overlay::after {
+    content: '';
+    position: absolute;
+    bottom: -200px;
+    left: -200px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(96,165,250,0.04) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* ===== SPLASH STAGE (card + terminal wrapper) ===== */
+.splash-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+/* ===== BUSINESS CARD ===== */
+.splash-card {
+    --navy: #0f172a;
+    --navy-mid: #1e293b;
+    --navy-light: #334155;
+    --blue: #3b82f6;
+    --blue-light: #60a5fa;
+    --text-white: #f8fafc;
+    --text-muted: #94a3b8;
+
+    width: 420px;
+    height: 240px;
+    border-radius: 12px;
+    background: var(--navy);
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+        0 4px 24px rgba(0,0,0,0.4),
+        0 1px 3px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.03);
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px 26px 22px 28px;
+    z-index: 2;
+
+    /* Entry animation */
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+    animation: cardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+}
+
+@keyframes cardEnter {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Left accent bar */
+.splash-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--blue) 0%, var(--blue-light) 100%);
+}
+
+/* Grid pattern */
+.splash-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+}
+
+.splash-card-top {
+    position: relative;
+    z-index: 1;
+}
+
+.splash-card-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-white);
+    letter-spacing: 0.3px;
+    line-height: 1;
+}
+
+.splash-card-title {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--blue-light);
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+}
+
+.splash-card-tagline {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-weight: 400;
+}
+
+.splash-card-divider {
+    width: 140px;
+    height: 1px;
+    background: var(--navy-light);
+    position: relative;
+    z-index: 1;
+}
+
+.splash-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    position: relative;
+    z-index: 1;
+}
+
+.splash-contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.splash-contact-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.6rem;
+    color: var(--text-white);
+    font-weight: 400;
+}
+
+.splash-contact-row .icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.52rem;
+    color: var(--blue-light);
+    width: 16px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.splash-contact-row.website-row {
+    font-weight: 700;
+}
+
+.splash-qr-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.splash-qr-frame {
+    background: white;
+    border-radius: 4px;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.splash-qr-frame canvas {
+    display: block;
+}
+
+.splash-qr-location {
+    font-size: 0.48rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: 0.3px;
+}
+
+
+/* ===== PAYMENT TERMINAL ===== */
+.splash-terminal {
+    width: 340px;
+    background: #1e293b;
+    border-radius: 0 0 16px 16px;
+    border-top: 3px solid #334155;
+    padding: 20px 24px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    position: relative;
+    z-index: 1;
+    box-shadow:
+        0 8px 32px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.02);
+
+    /* Starts hidden, slides down */
+    opacity: 0;
+    transform: translateY(-20px);
+    max-height: 0;
+    overflow: hidden;
+    transition: none;
+}
+
+.splash-terminal.active {
+    animation: terminalSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes terminalSlideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-20px);
+        padding: 0 24px;
+    }
+    to {
+        opacity: 1;
+        max-height: 300px;
+        transform: translateY(0);
+        padding: 20px 24px 24px;
+    }
+}
+
+.terminal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.terminal-title {
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.terminal-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #334155;
+    transition: background 0.3s ease;
+}
+
+.terminal-status-dot.processing {
+    background: #fbbf24;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+    animation: pulse-dot 1s ease infinite;
+}
+
+.terminal-status-dot.approved {
+    background: #34d399;
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* Terminal lines */
+.terminal-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.terminal-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.65rem;
+    color: #94a3b8;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.terminal-line.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.terminal-line .label {
+    color: #64748b;
+}
+
+.terminal-line .value {
+    color: #e2e8f0;
+}
+
+/* Divider line in terminal */
+.terminal-divider {
+    width: 100%;
+    height: 1px;
+    background: #334155;
+    margin: 4px 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.terminal-divider.visible {
+    opacity: 1;
+}
+
+/* Total line */
+.terminal-line.total .label {
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.terminal-line.total .value {
+    color: #f8fafc;
+    font-weight: 700;
+    font-size: 0.75rem;
+}
+
+/* Processing bar */
+.terminal-progress {
+    margin-top: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.terminal-progress.visible {
+    opacity: 1;
+}
+
+.terminal-progress-label {
+    font-size: 0.55rem;
+    color: #64748b;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.terminal-progress-bar {
+    width: 100%;
+    height: 3px;
+    background: #0f172a;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.terminal-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+}
+
+/* Approval result */
+.terminal-result {
+    margin-top: 14px;
+    text-align: center;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.terminal-result.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.terminal-result-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+}
+
+.terminal-result-text.approved {
+    color: #34d399;
+    text-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+}
+
+.terminal-auth-code {
+    font-size: 0.5rem;
+    color: #64748b;
+    margin-top: 4px;
+    letter-spacing: 1px;
+}
+
+/* ===== SKIP BUTTON ===== */
+.splash-skip {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 10000;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #475569;
+    background: none;
+    border: 1px solid #1e293b;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.3s, border-color 0.3s;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 1s forwards;
+}
+
+.splash-skip:hover {
+    color: #94a3b8;
+    border-color: #334155;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+/* ===== GOLD FLASH TRANSITION ===== */
+.splash-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: #ffb800;
+    opacity: 0;
+    pointer-events: none;
+    transition: none;
+}
+
+.splash-flash.active {
+    animation: goldFlash 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes goldFlash {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 500px) {
+    .splash-card {
+        width: 320px;
+        height: 190px;
+        padding: 18px 20px 16px 22px;
+    }
+
+    .splash-card-name { font-size: 1.05rem; }
+    .splash-card-title { font-size: 0.6rem; }
+    .splash-card-tagline { font-size: 0.52rem; }
+    .splash-contact-row { font-size: 0.52rem; }
+
+    .splash-terminal {
+        width: 280px;
+        padding: 16px 18px 18px;
+    }
+
+    .splash-skip {
+        bottom: 20px;
+        right: 20px;
+    }
+}
