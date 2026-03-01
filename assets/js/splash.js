@@ -20,20 +20,20 @@
 
     // ===== TIMING =====
     const T = {
-        terminalReady: 800,
-        cardAppear: 1600,         // card floats down from above
-        cardHoverPause: 700,      // card hovers before tapping
-        cardTapDuration: 400,     // card lowers to touch
-        tapContactHold: 500,      // card stays in contact
-        cardLiftDuration: 700,    // card lifts away
-        readingDelay: 300,        // after lift, "READING CARD..."
-        lineDelay: 200,
-        processingDuration: 1600,
-        approvedDelay: 350,
-        receiptDelay: 500,
-        receiptStamp: 1400,
-        exitDelay: 1000,
-        flashDuration: 800,
+        terminalReady: 500,
+        cardAppear: 1000,         // card floats down from above
+        cardHoverPause: 400,      // card hovers before tapping
+        cardTapDuration: 300,     // card lowers to touch
+        tapContactHold: 300,      // card stays in contact
+        cardLiftDuration: 450,    // card lifts away
+        readingDelay: 200,        // after lift, "READING CARD..."
+        lineDelay: 120,
+        processingDuration: 1000,
+        approvedDelay: 250,
+        receiptDelay: 300,
+        receiptStamp: 900,
+        exitDelay: 600,
+        flashDuration: 600,
     };
 
     // ===== HELPERS =====
