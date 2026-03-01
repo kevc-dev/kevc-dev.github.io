@@ -244,37 +244,60 @@
         <div class="container">
             <div class="hero-content">
                 <h1>Hey, I'm Kevin!</h1>
-                <p> A Software Engineer with 6+ years of experience building full-stack solutions across financial
+                <p>A Software Engineer with 6+ years of experience building full-stack solutions across financial
                     services, payment processing, and banking systems. Currently based in Scottsdale, Arizona.</p>
-                <a href="#connect" class="btn">Let's Connect</a>
+                <a href="#connect" class="btn"><span style="position:relative;z-index:1">Let's Connect</span></a>
             </div>
             <div class="hero-image">
                 <div class="profile-photo">
-                    <!-- For profile image -->
                     <img src="assets/img/profile.jpg" alt="Kevin C, Software Engineer based in Scottsdale, Arizona specializing in payment systems" width="320" height="320" style="border-radius: 50%; border: 5px solid #000000; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); max-width: 320px; width: 100%;">
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Gradient transition: black → white -->
+    <div class="section-gradient gradient-black-to-white"></div>
+
     <section class="section">
         <div class="container">
-            <h2 class="section-title">What I Do</h2>
-            <p>I build secure, scalable software solutions that solve real business problems. My experience spans:</p>
-            <div class="expertise-grid">
-                <div class="expertise-item">
+            <h2 class="section-title reveal">What I Do</h2>
+            <p class="section-subtitle reveal" style="--reveal-index: 1">I build secure, scalable software solutions that solve real business problems. My experience spans:</p>
+
+            <!-- Impact Stats -->
+            <div class="stat-grid reveal" style="--reveal-index: 2">
+                <div class="stat-item">
+                    <div class="stat-number" data-count="6" data-suffix="+">0+</div>
+                    <div class="stat-label">Years Experience</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-count="1" data-suffix="M+" data-suffix-reveal="true">0</div>
+                    <div class="stat-label">Weekly Transactions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-count="30000" data-suffix="+">0+</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-count="99" data-suffix=".9%">0</div>
+                    <div class="stat-label">API Uptime</div>
+                </div>
+            </div>
+
+            <div class="expertise-grid reveal-stagger">
+                <div class="expertise-item reveal" style="--reveal-index: 0">
                     <h3>Payment Systems</h3>
                     <p>Developing transaction systems for payment terminals (Clover, Pax, Dejavoo)</p>
                 </div>
-                <div class="expertise-item">
+                <div class="expertise-item reveal" style="--reveal-index: 1">
                     <h3>High-Performance APIs</h3>
                     <p>Creating high-availability REST APIs handling millions of weekly transactions</p>
                 </div>
-                <div class="expertise-item">
+                <div class="expertise-item reveal" style="--reveal-index: 2">
                     <h3>Mobile Development</h3>
                     <p>Building mobile applications with 30,000+ active users</p>
                 </div>
-                <div class="expertise-item">
+                <div class="expertise-item reveal" style="--reveal-index: 3">
                     <h3>AI Integration</h3>
                     <p>Integrating AI language models to enhance payment processing systems</p>
                 </div>
@@ -282,33 +305,38 @@
         </div>
     </section>
 
+    <!-- Gradient transition: white → black -->
+    <div class="section-gradient gradient-white-to-black"></div>
+
     <section id="focus" class="section focus-section">
         <div class="container">
-            <h2 class="section-title">Current Focus</h2>
+            <h2 class="section-title reveal">Current Focus</h2>
             <div class="focus-content">
-                <div class="focus-text">
-                    <p>As a Senior Software Engineer at MiCamp Solutions in Scottsdale, I'm leading development of payment
+                <div class="focus-text reveal" style="--reveal-index: 1">
+                    <p class="text-reveal">As a Senior Software Engineer at MiCamp Solutions in Scottsdale, I'm leading development of payment
                         transaction systems and standardizing Agile workflows to improve team efficiency. I'm also
                         exploring AI and Machine Learning to enhance our payment processing capabilities.</p>
-                    <div style="margin-top: 30px;">
+                    <div class="skill-list" style="margin-top: 30px;">
                         <span class="skill-tag" style="background-color: var(--primary);">Payment Systems</span>
                         <span class="skill-tag" style="background-color: var(--primary);">Agile Leadership</span>
                         <span class="skill-tag" style="background-color: var(--primary);">AI/ML</span>
                     </div>
                 </div>
-                <div class="focus-image">
-                    <!-- For focus icon -->
+                <div class="focus-image reveal-scale" style="--reveal-index: 2">
                     <img id="shake-image" src="assets/img/focus-icon.png" alt="Kevin Casas's focus on Payment Systems, Agile Leadership, and AI/ML integration" width="200" height="200" style="max-width: 200px; width: 100%;" class="shake">
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Gradient transition: black → white -->
+    <div class="section-gradient gradient-black-to-white"></div>
+
     <section id="expertise" class="section">
         <div class="container">
-            <h2 class="section-title">Technical Expertise</h2>
-            <div class="expertise-grid">
-                <div class="expertise-item">
+            <h2 class="section-title reveal">Technical Expertise</h2>
+            <div class="expertise-grid reveal-stagger">
+                <div class="expertise-item reveal" style="--reveal-index: 0">
                     <h3>Languages</h3>
                     <div class="skill-list">
                         <span class="skill-tag">Java</span>
@@ -318,7 +346,7 @@
                         <span class="skill-tag">TypeScript</span>
                     </div>
                 </div>
-                <div class="expertise-item">
+                <div class="expertise-item reveal" style="--reveal-index: 1">
                     <h3>Frameworks</h3>
                     <div class="skill-list">
                         <span class="skill-tag">Spring Boot</span>
@@ -328,7 +356,7 @@
                         <span class="skill-tag">ASP.NET Core</span>
                     </div>
                 </div>
-                <div class="expertise-item">
+                <div class="expertise-item reveal" style="--reveal-index: 2">
                     <h3>Data</h3>
                     <div class="skill-list">
                         <span class="skill-tag">SQL Server</span>
@@ -337,7 +365,7 @@
                         <span class="skill-tag">PostgreSQL</span>
                     </div>
                 </div>
-                <div class="expertise-item">
+                <div class="expertise-item reveal" style="--reveal-index: 3">
                     <h3>Cloud/DevOps</h3>
                     <div class="skill-list">
                         <span class="skill-tag">AWS</span>
@@ -348,7 +376,7 @@
                         <span class="skill-tag">CI/CD</span>
                     </div>
                 </div>
-                <div class="expertise-item">
+                <div class="expertise-item reveal" style="--reveal-index: 4">
                     <h3>Architecture</h3>
                     <div class="skill-list">
                         <span class="skill-tag">Microservices</span>
@@ -357,7 +385,7 @@
                         <span class="skill-tag">MVVM</span>
                     </div>
                 </div>
-                <div class="expertise-item">
+                <div class="expertise-item reveal" style="--reveal-index: 5">
                     <h3>Tools & Methodologies</h3>
                     <div class="skill-list">
                         <span class="skill-tag">Jira</span>
@@ -374,35 +402,77 @@
 
     <section id="journey" class="section">
         <div class="container">
-            <h2 class="section-title">Professional Journey</h2>
+            <h2 class="section-title reveal">Professional Journey</h2>
             <div class="journey-timeline">
+                <!-- Animated progress line -->
+                <div class="timeline-progress-line"></div>
+
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <h3>MiCamp Solutions</h3>
-                        <p>Senior Software Engineer</p>
-                        <p class="year">Current</p>
+                    <div class="timeline-content timeline-expandable">
+                        <div class="timeline-header">
+                            <div>
+                                <h3>MiCamp Solutions</h3>
+                                <p class="timeline-role">Senior Software Engineer</p>
+                            </div>
+                            <span class="timeline-toggle">+</span>
+                        </div>
+                        <div class="timeline-details">
+                            <p class="timeline-location">Scottsdale, Arizona</p>
+                            <p class="year">Nov 2024 – Present</p>
+                            <p class="timeline-desc">Lead backend architect for merchant services APIs, designing and scaling payment processing systems handling $1M+ in monthly transaction volume. Drive technical decisions and mentor junior developers on CI/CD best practices and design patterns.</p>
+                        </div>
                     </div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <h3>MiCamp Solutions</h3>
-                        <p>Software Engineer</p>
+                    <div class="timeline-content timeline-expandable">
+                        <div class="timeline-header">
+                            <div>
+                                <h3>MiCamp Solutions</h3>
+                                <p class="timeline-role">Software Engineer</p>
+                            </div>
+                            <span class="timeline-toggle">+</span>
+                        </div>
+                        <div class="timeline-details">
+                            <p class="timeline-location">Scottsdale, Arizona</p>
+                            <p class="year">Jan 2023 – May 2024</p>
+                            <p class="timeline-desc">Built scalable mobile payment applications growing user base to 30,000+ users while maintaining 99.5% uptime. Improved transaction throughput by 40% through optimized payment APIs and deployed automated CI/CD pipelines.</p>
+                        </div>
                     </div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <h3>Tata Consultancy Services</h3>
-                        <p>Intermediate Developer</p>
+                    <div class="timeline-content timeline-expandable">
+                        <div class="timeline-header">
+                            <div>
+                                <h3>Tata Consultancy Services</h3>
+                                <p class="timeline-role">Intermediate Developer</p>
+                            </div>
+                            <span class="timeline-toggle">+</span>
+                        </div>
+                        <div class="timeline-details">
+                            <p class="timeline-location">Bogotá, Colombia</p>
+                            <p class="year">Oct 2021 – Jan 2023</p>
+                            <p class="timeline-desc">Contributed to scalable web banking platform processing 500,000+ daily active users with event-driven microservices architecture. Optimized system performance by 50% through automated SQL procedures.</p>
+                        </div>
                     </div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <h3>Teleperformance</h3>
-                        <p>Developer I</p>
+                    <div class="timeline-content timeline-expandable">
+                        <div class="timeline-header">
+                            <div>
+                                <h3>Teleperformance</h3>
+                                <p class="timeline-role">Developer I</p>
+                            </div>
+                            <span class="timeline-toggle">+</span>
+                        </div>
+                        <div class="timeline-details">
+                            <p class="timeline-location">Bogotá, Colombia</p>
+                            <p class="year">Oct 2018 – Oct 2021</p>
+                            <p class="timeline-desc">Developed HR management platform reducing payroll processing by 70% through automation. Built responsive web applications using React.js and Angular, increasing user engagement by 25%.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -411,36 +481,47 @@
 
     <section class="section">
         <div class="container">
-            <h2 class="section-title">Education</h2>
-            <div class="education-grid">
-                <div class="education-item">
-                    <h3>CS Professional Certification</h3>
+            <h2 class="section-title reveal">Education</h2>
+            <div class="education-grid reveal-stagger">
+                <div class="education-item reveal education-clickable" style="--reveal-index: 0" onclick="window.open('assets/Professional_Certification_AIML_ASU.pdf', '_blank')">
+                    <h3>CS Professional Certification <span class="edu-link-icon" title="View Certification">&#8599;</span></h3>
                     <p>AI and Machine Learning</p>
                     <p>Arizona State University</p>
+                    <p class="edu-year">Jan 2025 – Dec 2025</p>
                 </div>
-                <div class="education-item">
+                <div class="education-item reveal" style="--reveal-index: 1">
                     <h3>Bachelor of Science</h3>
                     <p>Computer Software Engineering</p>
                     <p>Politécnico Grancolombiano</p>
+                    <p class="edu-year">Jan 2020 – Jun 2023</p>
+                </div>
+                <div class="education-item reveal" style="--reveal-index: 2">
+                    <h3>Associate of Science</h3>
+                    <p>Software Development</p>
+                    <p>SENA Colombia</p>
+                    <p class="edu-year">Jan 2017 – Jan 2019</p>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Gradient transition: white → gold -->
+    <div class="section-gradient gradient-white-to-gold"></div>
+
     <section id="connect" class="section connect-section">
         <div class="container">
-            <h2 class="section-title">Let's Connect</h2>
-            <div class="connect-grid">
-                <div class="connect-item">
+            <h2 class="section-title reveal">Let's Connect</h2>
+            <div class="connect-grid reveal-stagger">
+                <a href="mailto:contact@kev-c.dev" class="connect-item reveal" style="--reveal-index: 0">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                         <polyline points="22,6 12,13 2,6"></polyline>
                     </svg>
                     <p>Email</p>
-                    <a href="mailto:kc.py@icloud.com">contact@kev-c.dev</a>
-                </div>
-                <div class="connect-item">
+                    <span class="connect-link">contact@kev-c.dev</span>
+                </a>
+                <a href="https://www.linkedin.com/in/kevc-dev/" target="_blank" rel="noopener noreferrer" class="connect-item reveal" style="--reveal-index: 1">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
@@ -448,10 +529,9 @@
                         <circle cx="4" cy="4" r="2"></circle>
                     </svg>
                     <p>LinkedIn</p>
-                    <a href="https://www.linkedin.com/in/kevc-dev/"
-                        target="_blank" rel="noopener noreferrer">linkedin.com/in/kevc-dev</a>
-                </div>
-                <div class="connect-item">
+                    <span class="connect-link">linkedin.com/in/kevc-dev</span>
+                </a>
+                <a href="https://github.com/kevc-dev" target="_blank" rel="noopener noreferrer" class="connect-item reveal" style="--reveal-index: 2">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <path
@@ -459,11 +539,14 @@
                         </path>
                     </svg>
                     <p>GitHub</p>
-                    <a href="https://github.com/kevc-dev" target="_blank" rel="noopener noreferrer">github.com/kevc-dev</a>
-                </div>
+                    <span class="connect-link">github.com/kevc-dev</span>
+                </a>
             </div>
         </div>
     </section>
+
+    <!-- Gradient transition: gold → black -->
+    <div class="section-gradient gradient-gold-to-black"></div>
 
     <footer>
         <div class="container footer-content">
