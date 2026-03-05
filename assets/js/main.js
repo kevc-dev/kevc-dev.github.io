@@ -381,6 +381,8 @@
   // 6. HEADER SCROLL EFFECT
   // ============================================
   function initHeaderScroll() {
+    const connectSection = document.querySelector(".connect-section");
+
     window.addEventListener(
       "scroll",
       () => {
@@ -392,6 +394,16 @@
           header.classList.add("scrolled");
         } else {
           header.classList.remove("scrolled");
+        }
+
+        // Gold header when in Connect section
+        if (connectSection) {
+          const rect = connectSection.getBoundingClientRect();
+          if (rect.top <= 80 && rect.bottom > 80) {
+            header.classList.add("header-gold");
+          } else {
+            header.classList.remove("header-gold");
+          }
         }
       },
       { passive: true }

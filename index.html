@@ -90,7 +90,7 @@
         /* Critical CSS for above-the-fold content */
         :root{--primary:#ffb800;--black:#000000;--white:#ffffff;--gray:#f0f0f0}
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
-        body{background-color:var(--white);color:var(--black);line-height:1.6}
+        body{background-color:var(--black);color:var(--white);line-height:1.6}
         .container{max-width:1200px;margin:0 auto;padding:0 20px}
         header{background-color:var(--black);padding:20px 0;position:fixed;width:100%;top:0;z-index:1000}
     </style>
@@ -229,6 +229,7 @@
                 </span>
             </a>
             <div class="nav-links">
+                <a href="#impact">Impact</a>
                 <a href="#focus">Current Focus</a>
                 <a href="#expertise">Expertise</a>
                 <a href="#journey">Journey</a>
@@ -248,7 +249,9 @@
                 <h1>Hey, I'm Kevin!</h1>
                 <p>A Software Engineer with 6+ years of experience building full-stack solutions across financial
                     services, payment processing, and banking systems. Currently based in Scottsdale, Arizona.</p>
-                <a href="#connect" class="btn"><span style="position:relative;z-index:1">Let's Connect</span></a>
+                <div class="hero-buttons">
+                    <a href="#connect" class="btn"><span style="position:relative;z-index:1">Let's Connect</span></a>
+                </div>
             </div>
             <div class="hero-image">
                 <div class="profile-photo">
@@ -258,33 +261,57 @@
         </div>
     </section>
 
-    <!-- Gradient transition: black → white -->
+    <!-- ===== DARK BLOCK: "The Hook" ===== -->
+
+    <section id="impact" class="section">
+        <div class="container">
+            <h2 class="section-title reveal">Impact</h2>
+            <p class="section-subtitle reveal" style="--reveal-index: 1">Measurable results from real-world systems I've built and scaled.</p>
+            <div class="impact-grid reveal-stagger">
+                <div class="impact-item reveal" style="--reveal-index: 0">
+                    <div class="impact-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="impact-value" data-count="1" data-prefix="$" data-suffix="M+">0</div>
+                    <div class="impact-label">Monthly Transaction Volume</div>
+                    <p class="impact-desc">Processing over $1M in monthly payment transactions through merchant services APIs.</p>
+                </div>
+                <div class="impact-item reveal" style="--reveal-index: 1">
+                    <div class="impact-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="impact-value" data-count="30000" data-suffix="+">0</div>
+                    <div class="impact-label">Active Users</div>
+                    <p class="impact-desc">Mobile payment applications serving 30,000+ active users with 99.5% uptime.</p>
+                </div>
+                <div class="impact-item reveal" style="--reveal-index: 2">
+                    <div class="impact-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <div class="impact-value" data-count="40" data-suffix="%">0</div>
+                    <div class="impact-label">Throughput Improvement</div>
+                    <p class="impact-desc">Optimized payment API performance, boosting transaction throughput by 40%.</p>
+                </div>
+                <div class="impact-item reveal" style="--reveal-index: 3">
+                    <div class="impact-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    </div>
+                    <div class="impact-value" data-count="500" data-suffix="K+">0</div>
+                    <div class="impact-label">Daily Active Users</div>
+                    <p class="impact-desc">Banking platform supporting 500K+ daily users with event-driven microservices.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <div class="section-gradient gradient-black-to-white"></div>
 
-    <section class="section">
+    <!-- ===== LIGHT BLOCK: "The Substance" ===== -->
+
+    <section class="section section-light">
         <div class="container">
             <h2 class="section-title reveal">What I Do</h2>
             <p class="section-subtitle reveal" style="--reveal-index: 1">I build secure, scalable software solutions that solve real business problems. My experience spans:</p>
-
-            <!-- Impact Stats -->
-            <div class="stat-grid reveal" style="--reveal-index: 2">
-                <div class="stat-item">
-                    <div class="stat-number" data-count="6" data-suffix="+">0+</div>
-                    <div class="stat-label">Years Experience</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" data-count="1" data-suffix="M+" data-suffix-reveal="true">0</div>
-                    <div class="stat-label">Weekly Transactions</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" data-count="30000" data-suffix="+">0+</div>
-                    <div class="stat-label">Active Users</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" data-count="99" data-suffix=".9%">0</div>
-                    <div class="stat-label">API Uptime</div>
-                </div>
-            </div>
 
             <div class="expertise-grid reveal-stagger">
                 <div class="expertise-item reveal" style="--reveal-index: 0">
@@ -307,34 +334,7 @@
         </div>
     </section>
 
-    <!-- Gradient transition: white → black -->
-    <div class="section-gradient gradient-white-to-black"></div>
-
-    <section id="focus" class="section focus-section">
-        <div class="container">
-            <h2 class="section-title reveal">Current Focus</h2>
-            <div class="focus-content">
-                <div class="focus-text reveal" style="--reveal-index: 1">
-                    <p class="text-reveal">As a Senior Software Engineer at MiCamp Solutions in Scottsdale, I'm leading development of payment
-                        transaction systems. I'm also
-                        exploring AI and Machine Learning to enhance our payment processing capabilities.</p>
-                    <div class="skill-list" style="margin-top: 30px;">
-                        <span class="skill-tag" style="background-color: var(--primary);">Payment Systems</span>
-                        <span class="skill-tag" style="background-color: var(--primary);">Agile Leadership</span>
-                        <span class="skill-tag" style="background-color: var(--primary);">AI/ML</span>
-                    </div>
-                </div>
-                <div class="focus-image reveal-scale" style="--reveal-index: 2">
-                    <img id="shake-image" src="assets/img/focus-icon.png" alt="Kevin Casas's focus on Payment Systems, Agile Leadership, and AI/ML integration" width="200" height="200" style="max-width: 200px; width: 100%;" class="shake">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Gradient transition: black → white -->
-    <div class="section-gradient gradient-black-to-white"></div>
-
-    <section id="expertise" class="section">
+    <section id="expertise" class="section section-light">
         <div class="container">
             <h2 class="section-title reveal">Technical Expertise</h2>
             <div class="expertise-grid reveal-stagger">
@@ -402,6 +402,78 @@
         </div>
     </section>
 
+    <section id="testimonials" class="section section-light testimonials-section">
+        <div class="container">
+            <h2 class="section-title reveal">What People Say</h2>
+            <div class="testimonials-grid reveal-stagger">
+                <div class="testimonial-item reveal" style="--reveal-index: 0">
+                    <div class="quote-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C9.591 11.69 11 13.192 11 15c0 1.933-1.567 3.5-3.5 3.5-1.196 0-2.316-.631-2.917-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C19.591 11.69 21 13.192 21 15c0 1.933-1.567 3.5-3.5 3.5-1.196 0-2.316-.631-2.917-1.179z"/></svg>
+                    </div>
+                    <p class="testimonial-quote">Kevin is technically proficient, quickly adapting to new technologies and offering innovative solutions to complex problems. His dedication to the quality of work is evident in every project he undertakes. His ability to explain technical details in an accessible manner has been invaluable in bridging the gap between our technical team and other departments.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar-placeholder">JQ</div>
+                        <div>
+                            <p class="testimonial-name">Jose Quintana</p>
+                            <p class="testimonial-title">Software Developer &bull; MiCamp Solutions</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-item reveal" style="--reveal-index: 1">
+                    <div class="quote-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C9.591 11.69 11 13.192 11 15c0 1.933-1.567 3.5-3.5 3.5-1.196 0-2.316-.631-2.917-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C19.591 11.69 21 13.192 21 15c0 1.933-1.567 3.5-3.5 3.5-1.196 0-2.316-.631-2.917-1.179z"/></svg>
+                    </div>
+                    <p class="testimonial-quote">Kevin consistently demonstrated strong technical skills, contributing significantly to our project's success with his expertise in various programming languages and innovative problem-solving abilities. He is a team player, always ready to lend a hand and share his knowledge, creating a positive and inclusive atmosphere in our team.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar-placeholder">KR</div>
+                        <div>
+                            <p class="testimonial-name">Karthik Ramaraju Kosuri</p>
+                            <p class="testimonial-title">Technology Lead &bull; Scotiabank</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-item reveal" style="--reveal-index: 2">
+                    <div class="quote-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C9.591 11.69 11 13.192 11 15c0 1.933-1.567 3.5-3.5 3.5-1.196 0-2.316-.631-2.917-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C19.591 11.69 21 13.192 21 15c0 1.933-1.567 3.5-3.5 3.5-1.196 0-2.316-.631-2.917-1.179z"/></svg>
+                    </div>
+                    <p class="testimonial-quote">Kevin is a hard-working individual who knows how to get the job done effectively. He works well as a part of a team and can take responsibility working independently. He has good communication skills and was always learning about new technologies that he applied in his work.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar-placeholder">CC</div>
+                        <div>
+                            <p class="testimonial-name">Carlos Castrillon Martinez</p>
+                            <p class="testimonial-title">HR Analytics Coordinator &bull; Teleperformance</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-gradient gradient-white-to-black"></div>
+
+    <!-- ===== DARK BLOCK: "The Story" ===== -->
+
+    <section id="focus" class="section focus-section">
+        <div class="container">
+            <h2 class="section-title reveal">Current Focus</h2>
+            <div class="focus-content">
+                <div class="focus-text reveal" style="--reveal-index: 1">
+                    <p class="text-reveal">As a Senior Software Engineer at MiCamp Solutions in Scottsdale, I'm leading development of payment
+                        transaction systems. I'm also
+                        exploring AI and Machine Learning to enhance our payment processing capabilities.</p>
+                    <div class="skill-list" style="margin-top: 30px;">
+                        <span class="skill-tag">Payment Systems</span>
+                        <span class="skill-tag">Agile Leadership</span>
+                        <span class="skill-tag">AI/ML</span>
+                    </div>
+                </div>
+                <div class="focus-image reveal-scale" style="--reveal-index: 2">
+                    <img id="shake-image" src="assets/img/focus-icon.png" alt="Kevin Casas's focus on Payment Systems, Agile Leadership, and AI/ML integration" width="200" height="200" style="max-width: 200px; width: 100%;" class="shake">
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="journey" class="section">
         <div class="container">
             <h2 class="section-title reveal">Professional Journey</h2>
@@ -413,14 +485,17 @@
                     <div class="timeline-dot"></div>
                     <div class="timeline-content timeline-expandable">
                         <div class="timeline-header">
-                            <div>
-                                <h3>MiCamp Solutions</h3>
-                                <p class="timeline-role">Senior Software Engineer</p>
+                            <div class="timeline-company-info">
+                                <div class="company-logo"><img src="assets/img/MiCamp.jpeg" alt="MiCamp Solutions" class="company-logo-img"></div>
+                                <div>
+                                    <h3>MiCamp Solutions</h3>
+                                    <p class="timeline-role">Senior Software Engineer</p>
+                                </div>
                             </div>
                             <span class="timeline-toggle">+</span>
                         </div>
                         <div class="timeline-details">
-                            <p class="timeline-location">Scottsdale, Arizona</p>
+                            <p class="timeline-location">Scottsdale, Arizona (Hybrid)</p>
                             <p class="year">Nov 2024 – Present</p>
                             <p class="timeline-desc">Lead backend architect for merchant services APIs, designing and scaling payment processing systems handling $1M+ in monthly transaction volume. Drive technical decisions and mentor junior developers on CI/CD best practices and design patterns.</p>
                         </div>
@@ -430,14 +505,17 @@
                     <div class="timeline-dot"></div>
                     <div class="timeline-content timeline-expandable">
                         <div class="timeline-header">
-                            <div>
-                                <h3>MiCamp Solutions</h3>
-                                <p class="timeline-role">Software Engineer</p>
+                            <div class="timeline-company-info">
+                                <div class="company-logo"><img src="assets/img/MiCamp.jpeg" alt="MiCamp Solutions" class="company-logo-img"></div>
+                                <div>
+                                    <h3>MiCamp Solutions</h3>
+                                    <p class="timeline-role">Software Engineer</p>
+                                </div>
                             </div>
                             <span class="timeline-toggle">+</span>
                         </div>
                         <div class="timeline-details">
-                            <p class="timeline-location">Scottsdale, Arizona</p>
+                            <p class="timeline-location">Scottsdale, Arizona (On-site)</p>
                             <p class="year">Jan 2023 – May 2024</p>
                             <p class="timeline-desc">Built scalable mobile payment applications growing user base to 30,000+ users while maintaining 99.5% uptime. Improved transaction throughput by 40% through optimized payment APIs and deployed automated CI/CD pipelines.</p>
                         </div>
@@ -447,16 +525,23 @@
                     <div class="timeline-dot"></div>
                     <div class="timeline-content timeline-expandable">
                         <div class="timeline-header">
-                            <div>
-                                <h3>Tata Consultancy Services</h3>
-                                <p class="timeline-role">Intermediate Developer</p>
+                            <div class="timeline-company-info">
+                                <div class="company-logo"><img src="assets/img/TCS.png" alt="Tata Consultancy Services" class="company-logo-img"></div>
+                                <div>
+                                    <h3>Tata Consultancy Services</h3>
+                                    <p class="timeline-role">Intermediate Developer</p>
+                                </div>
                             </div>
                             <span class="timeline-toggle">+</span>
                         </div>
                         <div class="timeline-details">
-                            <p class="timeline-location">Bogotá, Colombia</p>
+                            <p class="timeline-location">Bogotá, Colombia (Remote)</p>
                             <p class="year">Oct 2021 – Jan 2023</p>
-                            <p class="timeline-desc">Contributed to scalable web banking platform processing 500,000+ daily active users with event-driven microservices architecture. Optimized system performance by 50% through automated SQL procedures.</p>
+                            <div class="timeline-client">
+                                <img src="assets/img/scotiabank.png" alt="Scotiabank" class="client-logo-img">
+                                <span class="client-label">Client: Scotiabank (Toronto, Canada)</span>
+                            </div>
+                            <p class="timeline-desc">Contributed to scalable web banking platform processing 500,000+ daily active users with event-driven microservices architecture. Worked with the Scotiabank team based in Toronto, Canada. Optimized system performance by 50% through automated SQL procedures.</p>
                         </div>
                     </div>
                 </div>
@@ -464,14 +549,17 @@
                     <div class="timeline-dot"></div>
                     <div class="timeline-content timeline-expandable">
                         <div class="timeline-header">
-                            <div>
-                                <h3>Teleperformance</h3>
-                                <p class="timeline-role">Developer I</p>
+                            <div class="timeline-company-info">
+                                <div class="company-logo"><img src="assets/img/Teleperformance.jpeg" alt="Teleperformance" class="company-logo-img"></div>
+                                <div>
+                                    <h3>Teleperformance</h3>
+                                    <p class="timeline-role">Developer I</p>
+                                </div>
                             </div>
                             <span class="timeline-toggle">+</span>
                         </div>
                         <div class="timeline-details">
-                            <p class="timeline-location">Bogotá, Colombia</p>
+                            <p class="timeline-location">Bogotá, Colombia (Hybrid)</p>
                             <p class="year">Oct 2018 – Oct 2021</p>
                             <p class="timeline-desc">Developed HR management platform reducing payroll processing by 70% through automation. Built responsive web applications using React.js and Angular, increasing user engagement by 25%.</p>
                         </div>
@@ -507,8 +595,27 @@
         </div>
     </section>
 
-    <!-- Gradient transition: white → gold -->
-    <div class="section-gradient gradient-white-to-gold"></div>
+    <section id="about" class="section about-section">
+        <div class="container">
+            <h2 class="section-title reveal">Beyond the Code</h2>
+            <div class="about-content reveal" style="--reveal-index: 1">
+                <p class="about-text">Curiosity has been the thread connecting every chapter of my career. From payroll systems at Teleperformance, to banking platforms at TCS serving Scotiabank, to payment processing at MiCamp Solutions, each role has deepened my understanding of how technology moves money and empowers people.
+Originally from Colombia, I moved to the United States over three years ago and found home in Arizona. The desert has a way of teaching you to appreciate both simplicity and resilience, qualities I try to carry into the software I engineer every day. I love exploring the landscape out here and thinking about how technology can improve the world around us.
+My path hasn't been conventional, and I think that's an advantage. A diverse background means different perspectives at the table, and different perspectives build better software. Having completed my AI and Machine Learning coursework at Arizona State University, I'm now pursuing a Master's in Computer Science there, because for me, the learning never stops.</p>
+                <div class="about-tags">
+                    <span class="about-tag">Arizona-Based</span>
+                    <span class="about-tag">Desert Explorer</span>
+                    <span class="about-tag">Lifelong Learner</span>
+                    <span class="about-tag">MSCS at ASU</span>
+                    <span class="about-tag">Diverse Background</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-gradient gradient-black-to-gold"></div>
+
+    <!-- ===== GOLD BLOCK: "The CTA" ===== -->
 
     <section id="connect" class="section connect-section">
         <div class="container">
@@ -547,7 +654,6 @@
         </div>
     </section>
 
-    <!-- Gradient transition: gold → black -->
     <div class="section-gradient gradient-gold-to-black"></div>
 
     <footer>
