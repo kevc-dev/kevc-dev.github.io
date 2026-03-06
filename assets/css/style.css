@@ -58,6 +58,34 @@ header.scrolled {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+header.header-light {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+header.header-light .logo {
+    color: var(--black);
+}
+
+header.header-light .nav-links a {
+    color: var(--black);
+}
+
+header.header-light .nav-links a::after {
+    background: var(--primary);
+}
+
+header.header-light .hamburger div {
+    background-color: var(--black);
+}
+
+header.header-light .typewriter {
+    border-right-color: var(--black);
+    animation: blink-caret-gold 0.75s step-end infinite;
+}
+
 header.header-gold {
     background-color: var(--primary);
     border-bottom: none;
@@ -702,10 +730,27 @@ h1 {
     text-align: center;
 }
 
-/* Shake animation */
+/* Shake animation + golden shine */
 .shake {
     animation: shake-animation 4.72s ease infinite;
     transform-origin: 50% 50%;
+}
+
+#shake-image {
+    cursor: pointer;
+    animation: shake-animation 4.72s ease infinite, goldenShine 3s ease-in-out infinite;
+    transform-origin: 50% 50%;
+    transition: filter 0.3s ease;
+}
+
+@keyframes goldenShine {
+    0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 184, 0, 0.15)); }
+    50% { filter: drop-shadow(0 0 16px rgba(255, 184, 0, 0.5)); }
+}
+
+#shake-image:hover {
+    animation: shake-animation 4.72s ease infinite;
+    filter: drop-shadow(0 0 22px rgba(255, 184, 0, 0.65));
 }
 
 @keyframes shake-animation {
@@ -1455,6 +1500,14 @@ footer {
 
     .nav-links.active {
         right: 0;
+    }
+
+    header.header-light .nav-links {
+        background-color: var(--white);
+    }
+
+    header.header-light .nav-links a {
+        color: var(--black);
     }
 
     header.header-gold .nav-links {

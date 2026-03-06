@@ -187,11 +187,18 @@
 
     counters.forEach((el) => counterObserver.observe(el));
 
+    function formatCompact(n) {
+      if (n >= 1000000) return Math.floor(n / 1000000) + "M";
+      if (n >= 1000) return Math.floor(n / 1000) + "K";
+      return n.toString();
+    }
+
     function animateCounter(el) {
       const target = parseInt(el.dataset.count, 10);
       const suffix = el.dataset.suffix || "";
       const prefix = el.dataset.prefix || "";
       const suffixReveal = el.dataset.suffixReveal === "true";
+      const compact = el.dataset.format === "compact";
       const duration = 2000;
       const start = performance.now();
 
@@ -205,15 +212,15 @@
         const easedProgress = easeOutExpo(progress);
         const current = Math.floor(easedProgress * target);
 
-        // Hide suffix during counting if suffixReveal is set
         const showSuffix = suffixReveal ? (progress >= 1) : true;
-        el.textContent =
-          prefix + current.toLocaleString() + (showSuffix ? suffix : "");
+        const display = compact ? formatCompact(current) : current.toLocaleString();
+        el.textContent = prefix + display + (showSuffix ? suffix : "");
 
         if (progress < 1) {
           requestAnimationFrame(update);
         } else {
-          el.textContent = prefix + target.toLocaleString() + suffix;
+          const finalDisplay = compact ? formatCompact(target) : target.toLocaleString();
+          el.textContent = prefix + finalDisplay + suffix;
         }
       }
 
@@ -382,6 +389,7 @@
   // ============================================
   function initHeaderScroll() {
     const connectSection = document.querySelector(".connect-section");
+    const lightSections = document.querySelectorAll(".section-light, .gradient-black-to-white, .gradient-white-to-black");
 
     window.addEventListener(
       "scroll",
@@ -394,6 +402,20 @@
           header.classList.add("scrolled");
         } else {
           header.classList.remove("scrolled");
+        }
+
+        // Light header when over white sections
+        let inLight = false;
+        lightSections.forEach((section) => {
+          const rect = section.getBoundingClientRect();
+          if (rect.top <= 80 && rect.bottom > 80) {
+            inLight = true;
+          }
+        });
+        if (inLight) {
+          header.classList.add("header-light");
+        } else {
+          header.classList.remove("header-light");
         }
 
         // Gold header when in Connect section

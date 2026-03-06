@@ -1,5 +1,6 @@
 /**
  * Splash Screen — POS Terminal + Tap to Pay + Receipt
+ * Easter egg: triggered by clicking the focus icon (#shake-image)
  *
  * Flow:
  * 1. POS terminal fades in
@@ -21,12 +22,12 @@
     // ===== TIMING =====
     const T = {
         terminalReady: 500,
-        cardAppear: 1000,         // card floats down from above
-        cardHoverPause: 400,      // card hovers before tapping
-        cardTapDuration: 300,     // card lowers to touch
-        tapContactHold: 300,      // card stays in contact
-        cardLiftDuration: 450,    // card lifts away
-        readingDelay: 200,        // after lift, "READING CARD..."
+        cardAppear: 1000,
+        cardHoverPause: 400,
+        cardTapDuration: 300,
+        tapContactHold: 300,
+        cardLiftDuration: 450,
+        readingDelay: 200,
         lineDelay: 120,
         processingDuration: 1000,
         approvedDelay: 250,
@@ -43,12 +44,12 @@
         return s;
     }
 
-    const authCode = randomCode(6, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
-    const txnId = 'TXN-' + Date.now().toString(36).toUpperCase().slice(-8);
+    // ===== STATE =====
+    let hasExited = false;
+    let isRunning = false;
+    let splashTemplate = '';
 
     // ===== EXIT =====
-    let hasExited = false;
-
     function exitSplash() {
         if (hasExited) return;
         hasExited = true;
@@ -58,7 +59,6 @@
         const skipBtn = document.querySelector('.splash-skip');
 
         if (skipBtn) skipBtn.style.display = 'none';
-
         if (flash) flash.classList.add('active');
 
         setTimeout(() => {
@@ -67,8 +67,8 @@
         }, 300);
 
         setTimeout(() => {
-            if (overlay) overlay.remove();
-            if (flash) flash.remove();
+            if (flash) flash.classList.remove('active');
+            isRunning = false;
         }, T.flashDuration + 200);
     }
 
@@ -118,11 +118,9 @@
         t += 800 + T.cardHoverPause;
         setTimeout(() => {
             if (card) {
-                // Lock the hover end-state into inline styles before swapping animation
                 card.style.top = '-20px';
                 card.style.opacity = '1';
                 card.classList.remove('animate-hover');
-                // Force reflow so the browser registers the class removal
                 void card.offsetHeight;
                 card.classList.add('animate-tap');
             }
@@ -135,7 +133,6 @@
         t += T.cardTapDuration + T.tapContactHold;
         setTimeout(() => {
             if (card) {
-                // Lock the tap end-state before swapping to lift
                 card.style.top = '0px';
                 card.style.opacity = '1';
                 card.classList.remove('animate-tap');
@@ -212,24 +209,22 @@
         }, t);
     }
 
-    // ===== INIT =====
-    document.addEventListener('DOMContentLoaded', function () {
+    // ===== START SPLASH (easter egg) =====
+    function startSplash() {
+        if (isRunning) return;
+        isRunning = true;
+        hasExited = false;
+
         const overlay = document.getElementById('splash-overlay');
         if (!overlay) return;
 
-        // Skip if seen this session
-        if (sessionStorage.getItem('splash-seen')) {
-            overlay.remove();
-            const flash = document.getElementById('splash-flash');
-            if (flash) flash.remove();
-            document.body.classList.remove('splash-active');
-            return;
-        }
+        // Restore pristine HTML for clean re-triggers
+        overlay.innerHTML = splashTemplate;
 
-        sessionStorage.setItem('splash-seen', '1');
-        document.body.classList.add('splash-active');
+        // Generate fresh dynamic values
+        const txnId = 'TXN-' + Date.now().toString(36).toUpperCase().slice(-8);
+        const authCode = randomCode(6, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
 
-        // Set dynamic values
         const txnEl = document.getElementById('splash-txn-id');
         const authEl = document.getElementById('splash-auth-code');
         const receiptTxnEl = document.getElementById('receipt-txn-id');
@@ -240,10 +235,33 @@
         if (receiptTxnEl) receiptTxnEl.textContent = txnId;
         if (receiptAuthEl) receiptAuthEl.textContent = 'AUTH CODE: ' + authCode;
 
-        // Skip button
-        const skipBtn = document.querySelector('.splash-skip');
+        // Bind skip button
+        const skipBtn = overlay.querySelector('.splash-skip');
         if (skipBtn) skipBtn.addEventListener('click', exitSplash);
 
+        // Show overlay
+        overlay.classList.remove('hidden');
+        document.body.classList.add('splash-active');
+
         runSequence();
+    }
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', function () {
+        const overlay = document.getElementById('splash-overlay');
+        if (!overlay) return;
+
+        // Store pristine template for re-use
+        splashTemplate = overlay.innerHTML;
+
+        // Start hidden — no auto-play
+        overlay.classList.add('hidden');
+        document.body.classList.remove('splash-active');
+
+        // Easter egg: click focus icon to trigger splash
+        const shakeImage = document.getElementById('shake-image');
+        if (shakeImage) {
+            shakeImage.addEventListener('click', startSplash);
+        }
     });
 })();
