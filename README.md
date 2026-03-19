@@ -1,8 +1,8 @@
 ## Senior Software Engineer
 
-Senior Software Engineer with 6+ years of experience building full stack solutions for financial services, payment processing, and banking systems. Proficient in Java, Kotlin, and Python with expertise in developing secure transaction software for Clover, Pax, and Dejavoo terminals. Currently integrating AI language models to enhance payment processing systems.
+Senior Software Engineer with 6+ years of experience building payment processing systems. Currently at MiCamp Solutions in Scottsdale, where I lead development on the WAVit Payments Android app, integrating with terminals like Clover, PAX, Dejavoo, and Sunmi. My day-to-day involves merchant services APIs, PCI DSS compliance, and making sure small businesses get paid reliably.
 
-👋 [Email](mailto:kc.py@icloud.com) | 🔗 [LinkedIn](https://www.linkedin.com/in/kevc-dev/) | 📍 Scottsdale, Arizona
+[Email](mailto:contact@kev-c.dev) | [LinkedIn](https://www.linkedin.com/in/kevc-dev/) | Scottsdale, Arizona
 
 ---
 
@@ -10,14 +10,12 @@ Senior Software Engineer with 6+ years of experience building full stack solutio
 
 ### Senior Software Engineer, MiCamp Solutions — Scottsdale, Arizona
 *Nov 2024 — Present*
-
 - Lead development of payment transaction systems, integrating custom APIs and CRM systems for merchants needs
 - Standardize Agile workflows with Jira and Confluence, reducing project management time by 25%
 - Collaborate with Sales, Marketing, and Finance to align payment solutions with business objectives
 
 ### Software Engineer, MiCamp Solutions — Scottsdale, Arizona
 *Jan 2023 — May 2024*
-
 - Developed android and iOS apps using Java, Kotlin, and Swift reaching over 30,000 users within the first year
 - Developed web applications using Java Spring Boot, achieving 99.99% uptime for over 1 million weekly transactions
 - Designed and implemented RESTful APIs, enhancing data synchronization speed by 40%
@@ -25,7 +23,6 @@ Senior Software Engineer with 6+ years of experience building full stack solutio
 
 ### Intermediate Developer, Tata Consultancy Services — Toronto, Ontario, Canada
 *Oct 2021 — Jan 2023*
-
 - Developed scalable web banking solutions using Java Spring Boot, serving over 500,000 daily active users
 - Integrated OpenText information management tools, improving team document processing efficiency by 35%
 - Developed automated SQL store procedures and triggers to process customers' information and performance by 50%
@@ -34,7 +31,6 @@ Senior Software Engineer with 6+ years of experience building full stack solutio
 
 ### Developer I, Teleperformance — Bogota, Colombia
 *Oct 2018 — Oct 2021*
-
 - Developed web management platform in Java Spring Boot, reducing hiring processing time by 70%
 - Developed web applications using Node.js and Angular, increasing user engagement by 25%
 - Implemented data processing solutions with SQL Server and Python, enhancing data analysis capabilities by 50%
@@ -45,33 +41,28 @@ Senior Software Engineer with 6+ years of experience building full stack solutio
 
 ## Technical Skills
 
-### Programming
-Java, Kotlin, Python, JavaScript, TypeScript
+**Programming:** Java, Kotlin, Python, JavaScript, TypeScript
 
-### Frameworks
-Spring Boot, React, Angular, Node.js, ASP.NET Core
+**Frameworks:** Spring Boot, React, Angular, Node.js, ASP.NET Core
 
-### Data
-SQL Server, MySQL, MongoDB, PostgreSQL
+**Data:** SQL Server, MySQL, MongoDB, PostgreSQL
 
-### Cloud/DevOps
-AWS, Azure, Docker, Jenkins, Git, CI/CD
+**Cloud/DevOps:** AWS, Azure, Docker, Jenkins, Git, CI/CD
 
-### APIs
-REST, SOAP
+**APIs:** REST, SOAP
 
-### Architecture
-Microservices, MVC, MVP, MVVM
+**Architecture:** Microservices, MVC, MVP, MVVM
 
-### Tools
-Jira, Confluence, Postman, JMeter
+**Tools:** Jira, Confluence, Postman, JMeter
 
-### Methodologies
-Agile, Scrum
+**Methodologies:** Agile, Scrum
 
 ---
 
 ## Education
+
+### Master of Computer Science
+*Arizona State University, In Progress*
 
 ### CS Professional Certification in AI and Machine Learning
 *Arizona State University, 2025*
@@ -81,24 +72,10 @@ Agile, Scrum
 
 ---
 
-## Projects
-
-*Check out my repositories for examples of my work in:*
-
-- 💳 Payment Processing Systems
-- 📱 Mobile App Development
-- 🌐 RESTful API Design
-- 🤖 AI/ML Integration
-- 📊 Data Analysis & Visualization
-
----
-
 ## About Me
 
-When I'm not building software, I enjoy exploring the Arizona desert. I'm passionate about creating elegant solutions to complex problems and continuously expanding my technical skillset.
-
-> "The best code is no code at all. Every new line of code you willingly bring into the world is code that has to be debugged, code that has to be read and understood, code that has to be supported." — Jeff Atwood
+Originally from Colombia, I moved to the United States in 2023 and built my career here from scratch. Each role has deepened my understanding of how financial software works at scale. I hold ASU's Professional Certification in AI and Machine Learning, and I'm currently pursuing a Master's in Computer Science at Arizona State University, focusing on AI reliability in regulated financial environments and fraud detection.
 
 ---
 
-*This site was built using Jekyll and GitHub Pages. Last updated: April 2025*
+*Built with Jekyll and GitHub Pages. Last updated: March 2026*
