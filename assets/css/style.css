@@ -947,7 +947,7 @@ h1 {
 }
 
 .timeline-expandable.expanded .timeline-details {
-    max-height: 300px;
+    max-height: 800px;
     opacity: 1;
     margin-top: 10px;
 }
@@ -970,6 +970,105 @@ h1 {
     line-height: 1.6;
     color: var(--text-secondary) !important;
     margin-bottom: 0 !important;
+    list-style: none;
+    padding-left: 0;
+}
+
+.timeline-desc li {
+    position: relative;
+    padding-left: 16px;
+    margin-bottom: 8px;
+}
+
+.timeline-desc li::before {
+    content: '\2022';
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.timeline-desc li:last-child {
+    margin-bottom: 0;
+}
+
+/* Flip card structure (crossfade within overflow:hidden parents) */
+.timeline-card-flipper {
+    position: relative;
+}
+
+.timeline-card-front,
+.timeline-card-back {
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.timeline-card-front {
+    opacity: 1;
+    visibility: visible;
+}
+
+.timeline-card-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.timeline-card-flipper.flipped .timeline-card-front {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    max-height: 0;
+    overflow: hidden;
+}
+
+.timeline-card-flipper.flipped .timeline-card-back {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    position: relative;
+}
+
+/* Technical Skills button */
+.timeline-skills-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 8px 18px;
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+    font-family: inherit;
+}
+
+.timeline-skills-btn:hover {
+    background: var(--primary);
+    color: var(--black);
+    transform: scale(1.05);
+}
+
+/* Skills list inside flip card back */
+.timeline-skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.timeline-skills-list .skill-tag {
+    opacity: 1;
+    transform: none;
+    background-color: rgba(255, 184, 0, 0.15);
+    color: var(--primary);
+    border: 1px solid rgba(255, 184, 0, 0.3);
 }
 
 /* Gold left accent on expanded card */
