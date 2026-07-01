@@ -8,7 +8,8 @@ import { UIManager } from './UIManager.js';
 import { InputHandler } from './InputHandler.js';
 import { Player } from './entities/Player.js';
 import { GameMap } from './GameMap.js';
-import { getObjectTypes, getEnemyTypes, getItemTypes, getMaps, MAP_MUSIC } from './gameData.js';
+import { ParticleSystem } from './Particles.js';
+import { getObjectTypes, getEnemyTypes, getItemTypes, getCritterTypes, getMaps, MAP_MUSIC } from './gameData.js';
 
 export class Game {
     constructor() {
@@ -19,6 +20,7 @@ export class Game {
         this.sound = new SoundManager();
         this.ui = new UIManager(this);
         this.input = new InputHandler(this);
+        this.particles = new ParticleSystem();
         this.player = null;
         this.currentMap = null;
         this.interactionTarget = null;
@@ -36,6 +38,7 @@ export class Game {
         this.objectTypes = getObjectTypes();
         this.enemyTypes = getEnemyTypes();
         this.itemTypes = getItemTypes();
+        this.critterTypes = getCritterTypes();
         this.maps = getMaps();
     }
 
@@ -111,7 +114,15 @@ export class Game {
         }
 
         const mapData = this.maps[mapName];
-        const freshMapData = JSON.parse(JSON.stringify(mapData));
+        // Deep-copy JSON-safe parts only; NPC dialogs may be functions and must survive.
+        const freshMapData = {
+            ...mapData,
+            objects: JSON.parse(JSON.stringify(mapData.objects || [])),
+            enemies: JSON.parse(JSON.stringify(mapData.enemies || [])),
+            critters: JSON.parse(JSON.stringify(mapData.critters || [])),
+            npcs: mapData.npcs || [],
+        };
+        this.particles.clear();
         this.currentMap = new GameMap(this, freshMapData);
         if (this.player) {
             this.player.x = playerX;
@@ -188,6 +199,7 @@ export class Game {
         if (!this.player || !this.currentMap) return;
         this.player.update();
         this.currentMap.update();
+        this.particles.update();
         this.interactionTarget = null;
         this.gameTime += deltaTime * GAME_TIME_MULTIPLIER;
         const currentHour = Math.floor((this.gameTime % (24 * 3600)) / 3600);
@@ -216,6 +228,7 @@ export class Game {
         this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         if (this.gameState === GAME_STATE.PLAYING || this.gameState === GAME_STATE.DIALOG || this.gameState === GAME_STATE.PAUSED) {
             if (this.currentMap && this.player) this.currentMap.draw(this.ctx);
+            this.particles.draw(this.ctx);
             if (this.interactionTarget && this.gameState === GAME_STATE.PLAYING) {
                 this.ui.drawInteractionIndicator(this.interactionTarget.centerX, this.interactionTarget.y);
             }

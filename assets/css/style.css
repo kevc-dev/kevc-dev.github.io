@@ -15,11 +15,39 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 html {
     background-color: var(--black);
+    scroll-padding-top: 90px;
+}
+
+/* Visible keyboard focus */
+a:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* Skip to content link (visible on keyboard focus) */
+.skip-link {
+    position: absolute;
+    top: -60px;
+    left: 16px;
+    z-index: 2000;
+    background: var(--primary);
+    color: var(--black);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+    top: 12px;
 }
 
 body {
@@ -667,6 +695,117 @@ h1 {
 }
 
 /* ============================================
+   FEATURED PROJECTS
+   ============================================ */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.project-item {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--surface);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    padding: 35px;
+    border-radius: 16px;
+    border: 1px solid var(--surface-border);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.project-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 184, 0, 0.3);
+}
+
+.project-type {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.project-item h3 {
+    font-size: 22px;
+    margin-bottom: 6px;
+    color: var(--white);
+}
+
+.project-role {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+}
+
+.project-desc {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.project-metrics {
+    display: flex;
+    gap: 24px;
+    padding: 14px 0;
+    border-top: 1px solid var(--surface-border);
+    border-bottom: 1px solid var(--surface-border);
+    margin-bottom: 4px;
+}
+
+.project-metric {
+    display: flex;
+    flex-direction: column;
+}
+
+.project-metric strong {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1.2;
+}
+
+.project-metric span {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.project-item .skill-list {
+    margin-top: 16px;
+    margin-bottom: 0;
+}
+
+.project-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 22px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+    transition: gap 0.3s ease, color 0.3s ease;
+    align-self: flex-start;
+}
+
+.project-link:hover {
+    gap: 10px;
+    color: #ffd166;
+}
+
+/* ============================================
    SKILL TAGS
    ============================================ */
 .skill-list {
@@ -737,7 +876,6 @@ h1 {
 }
 
 #shake-image {
-    cursor: pointer;
     animation: shake-animation 4.72s ease infinite, goldenShine 3s ease-in-out infinite;
     transform-origin: 50% 50%;
     transition: filter 0.3s ease;
@@ -1484,6 +1622,9 @@ footer {
 .hamburger {
     display: none;
     cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
 }
 
 .hamburger div {
@@ -1718,5 +1859,38 @@ footer {
 @media (min-width: 1400px) {
     .hero .container {
         max-width: 1400px;
+    }
+}
+
+/* ============================================
+   REDUCED MOTION — respect user preference
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .reveal,
+    .reveal-left,
+    .reveal-right,
+    .reveal-scale,
+    .timeline-item,
+    .skill-tag,
+    .reveal-word {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+    }
+
+    .typewriter {
+        border-right-color: transparent !important;
+    }
+
+    html {
+        scroll-behavior: auto !important;
     }
 }

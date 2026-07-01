@@ -62,6 +62,16 @@ export class InteractiveObject extends Entity {
             case 'desert_flower': this.drawDesertFlower(ctx); break;
             case 'trail_marker': this.drawTrailMarker(ctx); break;
             case 'sand_dune': this.drawSandDune(ctx); break;
+            case 'old_building': this.drawOldBuilding(ctx); break;
+            case 'saloon': this.drawSaloon(ctx); break;
+            case 'wagon': this.drawWagon(ctx); break;
+            case 'barrel': this.drawBarrel(ctx); break;
+            case 'well': this.drawWell(ctx); break;
+            case 'mine_portal': this.drawMinePortal(ctx); break;
+            case 'rail_track': this.drawRailTrack(ctx); break;
+            case 'mine_cart': this.drawMineCart(ctx); break;
+            case 'crystal': this.drawCrystal(ctx); break;
+            case 'stalagmite': this.drawStalagmite(ctx); break;
             default: ctx.fillRect(this.x, this.y, this.width, this.height); break;
         }
     }
@@ -114,6 +124,17 @@ export class InteractiveObject extends Entity {
         ctx.fillRect(this.x, this.y + this.height * 0.3, this.width, 4);
         ctx.fillRect(this.x, this.y + this.height * 0.6, this.width, 4);
         ctx.fillRect(this.x + this.width / 2 - 3, this.y + this.height / 2 - 3, 6, 6);
+        // Sparkle hint on unopened chests
+        if (!this.objData.opened) {
+            const t = this.game.animationFrame % 90;
+            if (t < 12) {
+                ctx.fillStyle = '#FFFFFF';
+                const sx = this.x + 4 + (t % 3) * 10;
+                const sy = this.y - 4 + (t % 2) * 4;
+                ctx.fillRect(sx, sy, 2, 2);
+                ctx.fillRect(sx - 2, sy + 2, 2, 2);
+            }
+        }
     }
 
     drawSign(ctx) {
@@ -553,6 +574,299 @@ export class InteractiveObject extends Entity {
         ctx.fill();
     }
 
+    drawOldBuilding(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Facade
+        ctx.fillStyle = '#8A7358';
+        ctx.fillRect(x, y + h * 0.2, w, h * 0.8);
+        // Plank lines
+        ctx.strokeStyle = '#6E5A44';
+        for (let i = 1; i < 5; i++) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + h * 0.2 + i * (h * 0.8 / 5));
+            ctx.lineTo(x + w, y + h * 0.2 + i * (h * 0.8 / 5));
+            ctx.stroke();
+        }
+        // False front / roofline
+        ctx.fillStyle = '#6E5A44';
+        ctx.fillRect(x - 3, y + h * 0.12, w + 6, h * 0.12);
+        ctx.fillStyle = '#7A6650';
+        ctx.fillRect(x + w * 0.1, y, w * 0.8, h * 0.14);
+        // Boarded window
+        ctx.fillStyle = '#3A2F22';
+        ctx.fillRect(x + w * 0.12, y + h * 0.35, w * 0.24, h * 0.28);
+        ctx.strokeStyle = '#9A8265';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.12, y + h * 0.38);
+        ctx.lineTo(x + w * 0.36, y + h * 0.58);
+        ctx.moveTo(x + w * 0.36, y + h * 0.38);
+        ctx.lineTo(x + w * 0.12, y + h * 0.58);
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        // Dark doorway
+        ctx.fillStyle = '#241C12';
+        ctx.fillRect(x + w * 0.58, y + h * 0.42, w * 0.24, h * 0.58);
+    }
+
+    drawSaloon(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Facade
+        ctx.fillStyle = '#9A8265';
+        ctx.fillRect(x, y + h * 0.22, w, h * 0.78);
+        ctx.strokeStyle = '#7E6A50';
+        for (let i = 1; i < 6; i++) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + h * 0.22 + i * (h * 0.78 / 6));
+            ctx.lineTo(x + w, y + h * 0.22 + i * (h * 0.78 / 6));
+            ctx.stroke();
+        }
+        // Tall false front with sign
+        ctx.fillStyle = '#7E6A50';
+        ctx.fillRect(x - 4, y, w + 8, h * 0.24);
+        ctx.fillStyle = '#4A2A0A';
+        ctx.fillRect(x + w * 0.15, y + h * 0.04, w * 0.7, h * 0.14);
+        ctx.fillStyle = '#FFD27D';
+        ctx.font = '8px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText('SALOON', x + w / 2, y + h * 0.145);
+        ctx.textAlign = 'left';
+        // Porch roof
+        ctx.fillStyle = '#5E4A34';
+        ctx.fillRect(x + w * 0.05, y + h * 0.42, w * 0.9, h * 0.06);
+        // Swinging doors
+        ctx.fillStyle = '#241C12';
+        ctx.fillRect(x + w * 0.4, y + h * 0.55, w * 0.2, h * 0.45);
+        const swing = Math.sin(this.game.animationFrame * 0.05) * 2;
+        ctx.fillStyle = '#6E5A44';
+        ctx.fillRect(x + w * 0.4 - swing, y + h * 0.6, w * 0.1, h * 0.25);
+        ctx.fillRect(x + w * 0.5 + swing, y + h * 0.6, w * 0.1, h * 0.25);
+        // Windows (warm glow flicker, as if a lamp still burns)
+        const glow = (this.game.animationFrame % 80 < 40) ? '#B8934E' : '#A8834E';
+        ctx.fillStyle = glow;
+        ctx.fillRect(x + w * 0.12, y + h * 0.55, w * 0.16, h * 0.2);
+        ctx.fillRect(x + w * 0.72, y + h * 0.55, w * 0.16, h * 0.2);
+        ctx.strokeStyle = '#4A3A28';
+        ctx.strokeRect(x + w * 0.12, y + h * 0.55, w * 0.16, h * 0.2);
+        ctx.strokeRect(x + w * 0.72, y + h * 0.55, w * 0.16, h * 0.2);
+    }
+
+    drawWagon(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Bed
+        ctx.fillStyle = '#6B4226';
+        ctx.fillRect(x + w * 0.05, y + h * 0.3, w * 0.9, h * 0.4);
+        ctx.strokeStyle = '#4A2F18';
+        for (let i = 1; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.05 + i * (w * 0.9 / 4), y + h * 0.3);
+            ctx.lineTo(x + w * 0.05 + i * (w * 0.9 / 4), y + h * 0.7);
+            ctx.stroke();
+        }
+        // Intact wheel
+        ctx.strokeStyle = '#3A2A18';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x + w * 0.75, y + h * 0.78, h * 0.22, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.75 - h * 0.22, y + h * 0.78);
+        ctx.lineTo(x + w * 0.75 + h * 0.22, y + h * 0.78);
+        ctx.moveTo(x + w * 0.75, y + h * 0.56);
+        ctx.lineTo(x + w * 0.75, y + h);
+        ctx.stroke();
+        // Broken wheel on the ground
+        ctx.beginPath();
+        ctx.arc(x + w * 0.15, y + h * 0.95, h * 0.18, Math.PI, Math.PI * 2);
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        // Tilted tongue beam
+        ctx.fillStyle = '#4A2F18';
+        ctx.save();
+        ctx.translate(x, y + h * 0.6);
+        ctx.rotate(0.4);
+        ctx.fillRect(0, 0, w * 0.3, 3);
+        ctx.restore();
+    }
+
+    drawBarrel(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        ctx.fillStyle = '#7A5438';
+        ctx.fillRect(x + 1, y, w - 2, h);
+        // Slight bulge
+        ctx.fillRect(x, y + h * 0.2, w, h * 0.6);
+        // Metal bands
+        ctx.fillStyle = '#4A4038';
+        ctx.fillRect(x, y + h * 0.2, w, 3);
+        ctx.fillRect(x, y + h * 0.72, w, 3);
+        // Stave lines
+        ctx.strokeStyle = '#5E4028';
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.35, y); ctx.lineTo(x + w * 0.35, y + h);
+        ctx.moveTo(x + w * 0.65, y); ctx.lineTo(x + w * 0.65, y + h);
+        ctx.stroke();
+    }
+
+    drawWell(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Stone base
+        ctx.fillStyle = '#7D7064';
+        ctx.fillRect(x, y + h * 0.5, w, h * 0.5);
+        ctx.fillStyle = '#5F534B';
+        for (let r = 0; r < 2; r++) {
+            for (let c = 0; c < 4; c++) {
+                ctx.strokeStyle = '#4F453D';
+                ctx.strokeRect(x + c * (w / 4) + (r % 2) * 4, y + h * 0.5 + r * (h * 0.25), w / 4, h * 0.25);
+            }
+        }
+        // Dark water inside
+        ctx.fillStyle = '#1A2A3A';
+        ctx.fillRect(x + w * 0.15, y + h * 0.55, w * 0.7, h * 0.12);
+        if (this.game.animationFrame % 70 < 8) {
+            ctx.fillStyle = '#3377CC';
+            ctx.fillRect(x + w * 0.4, y + h * 0.58, 4, 2);
+        }
+        // Posts and roof
+        ctx.fillStyle = '#6B4226';
+        ctx.fillRect(x + 2, y + h * 0.1, 4, h * 0.45);
+        ctx.fillRect(x + w - 6, y + h * 0.1, 4, h * 0.45);
+        ctx.fillStyle = '#8B5A2B';
+        ctx.beginPath();
+        ctx.moveTo(x - 3, y + h * 0.15);
+        ctx.lineTo(x + w / 2, y - 4);
+        ctx.lineTo(x + w + 3, y + h * 0.15);
+        ctx.lineTo(x + w - 2, y + h * 0.22);
+        ctx.lineTo(x + w / 2, y + 4);
+        ctx.lineTo(x + 2, y + h * 0.22);
+        ctx.closePath(); ctx.fill();
+        // Rope and bucket
+        ctx.strokeStyle = '#C8BCA0';
+        ctx.beginPath();
+        ctx.moveTo(x + w / 2, y + 4);
+        ctx.lineTo(x + w / 2, y + h * 0.4);
+        ctx.stroke();
+        ctx.fillStyle = '#5E4028';
+        ctx.fillRect(x + w / 2 - 4, y + h * 0.4, 8, 6);
+    }
+
+    drawMinePortal(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Dark opening
+        ctx.fillStyle = '#0F0A05';
+        ctx.fillRect(x + w * 0.12, y + h * 0.2, w * 0.76, h * 0.8);
+        // Timber frame
+        ctx.fillStyle = '#5E4A34';
+        ctx.fillRect(x, y + h * 0.15, w * 0.14, h * 0.85);
+        ctx.fillRect(x + w * 0.86, y + h * 0.15, w * 0.14, h * 0.85);
+        ctx.fillRect(x - 3, y, w + 6, h * 0.18);
+        // Support brace
+        ctx.fillStyle = '#4A3A28';
+        ctx.fillRect(x + w * 0.2, y + h * 0.18, w * 0.6, 4);
+        if (this.objData.text) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '8px "Press Start 2P"';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.objData.text.substring(0, 10), x + w / 2, y - 5);
+            ctx.textAlign = 'left';
+        }
+    }
+
+    drawRailTrack(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Sleepers
+        ctx.fillStyle = '#4A3A28';
+        for (let i = 0; i < 6; i++) {
+            ctx.fillRect(x + i * (w / 6) + 2, y, 6, h);
+        }
+        // Rails
+        ctx.fillStyle = '#8A8078';
+        ctx.fillRect(x, y + h * 0.2, w, 3);
+        ctx.fillRect(x, y + h * 0.65, w, 3);
+    }
+
+    drawMineCart(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Body
+        ctx.fillStyle = '#4A4A52';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w, y);
+        ctx.lineTo(x + w * 0.85, y + h * 0.7);
+        ctx.lineTo(x + w * 0.15, y + h * 0.7);
+        ctx.closePath(); ctx.fill();
+        // Ore inside
+        ctx.fillStyle = '#B87333';
+        ctx.fillRect(x + w * 0.2, y - 4, w * 0.15, 5);
+        ctx.fillRect(x + w * 0.45, y - 6, w * 0.2, 7);
+        ctx.fillRect(x + w * 0.7, y - 3, w * 0.12, 4);
+        // Rivets
+        ctx.fillStyle = '#2A2A32';
+        ctx.fillRect(x + w * 0.1, y + h * 0.25, 3, 3);
+        ctx.fillRect(x + w * 0.85, y + h * 0.25, 3, 3);
+        // Wheels
+        ctx.fillStyle = '#1A1A1E';
+        ctx.beginPath();
+        ctx.arc(x + w * 0.28, y + h * 0.82, h * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + w * 0.72, y + h * 0.82, h * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    drawCrystal(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const pulse = 0.5 + Math.sin(this.game.animationFrame * 0.08) * 0.3;
+        // Glow halo
+        ctx.fillStyle = `rgba(102, 221, 238, ${pulse * 0.25})`;
+        ctx.beginPath();
+        ctx.ellipse(x + w / 2, y + h * 0.6, w * 0.9, h * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Crystal shards
+        const shards = [
+            { cx: 0.5, top: 0, base: 0.45, hw: 0.22 },
+            { cx: 0.25, top: 0.3, base: 0.35, hw: 0.14 },
+            { cx: 0.75, top: 0.25, base: 0.38, hw: 0.15 },
+        ];
+        shards.forEach(s => {
+            ctx.fillStyle = `rgba(102, 221, 238, ${0.6 + pulse * 0.4})`;
+            ctx.beginPath();
+            ctx.moveTo(x + w * s.cx, y + h * s.top);
+            ctx.lineTo(x + w * (s.cx + s.hw), y + h);
+            ctx.lineTo(x + w * (s.cx - s.hw), y + h);
+            ctx.closePath(); ctx.fill();
+            // Highlight edge
+            ctx.strokeStyle = `rgba(220, 255, 255, ${pulse})`;
+            ctx.beginPath();
+            ctx.moveTo(x + w * s.cx, y + h * s.top);
+            ctx.lineTo(x + w * (s.cx - s.hw * 0.5), y + h * 0.85);
+            ctx.stroke();
+        });
+        // Twinkle
+        if (this.game.animationFrame % 50 < 6) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(x + w * 0.5 - 1, y + h * 0.25, 2, 2);
+        }
+    }
+
+    drawStalagmite(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        ctx.fillStyle = '#5F534B';
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.75, y + h * 0.5);
+        ctx.lineTo(x + w, y + h);
+        ctx.lineTo(x, y + h);
+        ctx.lineTo(x + w * 0.3, y + h * 0.45);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#4A4038';
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.62, y + h * 0.5);
+        ctx.lineTo(x + w * 0.72, y + h);
+        ctx.lineTo(x + w * 0.45, y + h);
+        ctx.closePath(); ctx.fill();
+    }
+
     onInteract(player) {
         if (this.objData.triggersPuzzle && (!this.game.player || !this.game.player.hasItem('final_artifact')) && !this.objData.opened) {
             this.game.startPuzzle(this.objData.puzzleDetails);
@@ -589,7 +903,7 @@ export class InteractiveObject extends Entity {
             this.game.ui.showDialog(this.objData.text, (this.objData.name || this.type).toUpperCase());
             this.game.setGameState(GAME_STATE.DIALOG);
         }
-        if (this.type === 'water_source') {
+        if (this.type === 'water_source' || this.type === 'well') {
             if (player.hydration < player.maxHydration) {
                 player.hydrate(player.maxHydration);
                 this.game.ui.showDialog("You refill your canteen and take a long drink. You feel refreshed.", "Water Source");

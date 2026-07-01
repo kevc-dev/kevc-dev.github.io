@@ -44,6 +44,8 @@ export class SoundManager {
         this.music.whiteTanksTheme = new Audio('sounds/white_tanks_theme.mp3');
         this.music.asuLabTheme = new Audio('sounds/fourth_scenario.mp3');
         this.music.chamberTheme = new Audio('sounds/chamber_theme.mp3');
+        this.music.ghostTownTheme = new Audio('sounds/another_scenario.mp3');
+        this.music.mineTheme = new Audio('sounds/y_scenario.mp3');
 
         this.sounds.selectOption = new Audio('sounds/select_options.mp3');
         this.sounds.gameStart = new Audio('sounds/game_start.mp3');

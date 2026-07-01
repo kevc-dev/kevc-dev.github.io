@@ -1,6 +1,6 @@
 ## Senior Software Engineer
 
-Senior Software Engineer with 6+ years of experience building payment processing systems. Currently at MiCamp Solutions in Scottsdale, where I lead development on the WAVit Payments Android app, integrating with terminals like Clover, PAX, Dejavoo, and Sunmi. My day-to-day involves merchant services APIs, PCI DSS compliance, and making sure small businesses get paid reliably.
+Senior Software Engineer with 7+ years of experience building payment processing systems. Currently at MiCamp Solutions in Scottsdale, where I lead development on the WAVit Payments Android app, integrating with terminals like Clover, PAX, Dejavoo, and Sunmi. My day-to-day involves merchant services APIs, PCI DSS compliance, and making sure small businesses get paid reliably.
 
 [Email](mailto:contact@kev-c.dev) | [LinkedIn](https://www.linkedin.com/in/kevc-dev/) | Scottsdale, Arizona
 
@@ -16,8 +16,8 @@ Senior Software Engineer with 6+ years of experience building payment processing
 
 ### Software Engineer, MiCamp Solutions — Scottsdale, Arizona
 *Jan 2023 — May 2024*
-- Developed android and iOS apps using Java, Kotlin, and Swift reaching over 30,000 users within the first year
-- Developed web applications using Java Spring Boot, achieving 99.99% uptime for over 1 million weekly transactions
+- Developed Android and iOS apps using Java, Kotlin, and Swift, growing the user base to 5,000+ active users while maintaining 99.5% uptime
+- Developed web applications using Java Spring Boot, processing $1M+ in monthly transaction volume
 - Designed and implemented RESTful APIs, enhancing data synchronization speed by 40%
 - Implemented robust CI/CD pipelines using Jenkins and Git, enabling automated testing and deployment
 

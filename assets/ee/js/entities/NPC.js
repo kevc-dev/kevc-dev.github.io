@@ -23,7 +23,12 @@ export class NPC extends Entity {
         if (isSpirit) {
             this.drawSpirit(ctx, x, y, w, h, bodyTopY, bodyHeight, headHeight);
         } else {
+            // Subtle idle breathing bob
+            const bob = Math.round(Math.sin(this.npcAnimationFrame * 0.05));
+            ctx.save();
+            ctx.translate(0, bob);
             this.drawHuman(ctx, x, y, w, h, bodyTopY, bodyHeight, headHeight, npcHeadColor, npcShirtColor, npcTrouserColor, eyeColor);
+            ctx.restore();
         }
 
         ctx.fillStyle = '#FFFFFF';
@@ -92,6 +97,68 @@ export class NPC extends Entity {
             ctx.fillRect(0, 0, 3, bodyHeight * 0.7);
             ctx.fillStyle = '#A9A9A9';
             ctx.fillRect(-3, -2, 9, 4);
+            ctx.restore();
+        } else if (this.name === 'UFO Watcher') {
+            npcShirtColor = '#2F4F4F'; npcTrouserColor = '#3A3A3A';
+            // Foil hat
+            ctx.fillStyle = '#C0C8D0';
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.2, y + headHeight * 0.35);
+            ctx.lineTo(x + w * 0.5, y - 5);
+            ctx.lineTo(x + w * 0.8, y + headHeight * 0.35);
+            ctx.closePath(); ctx.fill();
+            // Telescope pointing up
+            ctx.fillStyle = '#555';
+            ctx.save();
+            ctx.translate(x + w * 0.9, bodyTopY + 4);
+            ctx.rotate(-0.9);
+            ctx.fillRect(0, 0, 4, bodyHeight * 0.7);
+            ctx.fillStyle = '#777';
+            ctx.fillRect(-1, 0, 6, 4);
+            ctx.restore();
+        } else if (this.name === 'Photographer') {
+            npcShirtColor = '#8FBC8F'; npcTrouserColor = '#5F5F5F';
+            // Backwards cap
+            ctx.fillStyle = '#B22222';
+            ctx.fillRect(x + w * 0.2, y - 2, w * 0.6, headHeight * 0.4);
+            ctx.fillRect(x + w * 0.05, y, w * 0.2, headHeight * 0.25);
+            // Camera held up
+            ctx.fillStyle = '#222';
+            ctx.fillRect(x + w * 0.55, bodyTopY + 3, 10, 7);
+            ctx.fillStyle = '#88CCEE';
+            ctx.fillRect(x + w * 0.55 + 3, bodyTopY + 5, 4, 3);
+        } else if (this.name === 'Tumbleweed Ted') {
+            npcTrouserColor = '#4E342E';
+            // Striped serape poncho
+            const stripes = ['#B23A48', '#E0A458', '#3E7C59'];
+            for (let i = 0; i < 3; i++) {
+                ctx.fillStyle = stripes[i];
+                ctx.fillRect(x + w * 0.1, bodyTopY + i * (bodyHeight * 0.2), w * 0.8, bodyHeight * 0.2);
+            }
+            npcShirtColor = 'rgba(0,0,0,0)';
+            // Wide sombrero
+            ctx.fillStyle = '#A0522D';
+            ctx.fillRect(x - 5, y + headHeight * 0.3, w + 10, headHeight * 0.35);
+            ctx.fillRect(x + w * 0.2, y - 4, w * 0.6, headHeight * 0.6);
+        } else if (this.name === 'Wandering Musician') {
+            npcShirtColor = '#6A0DAD'; npcTrouserColor = '#2F2F2F';
+            // Bandana
+            ctx.fillStyle = '#CC2222';
+            ctx.fillRect(x + w * 0.2, y - 1, w * 0.6, headHeight * 0.35);
+            // Guitar strapped across
+            ctx.save();
+            ctx.translate(x + w * 0.15, bodyTopY + bodyHeight * 0.15);
+            ctx.rotate(0.5);
+            ctx.fillStyle = '#8B5A2B';
+            ctx.beginPath();
+            ctx.ellipse(0, bodyHeight * 0.35, 7, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#5C3D1E';
+            ctx.fillRect(-1.5, -bodyHeight * 0.25, 3, bodyHeight * 0.6);
+            ctx.fillStyle = '#2A1A0A';
+            ctx.beginPath();
+            ctx.arc(0, bodyHeight * 0.35, 3, 0, Math.PI * 2);
+            ctx.fill();
             ctx.restore();
         } else if (this.name === 'Petroglyph Researcher' || this.name === 'Grad Student') {
             npcShirtColor = '#4682B4';

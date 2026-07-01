@@ -27,6 +27,17 @@ export const DAY_START_HOUR = 6;
 export const DAY_END_HOUR = 20;
 export const INITIAL_GAME_HOUR = 8;
 
+// Player melee combat
+export const PLAYER_ATTACK_DAMAGE = 25;
+export const PLAYER_ATTACK_RANGE = 34;
+export const PLAYER_ATTACK_COOLDOWN = 35;
+export const PLAYER_ATTACK_DURATION = 14;
+export const PLAYER_ATTACK_KNOCKBACK = 26;
+
+// Enemy idle behavior
+export const ENEMY_WANDER_SPEED_FACTOR = 0.4;
+export const ENEMY_WANDER_RADIUS = 80;
+
 export const GAME_STATE = {
     START_SCREEN: 'START_SCREEN',
     LOADING: 'LOADING',

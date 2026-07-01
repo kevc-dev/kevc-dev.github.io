@@ -37,6 +37,7 @@ export class InputHandler {
         const inventoryButton = document.getElementById('inventoryButton');
         const questButton = document.getElementById('questButton');
         const pauseButton = document.getElementById('pauseButton');
+        const attackButton = document.getElementById('attackButton');
 
         if (!joystickStick || !joystickBase) return;
 
@@ -120,6 +121,7 @@ export class InputHandler {
         setupButtonListener(inventoryButton, 'i');
         setupButtonListener(questButton, 'q');
         setupButtonListener(pauseButton, 'p');
+        setupButtonListener(attackButton, 'f');
 
         resetJoystick();
     }

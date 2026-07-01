@@ -1,6 +1,7 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, GAME_STATE } from './constants.js';
 import { NPC } from './entities/NPC.js';
 import { Enemy } from './entities/Enemy.js';
+import { Critter } from './entities/Critter.js';
 import { InteractiveObject } from './entities/InteractiveObject.js';
 
 export class GameMap {
@@ -8,10 +9,22 @@ export class GameMap {
         this.game = game;
         this.name = mapData.name;
         this.background = mapData.background;
+        this.indoor = mapData.indoor || false;
         this.objects = [];
         this.npcs = [];
         this.enemies = [];
+        this.critters = [];
         this.projectiles = [];
+        // Deterministic star field for night skies
+        this.stars = [];
+        for (let i = 0; i < 40; i++) {
+            this.stars.push({
+                x: (i * 137 + 61) % CANVAS_WIDTH,
+                y: ((i * 89 + 23) % (CANVAS_HEIGHT * 0.55)),
+                size: (i % 3 === 0) ? 2 : 1,
+                phase: i * 0.7,
+            });
+        }
         this.loadEntities(mapData);
     }
 
@@ -19,6 +32,7 @@ export class GameMap {
         this.objects = [];
         this.npcs = [];
         this.enemies = [];
+        this.critters = [];
         this.projectiles = [];
 
         (mapData.objects || []).forEach(objData => {
@@ -39,6 +53,15 @@ export class GameMap {
                 console.warn(`Enemy type "${enemyData.type}" not found in definitions.`);
             }
         });
+
+        (mapData.critters || []).forEach(critterData => {
+            const critterDefinition = this.game.critterTypes[critterData.type];
+            if (critterDefinition) {
+                this.critters.push(new Critter(this.game, critterData.x, critterData.y, critterDefinition));
+            } else {
+                console.warn(`Critter type "${critterData.type}" not found in definitions.`);
+            }
+        });
     }
 
     addProjectile(projectile) {
@@ -48,6 +71,7 @@ export class GameMap {
     update() {
         if (this.game.gameState !== GAME_STATE.PLAYING) return;
         this.npcs.forEach(npc => npc.update());
+        this.critters.forEach(critter => critter.update());
         [...this.enemies].forEach(enemy => enemy.update());
         this.objects.forEach(obj => {
             if (obj.type === 'skull_turret' && typeof obj.updateTurret === 'function') obj.updateTurret();
@@ -61,16 +85,94 @@ export class GameMap {
     draw(ctx) {
         ctx.fillStyle = this.background;
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        if (!this.game.dayTime) {
-            ctx.fillStyle = 'rgba(0, 0, 30, 0.65)';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        }
-        const allDrawableEntities = [...this.objects, ...this.npcs, ...this.enemies, ...this.projectiles];
+
+        // Daytime ground effects (outdoor maps only)
+        if (!this.indoor && this.game.dayTime) this.drawCloudShadows(ctx);
+
+        const allDrawableEntities = [...this.objects, ...this.npcs, ...this.critters, ...this.enemies, ...this.projectiles];
         if (this.game.player) allDrawableEntities.push(this.game.player);
         allDrawableEntities.sort((a, b) => (a.y + a.height) - (b.y + b.height));
         allDrawableEntities.forEach(entity => {
             if (entity && typeof entity.draw === 'function') entity.draw(ctx);
         });
+
+        // Night falls over everything (outdoor maps only)
+        if (!this.indoor && !this.game.dayTime) {
+            ctx.fillStyle = 'rgba(0, 0, 30, 0.55)';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            this.drawNightSky(ctx);
+        }
+        if (!this.indoor && this.game.dayTime) this.drawBirds(ctx);
+    }
+
+    drawCloudShadows(ctx) {
+        const t = this.game.animationFrame;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
+        for (let i = 0; i < 2; i++) {
+            const cx = ((t * (0.15 + i * 0.08) + i * 390) % (CANVAS_WIDTH + 260)) - 130;
+            const cy = 90 + i * 210;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, 70, 24, 0, 0, Math.PI * 2);
+            ctx.ellipse(cx + 45, cy + 10, 50, 18, 0, 0, Math.PI * 2);
+            ctx.ellipse(cx - 40, cy + 8, 40, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    drawBirds(ctx) {
+        const t = this.game.animationFrame;
+        const cycle = 1400;
+        const progress = (t % cycle) / cycle;
+        if (progress > 0.35) return; // birds only cross occasionally
+        const flockX = progress / 0.35 * (CANVAS_WIDTH + 120) - 60;
+        const flockY = 50 + Math.sin(progress * 8) * 10;
+        ctx.strokeStyle = 'rgba(40, 30, 20, 0.75)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 4; i++) {
+            const bx = flockX - i * 22 - (i % 2) * 8;
+            const by = flockY + (i % 2) * 12 + Math.floor(i / 2) * 7;
+            const flap = Math.sin(t * 0.25 + i) * 3;
+            ctx.beginPath();
+            ctx.moveTo(bx - 5, by - flap);
+            ctx.lineTo(bx, by + 2);
+            ctx.lineTo(bx + 5, by - flap);
+            ctx.stroke();
+        }
+        ctx.lineWidth = 1;
+    }
+
+    drawNightSky(ctx) {
+        const t = this.game.animationFrame;
+        // Twinkling stars
+        this.stars.forEach(star => {
+            const twinkle = 0.4 + Math.abs(Math.sin(t * 0.03 + star.phase)) * 0.6;
+            ctx.fillStyle = `rgba(255, 255, 230, ${twinkle})`;
+            ctx.fillRect(star.x, star.y, star.size, star.size);
+        });
+        // Moon
+        ctx.fillStyle = '#E8E8D8';
+        ctx.beginPath();
+        ctx.arc(CANVAS_WIDTH - 80, 60, 18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(0, 0, 30, 0.85)';
+        ctx.beginPath();
+        ctx.arc(CANVAS_WIDTH - 88, 54, 15, 0, Math.PI * 2);
+        ctx.fill();
+        // Occasional shooting star (or something else...?)
+        const cycle = 900;
+        const sp = (t % cycle) / cycle;
+        if (sp < 0.06) {
+            const p = sp / 0.06;
+            const sx = 100 + p * 300;
+            const sy = 40 + p * 90;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${1 - p})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sx - 22, sy - 8);
+            ctx.lineTo(sx, sy);
+            ctx.stroke();
+            ctx.lineWidth = 1;
+        }
     }
 
     checkCollision(x, y, width, height) {

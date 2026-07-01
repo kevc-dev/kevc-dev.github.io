@@ -12,19 +12,25 @@
 
   if (hamburger) {
     hamburger.addEventListener("click", () => {
-      navLinks.classList.toggle("active");
+      const isOpen = navLinks.classList.toggle("active");
+      hamburger.setAttribute("aria-expanded", String(isOpen));
     });
   }
 
   // Smooth scrolling for anchor links
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", function (e) {
+      const target = document.querySelector(this.getAttribute("href"));
+      if (!target) return;
       e.preventDefault();
       if (navLinks.classList.contains("active")) {
         navLinks.classList.remove("active");
+        if (hamburger) hamburger.setAttribute("aria-expanded", "false");
       }
-      document.querySelector(this.getAttribute("href")).scrollIntoView({
-        behavior: "smooth",
+      target.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
       });
     });
   });
@@ -199,7 +205,7 @@
       const prefix = el.dataset.prefix || "";
       const suffixReveal = el.dataset.suffixReveal === "true";
       const compact = el.dataset.format === "compact";
-      const duration = 2000;
+      const duration = prefersReducedMotion ? 0 : 2000;
       const start = performance.now();
 
       function easeOutExpo(t) {

@@ -30,6 +30,18 @@ export function getObjectTypes() {
         desert_flower: { name: "Desert Flower", width: 16, height: 20, solid: false, interactive: true, color: '#FF69B4', text: "A resilient desert bloom. Life finds a way even here." },
         trail_marker: { name: "Trail Marker", width: 20, height: 28, solid: true, interactive: true, color: '#B8860B' },
         sand_dune: { name: "Sand Dune", width: 80, height: 32, solid: false, interactive: false, color: '#D4B483' },
+        // Ghost town
+        old_building: { name: "Abandoned Building", width: 96, height: 80, solid: true, interactive: true, color: '#8A7358', text: "Boarded windows and a sagging roof. Nobody's home... probably." },
+        saloon: { name: "Old Saloon", width: 128, height: 90, solid: true, interactive: true, color: '#9A8265', text: "The 'Golden Gulch Saloon'. The piano inside still seems to play on windy nights." },
+        wagon: { name: "Broken Wagon", width: 64, height: 40, solid: true, interactive: true, color: '#6B4226', text: "A pioneer wagon, abandoned mid-journey. The wheel is snapped clean off." },
+        barrel: { name: "Barrel", width: 20, height: 26, solid: true, interactive: true, color: '#7A5438', text: "An old rain barrel. Bone dry." },
+        well: { name: "Town Well", width: 40, height: 44, solid: true, interactive: true, color: '#7D7064' },
+        // Mine
+        mine_portal: { name: "Mine Entrance", width: 56, height: 48, solid: false, portal: true, interactive: true, color: '#3A2B1A' },
+        rail_track: { name: "Rail Track", width: 96, height: 16, solid: false, interactive: false, color: '#5A4D41' },
+        mine_cart: { name: "Mine Cart", width: 40, height: 28, solid: true, interactive: true, color: '#4A4A52', text: "A rusted ore cart, still half-full of copper ore." },
+        crystal: { name: "Glowing Crystal", width: 24, height: 32, solid: true, interactive: true, color: '#66DDEE', text: "A cluster of crystals pulsing with faint blue light. Beautiful... and strange." },
+        stalagmite: { name: "Stalagmite", width: 24, height: 32, solid: true, interactive: false, color: '#5F534B' },
     };
 }
 
@@ -40,6 +52,21 @@ export function getEnemyTypes() {
         coyote: { name: 'Coyote', width: 40, height: 28, damage: 10, speed: 1.5, health: 50, color: '#B8860B', solid: true, interactive: true },
         spider: { name: 'Giant Spider', width: 36, height: 32, damage: 7, speed: 1.1, health: 40, color: '#3A3A3A', solid: true, interactive: false },
         attacking_ghost: { name: 'Restless Spirit', width: 24, height: 32, damage: 6, speed: 1.3, health: 35, color: '#A0B0D0', isEthereal: true, aggroRange: 180, solid: false, interactive: true },
+        gila_monster: { name: 'Gila Monster', width: 36, height: 18, damage: 12, speed: 0.6, health: 60, color: '#E2725B', solid: true, interactive: true },
+        vulture: { name: 'Vulture', width: 36, height: 24, damage: 6, speed: 1.7, health: 25, color: '#3B2F2F', isFlying: true, circles: true, aggroRange: 200, solid: false, interactive: false },
+        javelina: { name: 'Javelina', width: 42, height: 30, damage: 14, speed: 1.9, health: 70, color: '#4A4038', charges: true, aggroRange: 170, solid: true, interactive: true },
+        bat: { name: 'Cave Bat', width: 20, height: 14, damage: 4, speed: 1.9, health: 15, color: '#1A1A22', isFlying: true, erratic: true, aggroRange: 160, solid: false, interactive: false },
+        mummy: { name: 'Ancient Guardian', width: 26, height: 36, damage: 15, speed: 0.7, health: 120, color: '#C8BCA0', aggroRange: 220, solid: true, interactive: false },
+    };
+}
+
+export function getCritterTypes() {
+    return {
+        jackrabbit: { name: 'Jackrabbit', width: 22, height: 18, speed: 1.2, fleeRange: 85 },
+        roadrunner: { name: 'Roadrunner', width: 26, height: 20, speed: 1.9, fleeRange: 75 },
+        lizard: { name: 'Lizard', width: 18, height: 10, speed: 0.9, fleeRange: 50 },
+        quail: { name: 'Quail', width: 18, height: 16, speed: 1.0, fleeRange: 70 },
+        tortoise: { name: 'Desert Tortoise', width: 26, height: 18, speed: 0.2, fleeRange: 0 },
     };
 }
 
@@ -60,6 +87,22 @@ export function getItemTypes() {
         },
         compass: { name: 'Compass', description: 'Helps you navigate.' },
         journal: { name: 'Journal', description: 'Contains research notes and quests.', useFunc: (game) => game.ui.toggleQuestLog() },
+        prickly_pear: {
+            name: 'Prickly Pear', description: 'A sweet cactus fruit. Restores 35 HP.',
+            useFunc: (game) => {
+                if (game.player.health < game.player.maxHealth) {
+                    game.player.heal(35);
+                    game.player.removeItem('prickly_pear');
+                    game.sound.playSound('drink');
+                    game.ui.showDialog("You eat the prickly pear. Sweet and restoring! (+35 HP)", "Prickly Pear");
+                } else {
+                    game.ui.showDialog("You're at full health. Better save it for later.", "Prickly Pear");
+                }
+                game.setGameState(GAME_STATE.DIALOG);
+            }
+        },
+        old_pickaxe: { name: 'Old Pickaxe', description: "The Prospector's beloved pickaxe. Rusty but sturdy." },
+        lucky_charm: { name: 'Lucky Rabbit Foot', description: 'A worn charm from a braver era. It feels... lucky.' },
         artifact1: { name: 'Stone Tablet', description: 'Part of an ancient artifact set.' },
         final_artifact: { name: 'Arizona Artifact', description: 'The legendary treasure! Its power is immense.' },
     };
@@ -103,27 +146,42 @@ export function getMaps() {
                 // Interactive points
                 { type: 'sign', x: 150, y: 240, text: "Caution: Desert conditions ahead! Stay hydrated." },
                 { type: 'interactive_point', x: 350, y: 350, text: "Lizard tracks crisscross the sand. Something large passed through here recently." },
-                // Water & exit
+                // Water & exits
                 { type: 'water_source', x: 50, y: 300 },
-                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 232, toMap: 'canyon', toX: 50, toY: 240, text: "To Canyon" }
+                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 232, toMap: 'canyon', toX: 50, toY: 240, text: "To Canyon" },
+                { type: 'doorway', x: 296, y: CANVAS_HEIGHT - 16, toMap: 'ghost_town', toX: 296, toY: 40, text: "To Old Town" }
             ],
             npcs: [
                 { name: 'Ranger Rick', x: 200, y: 300, dialog: [
                     "Howdy, Professor! Dehydration is no joke out here.",
                     "Strange lights in the sky lately... military says it's flares.",
                     "If you're heading east, watch for scorpions near the rocks.",
-                    "There's an old well nearby if you need water."
+                    "There's an old well nearby if you need water.",
+                    "Press F to swing your walking stick if critters get too bold!"
                 ]},
                 { name: 'Lost Tourist', x: 450, y: 200, dialog: [
                     "Excuse me! Do you know the way back to Phoenix?",
                     "My rental car broke down about a mile back...",
                     "I swear I saw something glowing out past those rocks last night."
                 ]},
-                { name: 'Old Prospector', x: 100, y: 440, dialog: [
-                    "Been panning these dry riverbeds for thirty years, son.",
-                    "Gold? Nah... I'm looking for something older than gold.",
-                    "The Hohokam knew things we've forgotten. Mark my words.",
-                    "You look like a man on a mission. Good luck out there."
+                { name: 'Old Prospector', x: 100, y: 440, dialog: (player, game) => {
+                    const q = player.quests.find(q => q.id === 'prospector_pickaxe');
+                    if (!q) {
+                        player.addQuest({ id: 'prospector_pickaxe', description: "Find the Prospector's pickaxe in the Abandoned Mine.", completed: false });
+                        return "Lost my trusty pickaxe down in the old copper mine, past the ghost town south of here. Too many bats for these old bones. Fetch it, and I'll tell you a secret worth more than gold!";
+                    }
+                    if (!q.completed && player.hasItem('old_pickaxe')) {
+                        player.completeQuest('prospector_pickaxe');
+                        return "My pickaxe! Bless you, Professor! Now listen close... at the university, the ancients' door hides behind the Phoenix. Push what cannot fly.";
+                    }
+                    if (q.completed) return "Push what cannot fly, Professor. Remember it.";
+                    return "The mine's south of here — through the ghost town. Watch for bats, and mind the gila monsters!";
+                }},
+                { name: 'UFO Watcher', x: 520, y: 400, dialog: [
+                    "Shhh! I'm listening... they broadcast on 1420 megahertz, you know.",
+                    "Three nights ago a light zigzagged over the White Tanks. Zigzagged! Flares don't do that.",
+                    "The ancients drew them on the rocks thousands of years ago. Look closely at the petroglyphs.",
+                    "Nice hat. Good thinking — keeps the rays out."
                 ]}
             ],
             enemies: [
@@ -131,7 +189,15 @@ export function getMaps() {
                 { type: 'scorpion', x: 520, y: 140 },
                 { type: 'snake', x: 450, y: 90 },
                 { type: 'snake', x: 180, y: 380 },
-                { type: 'coyote', x: 380, y: 300 }
+                { type: 'coyote', x: 380, y: 300 },
+                { type: 'vulture', x: 120, y: 60 }
+            ],
+            critters: [
+                { type: 'jackrabbit', x: 240, y: 260 },
+                { type: 'roadrunner', x: 420, y: 400 },
+                { type: 'lizard', x: 300, y: 160 },
+                { type: 'tortoise', x: 140, y: 400 },
+                { type: 'quail', x: 480, y: 250 }
             ]
         },
         canyon: {
@@ -144,9 +210,19 @@ export function getMaps() {
                 { type: 'crater', x: 300, y: 350, width: 100, height: 50 },
                 { type: 'rock', x: 150, y: 350, width: 60, height: 40, solid: true, color: '#6B4226' },
                 { type: 'cactus', x: 500, y: 80 },
+                { type: 'animal_bones', x: 220, y: 420 },
+                { type: 'tumbleweed', x: 480, y: 300 },
             ],
             npcs: [{ name: 'Old Hermit', x: 250, y: 150, dialog: "The earth groans under the weight of secrets. Some are best left buried... or are they?" }],
-            enemies: [{ type: 'coyote', x: 350, y: 100 }]
+            enemies: [
+                { type: 'coyote', x: 350, y: 100 },
+                { type: 'gila_monster', x: 480, y: 400 },
+                { type: 'vulture', x: 450, y: 60 }
+            ],
+            critters: [
+                { type: 'lizard', x: 200, y: 300 },
+                { type: 'jackrabbit', x: 500, y: 200 }
+            ]
         },
         camelback: {
             name: 'Camelback Mountain Trail', background: '#A0B084',
@@ -155,10 +231,27 @@ export function getMaps() {
                 { type: 'rock', x: 150, y: 350 },
                 { type: 'interactive_point', x: 320, y: 50, text: "Scenic Overlook: A breathtaking view of Scottsdale." },
                 { type: 'doorway', x: 0, y: 100, toMap: 'canyon', toX: CANVAS_WIDTH - 70, toY: 100, text: "To Canyon" },
-                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 200, toMap: 'hohokam_site', toX: 50, toY: 240, text: "Ancient Path" }
+                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 200, toMap: 'hohokam_site', toX: 50, toY: 240, text: "Ancient Path" },
+                { type: 'desert_flower', x: 250, y: 300 },
+                { type: 'desert_flower', x: 420, y: 380 },
             ],
-            npcs: [{ name: 'Tired Hiker', x: 450, y: 280, dialog: ["Almost... at the top... Need water!", "Watch out for loose rocks."] }],
-            enemies: [{ type: 'snake', x: 200, y: 150 }]
+            npcs: [
+                { name: 'Tired Hiker', x: 450, y: 280, dialog: ["Almost... at the top... Need water!", "Watch out for loose rocks."] },
+                { name: 'Photographer', x: 220, y: 120, dialog: [
+                    "Hold still — the light is PERFECT right now.",
+                    "I've shot sunrises on six continents, but nothing beats an Arizona sky.",
+                    "Caught a javelina on camera yesterday. Those things charge, you know. Keep your distance!"
+                ]}
+            ],
+            enemies: [
+                { type: 'snake', x: 200, y: 150 },
+                { type: 'javelina', x: 400, y: 420 }
+            ],
+            critters: [
+                { type: 'quail', x: 300, y: 350 },
+                { type: 'quail', x: 330, y: 370 },
+                { type: 'lizard', x: 500, y: 150 }
+            ]
         },
         hohokam_site: {
             name: "Hohokam Settlement Ruins", background: "#D2B48C",
@@ -172,7 +265,16 @@ export function getMaps() {
                 { type: "doorway", x: CANVAS_WIDTH - 48, y: 150, toMap: 'casa_grande', toX: 50, toY: 240, text: "To Great House" }
             ],
             npcs: [{ name: "Hohokam Spirit", x: 350, y: 180, dialog: ["We followed the water... and the stars.", "Why we vanished... even the desert keeps that secret."] }],
-            enemies: [{ type: 'scorpion', x: 450, y: 350 }, { type: 'coyote', x: 150, y: 150 }, { type: 'snake', x: 400, y: 300 }]
+            enemies: [
+                { type: 'scorpion', x: 450, y: 350 },
+                { type: 'coyote', x: 150, y: 150 },
+                { type: 'snake', x: 400, y: 300 },
+                { type: 'javelina', x: 520, y: 60 }
+            ],
+            critters: [
+                { type: 'quail', x: 250, y: 400 },
+                { type: 'lizard', x: 420, y: 180 }
+            ]
         },
         casa_grande: {
             name: "Casa Grande Ruins", background: "#C19A6B",
@@ -184,7 +286,14 @@ export function getMaps() {
                 { type: "doorway", x: CANVAS_WIDTH - 48, y: 180, toMap: 'sky_people_shrine', toX: 50, toY: 240, text: "Spiritual Path" }
             ],
             npcs: [{ name: "Astronomer's Ghost", x: 300, y: 200, dialog: ["The sun, moon, Venus... they all danced for us.", "These walls tracked their movements, marking time."] }],
-            enemies: [{ type: 'spider', x: 100, y: 350 }, { type: 'spider', x: 500, y: 100 }, { type: 'attacking_ghost', x: 320, y: 150 }]
+            enemies: [
+                { type: 'spider', x: 100, y: 350 },
+                { type: 'spider', x: 500, y: 100 },
+                { type: 'attacking_ghost', x: 320, y: 150 }
+            ],
+            critters: [
+                { type: 'lizard', x: 150, y: 420 }
+            ]
         },
         sky_people_shrine: {
             name: "Sky People's Shrine", background: "#483D8B",
@@ -214,10 +323,117 @@ export function getMaps() {
                 { type: 'interactive_point', x: 200, y: 350, text: "The air is unusually still here. The rocks seem to watch." },
             ],
             npcs: [{ name: "Petroglyph Researcher", x: 500, y: 100, dialog: ["These symbols are thousands of years old.", "Some say they depict star charts... or even visitors."] }],
-            enemies: [{ type: 'coyote', x: 150, y: 350 }]
+            enemies: [
+                { type: 'coyote', x: 150, y: 350 },
+                { type: 'gila_monster', x: 400, y: 420 },
+                { type: 'vulture', x: 520, y: 320 }
+            ],
+            critters: [
+                { type: 'jackrabbit', x: 350, y: 150 },
+                { type: 'lizard', x: 180, y: 280 }
+            ]
+        },
+        ghost_town: {
+            name: 'Dusty Gulch Ghost Town', background: '#C9A876',
+            objects: [
+                // Buildings along a main street
+                { type: 'saloon', x: 190, y: 55 },
+                { type: 'old_building', x: 40, y: 65 },
+                { type: 'old_building', x: 380, y: 65 },
+                { type: 'well', x: 300, y: 230 },
+                { type: 'wagon', x: 100, y: 300 },
+                { type: 'barrel', x: 170, y: 148 },
+                { type: 'barrel', x: 330, y: 150 },
+                { type: 'barrel', x: 500, y: 130 },
+                // Dusty details
+                { type: 'tumbleweed', x: 250, y: 320 },
+                { type: 'tumbleweed', x: 450, y: 260 },
+                { type: 'tumbleweed', x: 80, y: 200 },
+                { type: 'animal_bones', x: 520, y: 350 },
+                { type: 'dead_tree', x: 560, y: 200 },
+                { type: 'cactus', x: 30, y: 400 },
+                { type: 'sign', x: 240, y: 400, text: "Welcome to Dusty Gulch — Population: 0 (and holding)" },
+                { type: 'interactive_point', x: 420, y: 330, text: "Hoofprints in the dust. Wild javelina roam this town now." },
+                { type: 'chest', x: 60, y: 160, contains: 'prickly_pear', text: "Someone stashed a fresh prickly pear in here. Still good!" },
+                // Exits
+                { type: 'doorway', x: 296, y: 0, toMap: 'desert', toX: 296, toY: CANVAS_HEIGHT - 60, text: "To Desert" },
+                { type: 'mine_portal', x: CANVAS_WIDTH - 60, y: 300, toMap: 'abandoned_mine', toX: 60, toY: 240, text: "To Mine" }
+            ],
+            npcs: [
+                { name: 'Tumbleweed Ted', x: 380, y: 220, dialog: [
+                    "Name's Ted. Been drifting through Dusty Gulch since '79. The rent is unbeatable.",
+                    "This town emptied out when the copper mine went bust in 1912.",
+                    "The saloon keeper never left, if you catch my meaning. Nice fella, though. Transparent about everything.",
+                    "The mine's east of town. Folks hear picks tapping down there some nights..."
+                ]},
+                { name: "Saloon Keeper's Ghost", x: 250, y: 165, dialog: [
+                    "Welcome to the Golden Gulch! What'll it be? We've got dust, and... dust.",
+                    "A hundred and fourteen years behind this bar, and you're my first customer since Roosevelt. The FIRST one.",
+                    "The miners used to sing about a blue glow deep in the shaft. Then one day they all just... stopped singing."
+                ]},
+                { name: 'Wandering Musician', x: 480, y: 400, dialog: [
+                    "Every ghost town's got a song, friend. This one's in D minor. The dustiest of keys.",
+                    "I play for the coyotes, mostly. Tough crowd. They only howl for the sad ones.",
+                    "There's a rhythm to the desert. The Hohokam heard it too — it's carved into every canyon."
+                ]}
+            ],
+            enemies: [
+                { type: 'javelina', x: 150, y: 420 },
+                { type: 'coyote', x: 540, y: 420 },
+                { type: 'vulture', x: 480, y: 70 },
+                { type: 'scorpion', x: 400, y: 180 }
+            ],
+            critters: [
+                { type: 'jackrabbit', x: 200, y: 250 },
+                { type: 'roadrunner', x: 350, y: 380 },
+                { type: 'lizard', x: 120, y: 250 }
+            ]
+        },
+        abandoned_mine: {
+            name: 'Abandoned Copper Mine', background: '#2B2119', indoor: true,
+            objects: [
+                // Rails through the mine
+                { type: 'rail_track', x: 60, y: 340 },
+                { type: 'rail_track', x: 156, y: 340 },
+                { type: 'rail_track', x: 252, y: 340 },
+                { type: 'mine_cart', x: 300, y: 328 },
+                // Cave formations
+                { type: 'stalagmite', x: 120, y: 100 },
+                { type: 'stalagmite', x: 200, y: 60 },
+                { type: 'stalagmite', x: 480, y: 100 },
+                { type: 'stalagmite', x: 540, y: 400 },
+                { type: 'stalagmite', x: 80, y: 430 },
+                // Glowing crystals
+                { type: 'crystal', x: 420, y: 80 },
+                { type: 'crystal', x: 560, y: 250 },
+                { type: 'crystal', x: 160, y: 400 },
+                { type: 'rock', x: 350, y: 180, color: '#4A3B2A' },
+                { type: 'sign', x: 100, y: 250, text: "DANGER: Shaft 7 closed by order of the Territorial Mining Office, 1912." },
+                { type: 'interactive_point', x: 480, y: 330, text: "Pick marks in the wall stop abruptly here. Whatever they found, they left in a hurry." },
+                // The prospector's pickaxe
+                { type: 'chest', x: 520, y: 160, contains: 'old_pickaxe', text: "The Prospector's old pickaxe! It's covered in strange blue dust..." },
+                { type: 'chest', x: 240, y: 430, contains: 'lucky_charm', text: "A lucky rabbit foot on a worn chain. Some miner's talisman." },
+                // Exit
+                { type: 'doorway', x: 0, y: 232, toMap: 'ghost_town', toX: CANVAS_WIDTH - 120, toY: 300, text: "To Town" }
+            ],
+            npcs: [
+                { name: "Miner's Ghost", x: 400, y: 250, dialog: [
+                    "Forty years I swung a pick down here. Didn't let a little thing like 1912 stop me.",
+                    "We dug too deep and found the blue glow. The foreman said it was copper. It was NOT copper.",
+                    "The bats moved in after we... moved on. Mind their swooping."
+                ]}
+            ],
+            enemies: [
+                { type: 'bat', x: 200, y: 150 },
+                { type: 'bat', x: 350, y: 100 },
+                { type: 'bat', x: 500, y: 380 },
+                { type: 'gila_monster', x: 300, y: 420 },
+                { type: 'attacking_ghost', x: 450, y: 200 }
+            ],
+            critters: []
         },
         asu_lab: {
-            name: 'ASU Engineering Lab', background: '#4A4A52',
+            name: 'ASU Engineering Lab', background: '#4A4A52', indoor: true,
             objects: [
                 { type: 'computer_terminal', x: 100, y: 100, text: "System Offline. Project PHOENIX data corrupted." },
                 { type: 'lab_bench', x: 200, y: 150 },
@@ -230,13 +446,21 @@ export function getMaps() {
             enemies: []
         },
         artifact_chamber: {
-            name: 'Hidden Artifact Chamber', background: '#301020',
+            name: 'Hidden Artifact Chamber', background: '#301020', indoor: true,
             objects: [
                 { type: 'pedestal', x: CANVAS_WIDTH / 2 - 16, y: CANVAS_HEIGHT / 2 - 16 },
+                { type: 'crystal', x: 100, y: 120 },
+                { type: 'crystal', x: CANVAS_WIDTH - 124, y: 120 },
+                { type: 'stalagmite', x: 60, y: 350 },
+                { type: 'stalagmite', x: CANVAS_WIDTH - 84, y: 350 },
                 { type: 'interactive_point', x: CANVAS_WIDTH / 2 - 24, y: CANVAS_HEIGHT - 48, width: 48, height: 16, solid: true, interactive: true, color: '#3E2731', text: "You never had a choice. You just thought you did. Hope wasn't invited." }
             ],
             npcs: [],
-            enemies: []
+            enemies: [
+                { type: 'mummy', x: 180, y: 140 },
+                { type: 'bat', x: 450, y: 300 }
+            ],
+            critters: []
         }
     };
 }
@@ -249,6 +473,8 @@ export const MAP_MUSIC = {
     casa_grande: 'casaGrandeTheme',
     sky_people_shrine: 'skyPeopleTheme',
     white_tanks_petroglyphs: 'whiteTanksTheme',
+    ghost_town: 'ghostTownTheme',
+    abandoned_mine: 'mineTheme',
     asu_lab: 'asuLabTheme',
     artifact_chamber: 'chamberTheme',
 };
