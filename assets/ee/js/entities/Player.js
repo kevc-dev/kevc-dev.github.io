@@ -84,6 +84,10 @@ export class Player extends Entity {
         const heatMult = (!indoors && hour >= 11 && hour < 16) ? 2.5 : 1;
         this.hydration -= (HYDRATION_RATE * heatMult) / 60;
         if (this.hydration < 0) this.hydration = 0;
+        // Water is life: staying above 60% hydration slowly mends you
+        if (this.hydration > 60 && this.health < this.maxHealth && this.animationFrame % 180 === 0) {
+            this.heal(1);
+        }
         if (this.hydration === 0 && this.animationFrame % DEHYDRATION_DAMAGE_INTERVAL === 0) {
             this.takeDamage(DEHYDRATION_DAMAGE, "Dehydration");
         }

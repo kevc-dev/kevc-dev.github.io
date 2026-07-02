@@ -16,11 +16,12 @@ export class Critter extends Entity {
         this.animFrame = Math.floor(Math.random() * 100);
     }
 
+    get isMoving() { return this.state !== 'idle'; }
+
     update() {
         this.animFrame++;
         const player = this.game.player;
 
-        // Flee if the player gets close
         if (player && this.fleeRange > 0) {
             const dx = this.centerX - player.centerX;
             const dy = this.centerY - player.centerY;
@@ -65,6 +66,17 @@ export class Critter extends Entity {
         }
     }
 
+    get walkFrame() {
+        return this.isMoving ? Math.floor(this.animFrame / 7) % 2 : 0;
+    }
+
+    drawSprite(ctx, frames, palette, frame, yOffset = 0) {
+        const rows = frames[frame];
+        const scale = this.width / rows[0].length;
+        const oy = this.y + this.height - rows.length * scale + yOffset;
+        this.drawPixels(ctx, rows, palette, this.x, oy, scale);
+    }
+
     draw(ctx) {
         ctx.save();
         if (this.facing === -1) {
@@ -72,240 +84,127 @@ export class Critter extends Entity {
             ctx.scale(-1, 1);
             ctx.translate(-this.centerX, 0);
         }
-        const x = this.x, y = this.y, w = this.width, h = this.height;
         switch (this.critterType.name) {
-            case 'Jackrabbit': this.drawJackrabbit(ctx, x, y, w, h); break;
-            case 'Roadrunner': this.drawRoadrunner(ctx, x, y, w, h); break;
-            case 'Lizard': this.drawLizard(ctx, x, y, w, h); break;
-            case 'Quail': this.drawQuail(ctx, x, y, w, h); break;
-            case 'Desert Tortoise': this.drawTortoise(ctx, x, y, w, h); break;
+            case 'Jackrabbit': this.drawJackrabbit(ctx); break;
+            case 'Roadrunner': this.drawRoadrunner(ctx); break;
+            case 'Lizard': this.drawLizard(ctx); break;
+            case 'Quail': this.drawQuail(ctx); break;
+            case 'Desert Tortoise': this.drawTortoise(ctx); break;
             default:
                 ctx.fillStyle = '#996633';
-                ctx.fillRect(x, y, w, h);
+                ctx.fillRect(this.x, this.y, this.width, this.height);
                 break;
         }
         ctx.restore();
     }
 
-    drawJackrabbit(ctx, x, y, w, h) {
-        const furColor = '#C4A882', darkFur = '#A08862';
-        const moving = this.state !== 'idle';
-        const hop = moving ? Math.abs(Math.sin(this.animFrame * 0.3)) * 4 : 0;
-        const yy = y - hop;
-
-        // Body
-        ctx.fillStyle = furColor;
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.45, yy + h * 0.6, w * 0.32, h * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Head
-        ctx.beginPath();
-        ctx.arc(x + w * 0.75, yy + h * 0.4, w * 0.16, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Long ears
-        ctx.fillStyle = darkFur;
-        ctx.fillRect(x + w * 0.68, yy - h * 0.35, 3, h * 0.6);
-        ctx.fillRect(x + w * 0.8, yy - h * 0.4, 3, h * 0.65);
-
-        // White tail
-        ctx.fillStyle = '#FFF';
-        ctx.fillRect(x + w * 0.08, yy + h * 0.5, 4, 4);
-
-        // Eye
-        ctx.fillStyle = '#000';
-        ctx.fillRect(x + w * 0.78, yy + h * 0.35, 2, 2);
-
-        // Legs
-        ctx.fillStyle = darkFur;
-        const kick = moving ? Math.sin(this.animFrame * 0.3) * 2 : 0;
-        ctx.fillRect(x + w * 0.25, yy + h * 0.82 + kick, w * 0.2, 3);
-        ctx.fillRect(x + w * 0.6, yy + h * 0.85 - kick, w * 0.15, 3);
+    drawJackrabbit(ctx) {
+        const P = { b: '#C4A882', d: '#A08862', w: '#FFFFFF', k: '#111111' };
+        const F = [[
+            "....d.d....",
+            "....d.d....",
+            "....bbb....",
+            "..bbbbbb...",
+            "wbbbbbbbk..",
+            ".bbbbbbbb..",
+            "..bb..bb...",
+            "..d....d...",
+        ], [
+            "....d.d....",
+            "....d.d....",
+            "....bbb....",
+            "..bbbbbb...",
+            "wbbbbbbbk..",
+            ".bbbbbbbb..",
+            "...dbbd....",
+            "...........",
+        ]];
+        // Hop while moving
+        const hop = this.isMoving ? -Math.abs(Math.sin(this.animFrame * 0.3)) * 4 : 0;
+        this.drawSprite(ctx, F, P, this.walkFrame, hop);
     }
 
-    drawRoadrunner(ctx, x, y, w, h) {
-        const bodyColor = '#6B5B45', crestColor = '#4A3D2E';
-        const moving = this.state !== 'idle';
-        const legBlur = moving ? Math.sin(this.animFrame * 0.6) * 3 : 0;
-
-        // Long tail (angled up)
-        ctx.fillStyle = crestColor;
-        ctx.save();
-        ctx.translate(x + w * 0.15, y + h * 0.45);
-        ctx.rotate(-0.5);
-        ctx.fillRect(-w * 0.35, -2, w * 0.4, 4);
-        ctx.restore();
-
-        // Body
-        ctx.fillStyle = bodyColor;
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.45, y + h * 0.5, w * 0.26, h * 0.26, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Neck + head
-        ctx.fillRect(x + w * 0.6, y + h * 0.2, w * 0.12, h * 0.35);
-        ctx.beginPath();
-        ctx.arc(x + w * 0.7, y + h * 0.18, w * 0.11, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Crest
-        ctx.fillStyle = crestColor;
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.64, y + h * 0.1);
-        ctx.lineTo(x + w * 0.68, y - h * 0.08);
-        ctx.lineTo(x + w * 0.74, y + h * 0.08);
-        ctx.closePath(); ctx.fill();
-
-        // Beak
-        ctx.fillStyle = '#3A3128';
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.8, y + h * 0.16);
-        ctx.lineTo(x + w * 1.0, y + h * 0.2);
-        ctx.lineTo(x + w * 0.8, y + h * 0.24);
-        ctx.closePath(); ctx.fill();
-
-        // Eye
-        ctx.fillStyle = '#FFD700';
-        ctx.fillRect(x + w * 0.7, y + h * 0.13, 2, 2);
-
-        // Fast legs
-        ctx.strokeStyle = crestColor;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.4, y + h * 0.72);
-        ctx.lineTo(x + w * 0.35 + legBlur, y + h);
-        ctx.moveTo(x + w * 0.5, y + h * 0.72);
-        ctx.lineTo(x + w * 0.55 - legBlur, y + h);
-        ctx.stroke();
-        ctx.lineWidth = 1;
+    drawRoadrunner(ctx) {
+        const P = { b: '#6B5B45', c: '#4A3D2E', t: '#4A3D2E', p: '#3A3128', e: '#FFD700', l: '#3A3128' };
+        const F = [[
+            ".........cc..",
+            "t.........bb.",
+            ".tt......bebp",
+            "..ttbbbbbbbb.",
+            "....bbbbbbb..",
+            ".....bbbb....",
+            "......l..l...",
+            ".....l....l..",
+        ], [
+            ".........cc..",
+            "t.........bb.",
+            ".tt......bebp",
+            "..ttbbbbbbbb.",
+            "....bbbbbbb..",
+            ".....bbbb....",
+            ".....l..l....",
+            "......l..l...",
+        ]];
+        this.drawSprite(ctx, F, P, this.walkFrame);
     }
 
-    drawLizard(ctx, x, y, w, h) {
-        const bodyColor = '#7A8B5A', stripeColor = '#5A6B3A';
-        const tailWiggle = Math.sin(this.animFrame * 0.25) * 2;
-
-        // Tail
-        ctx.strokeStyle = bodyColor;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.3, y + h * 0.5);
-        ctx.quadraticCurveTo(x + w * 0.05, y + h * 0.5 + tailWiggle, x - w * 0.15, y + h * 0.4 - tailWiggle);
-        ctx.stroke();
-        ctx.lineWidth = 1;
-
-        // Body
-        ctx.fillStyle = bodyColor;
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.5, y + h * 0.5, w * 0.28, h * 0.32, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Stripe
-        ctx.fillStyle = stripeColor;
-        ctx.fillRect(x + w * 0.3, y + h * 0.42, w * 0.4, 2);
-
-        // Head
-        ctx.fillStyle = bodyColor;
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.85, y + h * 0.45, w * 0.14, h * 0.24, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Eye
-        ctx.fillStyle = '#000';
-        ctx.fillRect(x + w * 0.86, y + h * 0.32, 2, 2);
-
-        // Tiny legs
-        const scurry = this.state !== 'idle' ? Math.sin(this.animFrame * 0.5) * 2 : 0;
-        ctx.strokeStyle = stripeColor;
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.35, y + h * 0.7); ctx.lineTo(x + w * 0.3 + scurry, y + h);
-        ctx.moveTo(x + w * 0.65, y + h * 0.7); ctx.lineTo(x + w * 0.7 - scurry, y + h);
-        ctx.stroke();
+    drawLizard(ctx) {
+        const P = { b: '#7A8B5A', t: '#5A6B3A', k: '#111111' };
+        const F = [[
+            "t...bbbb.",
+            ".tt.bbbbk",
+            "...b..b..",
+        ], [
+            ".t..bbbb.",
+            "t.t.bbbbk",
+            "..b..b...",
+        ]];
+        this.drawSprite(ctx, F, P, this.walkFrame);
     }
 
-    drawQuail(ctx, x, y, w, h) {
-        const bodyColor = '#8A8078', bellyColor = '#B0A698';
-        const bob = Math.sin(this.animFrame * 0.12) * 1;
-
-        // Round body
-        ctx.fillStyle = bodyColor;
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.45, y + h * 0.6 + bob, w * 0.35, h * 0.32, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = bellyColor;
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.45, y + h * 0.72 + bob, w * 0.25, h * 0.16, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Head
-        ctx.fillStyle = bodyColor;
-        ctx.beginPath();
-        ctx.arc(x + w * 0.72, y + h * 0.32 + bob, w * 0.15, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Signature topknot plume
-        ctx.strokeStyle = '#3A3128';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.74, y + h * 0.2 + bob);
-        ctx.quadraticCurveTo(x + w * 0.68, y - h * 0.05 + bob, x + w * 0.8, y - h * 0.02 + bob);
-        ctx.stroke();
-        ctx.lineWidth = 1;
-        ctx.fillStyle = '#3A3128';
-        ctx.beginPath();
-        ctx.arc(x + w * 0.8, y - h * 0.02 + bob, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Beak & eye
-        ctx.fillStyle = '#5A5148';
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.85, y + h * 0.3 + bob);
-        ctx.lineTo(x + w * 0.97, y + h * 0.34 + bob);
-        ctx.lineTo(x + w * 0.85, y + h * 0.38 + bob);
-        ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#000';
-        ctx.fillRect(x + w * 0.73, y + h * 0.28 + bob, 2, 2);
-
-        // Legs
-        ctx.strokeStyle = '#5A5148';
-        const step = this.state !== 'idle' ? Math.sin(this.animFrame * 0.4) * 2 : 0;
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.38, y + h * 0.85); ctx.lineTo(x + w * 0.36 + step, y + h);
-        ctx.moveTo(x + w * 0.55, y + h * 0.85); ctx.lineTo(x + w * 0.57 - step, y + h);
-        ctx.stroke();
+    drawQuail(ctx) {
+        const P = { b: '#8A8078', a: '#B0A698', p: '#3A3128', k: '#111111', l: '#5A5148' };
+        const F = [[
+            "......p..",
+            ".....pp..",
+            "...bbbb..",
+            "..bbbbbk.",
+            "..abbbbp.",
+            "..aabba..",
+            "...l.l...",
+        ], [
+            "......p..",
+            ".....pp..",
+            "...bbbb..",
+            "..bbbbbk.",
+            "..abbbbp.",
+            "..aabba..",
+            "..l...l..",
+        ]];
+        // Gentle idle bob
+        const bob = this.isMoving ? 0 : Math.sin(this.animFrame * 0.08) * 1;
+        this.drawSprite(ctx, F, P, this.walkFrame, bob);
     }
 
-    drawTortoise(ctx, x, y, w, h) {
-        const shellColor = '#6B5B3A', shellDark = '#4F4228', skinColor = '#8A7A55';
-        const headPoke = Math.sin(this.animFrame * 0.04) * 2;
-
-        // Legs
-        ctx.fillStyle = skinColor;
-        ctx.fillRect(x + w * 0.12, y + h * 0.7, 5, h * 0.3);
-        ctx.fillRect(x + w * 0.68, y + h * 0.7, 5, h * 0.3);
-
-        // Shell dome
-        ctx.fillStyle = shellColor;
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.45, y + h * 0.5, w * 0.38, h * 0.42, 0, Math.PI, 0);
-        ctx.fill();
-        ctx.fillRect(x + w * 0.07, y + h * 0.5, w * 0.76, h * 0.22);
-
-        // Shell pattern
-        ctx.strokeStyle = shellDark;
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.25, y + h * 0.2); ctx.lineTo(x + w * 0.3, y + h * 0.6);
-        ctx.moveTo(x + w * 0.45, y + h * 0.08); ctx.lineTo(x + w * 0.45, y + h * 0.65);
-        ctx.moveTo(x + w * 0.65, y + h * 0.2); ctx.lineTo(x + w * 0.6, y + h * 0.6);
-        ctx.moveTo(x + w * 0.12, y + h * 0.4); ctx.lineTo(x + w * 0.78, y + h * 0.4);
-        ctx.stroke();
-
-        // Head poking out
-        ctx.fillStyle = skinColor;
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.88 + headPoke, y + h * 0.55, w * 0.1, h * 0.18, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#000';
-        ctx.fillRect(x + w * 0.9 + headPoke, y + h * 0.45, 2, 2);
+    drawTortoise(ctx) {
+        const P = { s: '#6B5B3A', d: '#4F4228', h: '#8A7A55', k: '#111111', l: '#8A7A55' };
+        const F = [[
+            "....sssss....",
+            "..sssssssss..",
+            ".sdsdsdsdsds.",
+            ".sssssssssss.",
+            "..l...l...hh.",
+            "..l...l...hk.",
+        ], [
+            "....sssss....",
+            "..sssssssss..",
+            ".sdsdsdsdsds.",
+            ".sssssssssss.",
+            "..l...l..hh..",
+            "..l...l..hk..",
+        ]];
+        // Tortoise animates slowly even for its two frames
+        const frame = this.isMoving ? Math.floor(this.animFrame / 20) % 2 : 0;
+        this.drawSprite(ctx, F, P, frame);
     }
 }

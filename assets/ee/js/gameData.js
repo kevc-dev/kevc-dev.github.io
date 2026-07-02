@@ -3,6 +3,7 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT, HYDRATION_PER_DRINK, GAME_STATE } from './
 export function getObjectTypes() {
     return {
         cactus: { width: 32, height: 48, solid: true, color: '#2D7D40' },
+        fruit_cactus: { name: "Prickly Pear", width: 32, height: 30, solid: true, interactive: true, color: '#3E7C4A', contains: 'prickly_pear', opened: false, text: "You pick a ripe prickly pear fruit — mind the glochids." },
         rock: { width: 32, height: 32, solid: true, color: '#7D7064' },
         crater: { name: "Old Excavation", width: 80, height: 40, solid: false, interactive: true, text: "A backfilled excavation trench from a 1930s dig. They took what they wanted and wrote down almost nothing.", color: '#5B3A29' },
         chest: { width: 32, height: 32, solid: true, interactive: true, color: '#8B4513', opened: false },
@@ -150,6 +151,7 @@ export function getMaps() {
                 { type: 'sand_dune', x: 150, y: 360 },
                 { type: 'dead_tree', x: 310, y: 280 },
                 { type: 'campfire_remains', x: 170, y: 150 },
+                { type: 'fruit_cactus', x: 230, y: 350 },
                 { type: 'desert_flower', x: 350, y: 220 },
                 { type: 'tumbleweed', x: 280, y: 110 },
                 { type: 'trail_marker', x: 550, y: 190, text: "The canyon entrance lies ahead." },
@@ -162,6 +164,7 @@ export function getMaps() {
             npcs: [
                 { name: 'Ranger Rick', x: 200, y: 300, dialog: [
                     "Howdy, Professor! Dehydration is no joke out here. Rest at a campsite if you're caught out past dusk.",
+                    "Keep that canteen over half full and your body mends itself — water is life out here. For worse wounds, look for prickly pear with ripe red fruit on top.",
                     "You read the Republic this morning? Grading crew hit canal features by the airport. Salvage crew's got two weeks. Breaks your heart.",
                     "If you're heading east, watch for rattlers near the rocks. You'll hear them before you see them.",
                     "Press F to swing your walking stick if the wildlife gets too bold. Most of it just wants to be left alone."
@@ -237,6 +240,7 @@ export function getMaps() {
                 { type: 'rock', x: 150, y: 350 },
                 { type: 'interactive_point', x: 320, y: 50, text: "Scenic overlook. From up here the valley's peaks line up like beads on a string — Papago's red buttes, the mound by the airport, the dark ridge of South Mountain. Almost like it's arranged." },
                 { type: 'campfire_remains', x: 480, y: 380 },
+                { type: 'fruit_cactus', x: 100, y: 250 },
                 { type: 'doorway', x: 0, y: 100, toMap: 'canyon', toX: CANVAS_WIDTH - 70, toY: 100, text: "To Canyon" },
                 { type: 'doorway', x: CANVAS_WIDTH - 48, y: 200, toMap: 'papago_park', toX: 50, toY: 240, text: "To Papago" },
                 { type: 'desert_flower', x: 250, y: 300 },
@@ -281,6 +285,7 @@ export function getMaps() {
                 { type: 'sign', x: 200, y: 300, text: "Papago Park — City of Phoenix. Fishing ponds stocked seasonally. Please respect the buttes." },
                 { type: 'interactive_point', x: 380, y: 250, text: "Herons stalk the pond edge, ignoring the city entirely. The red buttes glow like coals at dusk." },
                 { type: 'campfire_remains', x: 460, y: 380 },
+                { type: 'fruit_cactus', x: 340, y: 330 },
                 { type: 'cactus', x: 40, y: 120 },
                 { type: 'cactus', x: 560, y: 300 },
                 { type: 'desert_flower', x: 300, y: 400 },
@@ -417,6 +422,7 @@ export function getMaps() {
                 }},
                 { type: "rock", x: 250, y: 150 },
                 { type: 'campfire_remains', x: 160, y: 400 },
+                { type: 'fruit_cactus', x: 480, y: 400 },
                 { type: "doorway", x: 0, y: 232, toMap: 'sky_people_shrine', toX: CANVAS_WIDTH - 70, toY: 200, text: "To South Mtn." },
                 { type: "doorway", x: CANVAS_WIDTH - 48, y: 120, toMap: 'asu_lab', toX: 50, toY: 240, text: "To ASU" },
                 { type: 'rock', x: 50, y: 200, width: 40, height: 40, solid: true, color: '#8A7967' },

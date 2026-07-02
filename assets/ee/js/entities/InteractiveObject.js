@@ -35,6 +35,7 @@ export class InteractiveObject extends Entity {
 
         switch (this.type) {
             case 'cactus': this.drawCactus(ctx); break;
+            case 'fruit_cactus': this.drawFruitCactus(ctx); break;
             case 'rock': this.drawRock(ctx); break;
             case 'chest': this.drawChest(ctx); break;
             case 'sign':
@@ -145,6 +146,40 @@ export class InteractiveObject extends Entity {
             ctx.fillStyle = '#2A1A0A';
             ctx.fillRect(wx + 8, wy - 2, 1, 1);    // eye
             ctx.fillRect(wx + 9, wy - 1, 2, 1);    // beak
+        }
+    }
+
+    drawFruitCactus(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const green = '#3E7C4A', dark = '#2A5A34', fruit = '#C42A5A';
+        const px = w / 8; // coarse pixel unit
+        const rect = (cx, cy, cw, ch, color) => {
+            ctx.fillStyle = color;
+            ctx.fillRect(Math.round(x + cx * px), Math.round(y + cy * px), Math.ceil(cw * px), Math.ceil(ch * px));
+        };
+        // Three prickly pear paddles, chunky pixel style
+        rect(2.5, 3.0, 3.0, 4.5, green);   // center paddle
+        rect(0.5, 4.0, 2.5, 3.0, green);   // left paddle
+        rect(5.0, 4.2, 2.5, 2.8, green);   // right paddle
+        rect(3.0, 3.4, 0.6, 3.6, dark);    // center rib
+        rect(1.2, 4.4, 0.5, 2.2, dark);    // left rib
+        rect(5.8, 4.6, 0.5, 1.8, dark);    // right rib
+        // Spine dots
+        ctx.fillStyle = '#D8E8C8';
+        for (let i = 0; i < 5; i++) {
+            ctx.fillRect(Math.round(x + (1 + i * 1.4) * px), Math.round(y + (3.6 + (i % 2)) * px), 2, 2);
+        }
+        // Ripe magenta fruits along the paddle tops (gone once picked)
+        if (!this.objData.opened) {
+            rect(2.2, 2.2, 1.0, 1.0, fruit);
+            rect(3.8, 2.0, 1.0, 1.0, fruit);
+            rect(5.4, 3.4, 1.0, 1.0, fruit);
+            rect(0.8, 3.2, 1.0, 1.0, fruit);
+            // Sparkle hint
+            if (this.game.animationFrame % 80 < 10) {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(Math.round(x + 4 * px), Math.round(y + 1.4 * px), 2, 2);
+            }
         }
     }
 
@@ -1157,7 +1192,7 @@ export class InteractiveObject extends Entity {
             this.game.changeMap(this.objData.toMap, this.objData.toX, this.objData.toY);
             return;
         }
-        if ((this.type === 'chest') && this.objData.contains && !this.objData.opened) {
+        if ((this.type === 'chest' || this.type === 'fruit_cactus') && this.objData.contains && !this.objData.opened) {
             if (player.addItem(this.objData.contains)) {
                 this.game.ui.showDialog(this.objData.text || `You found a ${this.game.itemTypes[this.objData.contains].name}!`, this.type.toUpperCase());
                 this.objData.opened = true;
