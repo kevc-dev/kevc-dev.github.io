@@ -66,7 +66,7 @@ export class Enemy extends Entity {
             }
             if (Math.abs(distX) > 2) this.facing = distX > 0 ? 1 : -1;
         } else if (this.enemyType.circles) {
-            // Vultures glide back onto their circling path — no teleporting
+            // Vultures glide back onto their circling path, no teleporting
             this.circleAngle += 0.02;
             const tx = this.spawnX + Math.cos(this.circleAngle) * 50;
             const ty = this.spawnY + Math.sin(this.circleAngle) * 32;

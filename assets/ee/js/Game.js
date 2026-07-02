@@ -76,7 +76,7 @@ export class Game {
             case GAME_STATE.WIN:
                 this.sound.stopMusic();
                 this.sound.playSound('winGame');
-                this.ui.showWinScreen("The stick comes out of the olla whole. Four centuries of sky and water — the great star of 1006, the floods, the drought years, and one final, deliberate mark. Cutler makes his offer. You make a phone call instead: Salt River, cultural office, Frances Antone's desk. Some things aren't found, Professor. They're returned.");
+                this.ui.showWinScreen("The stick comes out of the olla whole. Four centuries of sky and water: the great star of 1006, the floods, the drought years, and one final, deliberate mark. Cutler makes his offer. You make a phone call instead: Salt River, cultural office, Frances Antone's desk. Some things aren't found, Professor. They're returned.");
                 break;
             case GAME_STATE.GAME_OVER:
                 this.sound.stopMusic();
@@ -213,7 +213,7 @@ export class Game {
             setTimeout(() => { this.setGameState(GAME_STATE.WIN); }, 500);
         } else {
             this.sound.playSound('puzzleIncorrect');
-            this.gameOver("The counts don't align. Cutler smiles, and the moment — centuries in the making — passes to him.");
+            this.gameOver("The counts don't align. Cutler smiles, and the moment, centuries in the making, passes to him.");
         }
         this.currentPuzzle = null;
     }
@@ -342,7 +342,7 @@ export class Game {
         ctx.clip();
         const captions = [
             "June 5, 1986. Scottsdale, Arizona. The canal behind your house is older than the city. The 1912 engineers followed a ditch that was already seven hundred years old. Nobody thinks about that. The water just comes.",
-            "This morning's Republic, two stories on one page. A grading crew has cut into an ancient canal near the airport — salvage crews get two weeks. And a letter from a reader: a mountain carving that shows an exploding star. Signed, 'A Watcher of Skies.'",
+            "This morning's Republic, two stories on one page. A grading crew has cut into an ancient canal near the airport. Salvage crews get two weeks. And a letter from a reader: a mountain carving that shows an exploding star. Signed, 'A Watcher of Skies.'",
             "You have seen that carving. You sketched it in the White Tanks in 1956, and under it you wrote: 'What is this? Ask someone who knows.' You never did. You have thirty years of never did.",
             "The solstice is in sixteen days. The bulldozers pour concrete the Monday after. You take the hat off its hook and fill your canteen."
         ];
@@ -439,7 +439,7 @@ export class Game {
         ctx.textAlign = 'center';
         ctx.fillText('ARIZONA REPUBLIC', nx + nw / 2, ny + 26);
         ctx.font = '6px "Press Start 2P"';
-        ctx.fillText('THURSDAY, JUNE 5, 1986 — TEN CENTS', nx + nw / 2, ny + 40);
+        ctx.fillText('THURSDAY, JUNE 5, 1986 - TEN CENTS', nx + nw / 2, ny + 40);
         ctx.fillRect(nx + 10, ny + 46, nw - 20, 2);
         // Headline 1
         ctx.textAlign = 'left';
@@ -463,7 +463,7 @@ export class Game {
         }
         ctx.fillStyle = '#555';
         ctx.font = '6px "Press Start 2P"';
-        ctx.fillText("— signed, 'A WATCHER OF SKIES'", nx + 12, ny + nh - 12);
+        ctx.fillText("signed, 'A WATCHER OF SKIES'", nx + 12, ny + nh - 12);
         ctx.textAlign = 'left';
     }
 
@@ -487,14 +487,14 @@ export class Game {
         ctx.fillStyle = '#4A3A28';
         ctx.font = '8px "Press Start 2P"';
         ctx.textAlign = 'left';
-        ctx.fillText('WHITE TANK MTS — MAY 1956', nx + 26, ny + 24);
+        ctx.fillText('WHITE TANK MTS - MAY 1956', nx + 26, ny + 24);
         ctx.fillRect(nx + 24, ny + 30, nw - 44, 1);
         // The sketch: scorpion of stars
         const cx = nx + nw * 0.38, cy = ny + nh * 0.5;
         ctx.fillStyle = '#4A3A28';
         const scorpStars = [[0,0],[14,-6],[28,-8],[42,-4],[52,6],[56,20],[50,32],[38,36]];
         scorpStars.forEach(([dx, dy]) => ctx.fillRect(cx + dx - 40, cy + dy - 10, 4, 4));
-        // The great star — a circle with rays
+        // The great star: a circle with rays
         const gx = cx + 44, gy = cy - 26;
         ctx.beginPath();
         ctx.arc(gx, gy, 9, 0, Math.PI * 2);

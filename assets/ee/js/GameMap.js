@@ -180,7 +180,7 @@ export class GameMap {
                 ctx.fillStyle = 'rgba(190, 45, 25, 0.18)';
                 ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             } else if (hour < 8) {
-                // Golden dawn — the hour the alignments read
+                // Golden dawn, the hour the alignments read
                 ctx.fillStyle = 'rgba(255, 180, 80, 0.14)';
                 ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             }

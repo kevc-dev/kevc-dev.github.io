@@ -25,6 +25,8 @@ export class UIManager {
         this.puzzleOptionC = document.getElementById('puzzleOptionC');
         this.winScreen = document.getElementById('winScreen');
         this.winMessage = document.getElementById('winMessage');
+        this.questLogPinned = false;
+        this.questLogTimer = null;
 
         document.getElementById('startButton').addEventListener('click', () => {
             this.game.sound.initializeAudio();
@@ -132,7 +134,6 @@ export class UIManager {
             this.questLogDisplay.style.display = 'none';
             return;
         }
-        this.questLogDisplay.style.display = 'block';
         this.questList.innerHTML = '';
         quests.forEach(quest => {
             const li = document.createElement('li');
@@ -140,14 +141,26 @@ export class UIManager {
             if (quest.completed) li.style.textDecoration = "line-through";
             this.questList.appendChild(li);
         });
+        // Pop up briefly on quest changes, then hide (unless pinned open with Q)
+        this.questLogDisplay.style.display = 'block';
+        if (this.questLogTimer) clearTimeout(this.questLogTimer);
+        this.questLogTimer = setTimeout(() => {
+            this.questLogTimer = null;
+            if (!this.questLogPinned) this.questLogDisplay.style.display = 'none';
+        }, 2000);
     }
 
     toggleQuestLog() {
-        this.questLogDisplay.style.display = this.questLogDisplay.style.display === 'none' ? 'block' : 'none';
+        if (this.questLogTimer) {
+            clearTimeout(this.questLogTimer);
+            this.questLogTimer = null;
+        }
+        this.questLogPinned = !this.questLogPinned;
+        this.questLogDisplay.style.display = this.questLogPinned ? 'block' : 'none';
     }
 
     drawInteractionIndicator(x, y) {
-        // Bouncing arrow with outline — reads clearly against any background
+        // Bouncing arrow with outline. Reads clearly against any background
         const bounce = Math.sin(this.game.animationFrame * 0.15) * 3;
         const ty = y - 34 + bounce;
         this.ctx.fillStyle = '#000000';

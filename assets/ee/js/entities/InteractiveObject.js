@@ -73,6 +73,11 @@ export class InteractiveObject extends Entity {
             case 'mine_cart': this.drawMineCart(ctx); break;
             case 'crystal': this.drawCrystal(ctx); break;
             case 'stalagmite': this.drawStalagmite(ctx); break;
+            case 'sparky_statue': this.drawSparkyStatue(ctx); break;
+            case 'asu_banner': this.drawAsuBanner(ctx); break;
+            case 'trophy_case': this.drawTrophyCase(ctx); break;
+            case 'bulletin_board': this.drawBulletinBoard(ctx); break;
+            case 'potted_palm': this.drawPottedPalm(ctx); break;
             case 'hole_in_the_rock': this.drawHoleInTheRock(ctx); break;
             case 'aligned_doorway': this.drawAlignedDoorway(ctx); break;
             case 'horizon_marker': this.drawHorizonMarker(ctx); break;
@@ -995,6 +1000,180 @@ export class InteractiveObject extends Entity {
         ctx.lineTo(x + w * 0.72, y + h);
         ctx.lineTo(x + w * 0.45, y + h);
         ctx.closePath(); ctx.fill();
+    }
+
+    drawSparkyStatue(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const maroon = '#8C1D40', gold = '#FFC627', bronze = '#6B4A2A';
+        // Pedestal
+        ctx.fillStyle = '#7A7068';
+        ctx.fillRect(x + 2, y + h * 0.78, w - 4, h * 0.22);
+        ctx.fillStyle = '#5F534B';
+        ctx.fillRect(x + 2, y + h * 0.78, w - 4, 4);
+        // Plaque
+        ctx.fillStyle = gold;
+        ctx.fillRect(x + w * 0.3, y + h * 0.85, w * 0.4, 6);
+        // Legs
+        ctx.fillStyle = maroon;
+        ctx.fillRect(x + w * 0.32, y + h * 0.6, 6, h * 0.18);
+        ctx.fillRect(x + w * 0.52, y + h * 0.6, 6, h * 0.18);
+        // Body
+        ctx.fillRect(x + w * 0.28, y + h * 0.34, w * 0.38, h * 0.28);
+        // Head with widow's peak
+        ctx.fillRect(x + w * 0.34, y + h * 0.14, w * 0.26, h * 0.2);
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.47, y + h * 0.22);
+        ctx.lineTo(x + w * 0.42, y + h * 0.14);
+        ctx.lineTo(x + w * 0.52, y + h * 0.14);
+        ctx.closePath(); ctx.fill();
+        // Gold horns
+        ctx.fillStyle = gold;
+        ctx.fillRect(x + w * 0.3, y + h * 0.08, 4, 7);
+        ctx.fillRect(x + w * 0.6, y + h * 0.08, 4, 7);
+        // Eyes and grin
+        ctx.fillStyle = gold;
+        ctx.fillRect(x + w * 0.38, y + h * 0.2, 3, 3);
+        ctx.fillRect(x + w * 0.52, y + h * 0.2, 3, 3);
+        ctx.fillRect(x + w * 0.4, y + h * 0.28, w * 0.16, 2);
+        // Arm and pitchfork
+        ctx.fillStyle = maroon;
+        ctx.fillRect(x + w * 0.62, y + h * 0.38, w * 0.18, 5);
+        ctx.fillStyle = gold;
+        ctx.fillRect(x + w * 0.8, y + h * 0.12, 4, h * 0.55);   // shaft
+        ctx.fillRect(x + w * 0.72, y + h * 0.12, w * 0.24, 4);  // crossbar
+        ctx.fillRect(x + w * 0.72, y + h * 0.04, 4, h * 0.1);   // left prong
+        ctx.fillRect(x + w * 0.8, y + h * 0.02, 4, h * 0.12);   // center prong
+        ctx.fillRect(x + w * 0.88, y + h * 0.04, 4, h * 0.1);   // right prong
+        // Tail
+        ctx.fillStyle = bronze;
+        ctx.fillRect(x + w * 0.22, y + h * 0.52, 6, 4);
+        ctx.fillRect(x + w * 0.18, y + h * 0.46, 4, 8);
+    }
+
+    drawAsuBanner(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const maroon = '#8C1D40', gold = '#FFC627';
+        // Hanging rod
+        ctx.fillStyle = '#4A3A28';
+        ctx.fillRect(x - 4, y, w + 8, 3);
+        // Banner field with gold border
+        ctx.fillStyle = gold;
+        ctx.fillRect(x, y + 3, w, h - 3);
+        ctx.fillStyle = maroon;
+        ctx.fillRect(x + 3, y + 6, w - 6, h - 12);
+        // Swallowtail bottom edge
+        ctx.fillStyle = gold;
+        for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(x + (i * w) / 4, y + h - 6);
+            ctx.lineTo(x + (i * w) / 4 + w / 8, y + h);
+            ctx.lineTo(x + ((i + 1) * w) / 4, y + h - 6);
+            ctx.closePath(); ctx.fill();
+        }
+        // Text and mini pitchfork
+        ctx.fillStyle = gold;
+        ctx.font = '9px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText('ASU', x + w / 2 - 8, y + h * 0.55);
+        ctx.textAlign = 'left';
+        const fx = x + w - 20, fy = y + 9;
+        ctx.fillRect(fx + 4, fy, 2, 12);
+        ctx.fillRect(fx, fy + 3, 10, 2);
+        ctx.fillRect(fx, fy, 2, 5);
+        ctx.fillRect(fx + 8, fy, 2, 5);
+    }
+
+    drawTrophyCase(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const gold = '#FFC627';
+        // Wood frame
+        ctx.fillStyle = '#4A3A28';
+        ctx.fillRect(x, y, w, h);
+        // Glass
+        ctx.fillStyle = '#2A3A44';
+        ctx.fillRect(x + 3, y + 3, w - 6, h - 8);
+        // Shelf
+        ctx.fillStyle = '#8C1D40';
+        ctx.fillRect(x + 3, y + h * 0.55, w - 6, 3);
+        // Trophies (pixel cups)
+        const cup = (cx, cy, s) => {
+            ctx.fillStyle = gold;
+            ctx.fillRect(cx, cy, s * 3, s * 2);
+            ctx.fillRect(cx - s, cy, s, s);
+            ctx.fillRect(cx + s * 3, cy, s, s);
+            ctx.fillRect(cx + s, cy + s * 2, s, s);
+            ctx.fillRect(cx, cy + s * 3, s * 3, s);
+        };
+        cup(x + w * 0.18, y + h * 0.18, 2);
+        cup(x + w * 0.6, y + h * 0.22, 2);
+        cup(x + w * 0.38, y + h * 0.62, 2);
+        // Glass shine
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.beginPath();
+        ctx.moveTo(x + 6, y + h - 10);
+        ctx.lineTo(x + w * 0.45, y + 6);
+        ctx.stroke();
+    }
+
+    drawBulletinBoard(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Frame and cork
+        ctx.fillStyle = '#5E4A34';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#B08D57';
+        ctx.fillRect(x + 3, y + 3, w - 6, h - 6);
+        // Flyers
+        const flyers = [
+            { fx: 0.12, fy: 0.15, fw: 0.3, fh: 0.4, c: '#E8E4D8' },
+            { fx: 0.5, fy: 0.12, fw: 0.34, fh: 0.34, c: '#FFC627' },
+            { fx: 0.2, fy: 0.58, fw: 0.28, fh: 0.3, c: '#E8E4D8' },
+            { fx: 0.56, fy: 0.52, fw: 0.3, fh: 0.36, c: '#8C1D40' },
+        ];
+        flyers.forEach(f => {
+            ctx.fillStyle = f.c;
+            ctx.fillRect(x + w * f.fx, y + h * f.fy, w * f.fw, h * f.fh);
+            // Pin
+            ctx.fillStyle = '#CC2222';
+            ctx.fillRect(x + w * f.fx + (w * f.fw) / 2 - 1, y + h * f.fy - 1, 3, 3);
+            // Text lines
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            for (let l = 0; l < 2; l++) {
+                ctx.fillRect(x + w * f.fx + 2, y + h * f.fy + 4 + l * 4, w * f.fw - 4, 1.5);
+            }
+        });
+    }
+
+    drawPottedPalm(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const sway = Math.sin(this.game.animationFrame * 0.03 + this.x) * 1.5;
+        // Terracotta pot
+        ctx.fillStyle = '#B5654A';
+        ctx.fillRect(x + w * 0.2, y + h * 0.72, w * 0.6, h * 0.28);
+        ctx.fillRect(x + w * 0.12, y + h * 0.68, w * 0.76, 5);
+        // Trunk
+        ctx.fillStyle = '#8A6B4F';
+        ctx.fillRect(x + w * 0.44, y + h * 0.3, 4, h * 0.42);
+        ctx.fillStyle = '#7A5B3F';
+        ctx.fillRect(x + w * 0.44, y + h * 0.38, 4, 2);
+        ctx.fillRect(x + w * 0.44, y + h * 0.5, 4, 2);
+        ctx.fillRect(x + w * 0.44, y + h * 0.62, 4, 2);
+        // Fronds
+        ctx.strokeStyle = '#3E7C4A';
+        ctx.lineWidth = 3;
+        const cx = x + w * 0.5, cy = y + h * 0.3;
+        const fronds = [[-0.9, -0.3], [-0.5, -0.7], [0, -0.9], [0.5, -0.7], [0.9, -0.3]];
+        fronds.forEach(([dx, dy]) => {
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + dx * w * 0.42 + sway, cy + dy * h * 0.24);
+            ctx.stroke();
+        });
+        ctx.lineWidth = 1;
+        // Frond tips
+        ctx.fillStyle = '#4E9C5A';
+        fronds.forEach(([dx, dy]) => {
+            ctx.fillRect(cx + dx * w * 0.42 + sway - 2, cy + dy * h * 0.24 - 2, 4, 4);
+        });
     }
 
     drawHoleInTheRock(ctx) {

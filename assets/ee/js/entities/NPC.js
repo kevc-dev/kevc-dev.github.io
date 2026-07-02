@@ -121,6 +121,31 @@ export class NPC extends Entity {
             ctx.moveTo(x + w * 1.4, y - h * 0.2);
             ctx.lineTo(x + w * 1.4, bodyTopY + bodyHeight * 0.6);
             ctx.stroke();
+        } else if (this.name === 'Sparky') {
+            // Student in the Sparky suit: all maroon, gold horns, gold pitchfork
+            npcShirtColor = '#8C1D40'; npcTrouserColor = '#8C1D40'; npcHeadColor = '#8C1D40';
+            ctx.fillStyle = '#FFC627';
+            // Horns
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.28, y + 1);
+            ctx.lineTo(x + w * 0.32, y - 5);
+            ctx.lineTo(x + w * 0.38, y + 1);
+            ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.62, y + 1);
+            ctx.lineTo(x + w * 0.68, y - 5);
+            ctx.lineTo(x + w * 0.72, y + 1);
+            ctx.closePath(); ctx.fill();
+            // Pitchfork held at the side
+            const fx = x + w + 1, fy = y + 2;
+            ctx.fillRect(fx, fy, 2, h * 0.8);           // shaft
+            ctx.fillRect(fx - 4, fy + 3, 10, 2);        // crossbar
+            ctx.fillRect(fx - 4, fy - 2, 2, 5);         // left prong
+            ctx.fillRect(fx, fy - 4, 2, 5);             // center prong
+            ctx.fillRect(fx + 4, fy - 2, 2, 5);         // right prong
+            // Gold chest lightning bolt
+            ctx.fillRect(x + w * 0.45, bodyTopY + 2, 3, 4);
+            ctx.fillRect(x + w * 0.4, bodyTopY + 6, 3, 4);
         } else if (this.name === 'Old Hermit') {
             npcShirtColor = '#778899'; npcTrouserColor = '#5A4D41';
             ctx.fillStyle = '#A9A9A9';

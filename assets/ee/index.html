@@ -158,6 +158,14 @@
             overflow-y: auto;
         }
 
+        /* Start screen: solid backdrop (hides HUD behind it) and top-anchored
+           layout so long text never clips the title or the START button */
+        #startScreen {
+            background-color: #000;
+            justify-content: flex-start;
+            padding: 16px 24px 14px 24px;
+        }
+
         #startScreen h1, #pauseScreen h1, #gameOverScreen h1, #winScreen h1 {
             color: #FFAA33;
             font-size: 24px;
@@ -165,10 +173,15 @@
             margin-bottom: 10px;
         }
 
+        #startScreen h1 {
+            font-size: 20px;
+            margin: 0 0 6px 0;
+        }
+
         #startScreen h2 {
             color: #FF6633;
-            font-size: 16px;
-            margin-bottom: 30px;
+            font-size: 12px;
+            margin: 0 0 14px 0;
         }
 
         #startScreen p, #pauseScreen p, #gameOverScreen p, #winScreen p {
@@ -177,6 +190,17 @@
             max-width: 80%;
             margin-bottom: 20px;
             line-height: 1.5;
+        }
+
+        #startScreen p {
+            font-size: 9px;
+            max-width: 92%;
+            margin: 0 0 12px 0;
+            line-height: 1.6;
+        }
+
+        #startScreen button {
+            margin-top: 4px;
         }
 
         #startScreen button, #pauseScreen button, #gameOverScreen button {
@@ -494,7 +518,7 @@
             <h1>DESERT CHRONICLES</h1>
             <h2>The Arizona Artifact</h2>
             <p>JUNE 5, 1986. SCOTTSDALE, ARIZONA. The canal behind your house is older than the city. The engineers who dug it in 1912 were following a ditch that had already been there seven hundred years. Nobody thinks about that. The water just comes.</p>
-            <p>You are Professor James Walker, retired. Thirty years digging in other people's deserts, and you never once worked the one in your backyard. Then this morning's Republic runs two stories on the same page: a grading crew has cut into an ancient canal near the airport &mdash; salvage crews get two weeks &mdash; and a letter from a crank who swears a mountain carving shows an exploding star. You've seen that carving. You sketched it in 1956, and you never understood it.</p>
+            <p>You are Professor James Walker, retired. Thirty years digging in other people's deserts, and you never once worked the one in your backyard. Then this morning's Republic runs two stories on the same page: a grading crew has cut into an ancient canal near the airport, salvage crews get two weeks, and a letter from a crank who swears a mountain carving shows an exploding star. You've seen that carving. You sketched it in 1956, and you never understood it.</p>
             <p>The solstice is in sixteen days. The bulldozers pour concrete the Monday after. Fill your canteen.</p>
             <button id="startButton">START</button>
             <div id="loadingText" style="display: none;">Loading...</div>
