@@ -141,31 +141,20 @@ export function getMaps() {
             name: 'Sonoran Desert Outskirts', background: '#E2C9A1',
             objects: [
                 { type: 'cactus', x: 100, y: 80 },
-                { type: 'cactus', x: 400, y: 130 },
-                { type: 'cactus', x: 540, y: 60 },
-                { type: 'cactus', x: 30, y: 180 },
+                { type: 'cactus', x: 430, y: 120 },
                 { type: 'cactus', x: 480, y: 380 },
-                { type: 'cactus', x: 200, y: 430 },
+                { type: 'cactus', x: 60, y: 400 },
                 { type: 'rock', x: 250, y: 190 },
                 { type: 'rock', x: 350, y: 50, width: 40, height: 32 },
                 { type: 'rock', x: 550, y: 300, width: 48, height: 36 },
-                { type: 'rock', x: 80, y: 420 },
-                { type: 'sand_dune', x: 140, y: 350 },
-                { type: 'sand_dune', x: 420, y: 440 },
+                { type: 'sand_dune', x: 150, y: 360 },
                 { type: 'dead_tree', x: 310, y: 280 },
-                { type: 'dead_tree', x: 500, y: 180 },
-                { type: 'animal_bones', x: 460, y: 320 },
                 { type: 'campfire_remains', x: 170, y: 150 },
-                { type: 'desert_flower', x: 340, y: 220 },
-                { type: 'desert_flower', x: 75, y: 360 },
-                { type: 'desert_flower', x: 570, y: 420 },
-                { type: 'tumbleweed', x: 280, y: 120 },
-                { type: 'tumbleweed', x: 520, y: 250 },
-                { type: 'tumbleweed', x: 60, y: 450 },
-                { type: 'trail_marker', x: 430, y: 240, text: "An arrow scratched into the rock points east, toward the canyon." },
+                { type: 'desert_flower', x: 350, y: 220 },
+                { type: 'tumbleweed', x: 280, y: 110 },
                 { type: 'trail_marker', x: 550, y: 190, text: "The canyon entrance lies ahead." },
                 { type: 'sign', x: 150, y: 240, text: "Caution: desert conditions. Between 11 and 4 the sun is not negotiable. Travel at dawn and dusk." },
-                { type: 'interactive_point', x: 350, y: 350, text: "Lizard tracks crisscross the sand. Something heavier passed through too — tire tracks, out-of-state tread." },
+                { type: 'interactive_point', x: 380, y: 350, text: "Lizard tracks crisscross the sand. Something heavier passed through too — tire tracks, out-of-state tread." },
                 { type: 'water_source', x: 50, y: 300 },
                 { type: 'doorway', x: CANVAS_WIDTH - 48, y: 232, toMap: 'canyon', toX: 50, toY: 240, text: "To Canyon" },
                 { type: 'doorway', x: 296, y: CANVAS_HEIGHT - 16, toMap: 'ghost_town', toX: 296, toY: 40, text: "To Old Town" }
@@ -176,11 +165,6 @@ export function getMaps() {
                     "You read the Republic this morning? Grading crew hit canal features by the airport. Salvage crew's got two weeks. Breaks your heart.",
                     "If you're heading east, watch for rattlers near the rocks. You'll hear them before you see them.",
                     "Press F to swing your walking stick if the wildlife gets too bold. Most of it just wants to be left alone."
-                ]},
-                { name: 'Lost Tourist', x: 450, y: 200, dialog: [
-                    "Excuse me! Do you know the way back to Phoenix?",
-                    "My rental car broke down about a mile back...",
-                    "I swear I saw something glowing out past those rocks last night."
                 ]},
                 { name: 'Old Prospector', x: 100, y: 440, dialog: (player, game) => {
                     const q = player.quests.find(q => q.id === 'prospector_pickaxe');
@@ -213,18 +197,13 @@ export function getMaps() {
             ],
             enemies: [
                 { type: 'scorpion', x: 300, y: 400 },
-                { type: 'scorpion', x: 520, y: 140 },
                 { type: 'snake', x: 450, y: 90 },
-                { type: 'snake', x: 180, y: 380 },
-                { type: 'coyote', x: 380, y: 300 },
-                { type: 'vulture', x: 120, y: 60 }
+                { type: 'coyote', x: 380, y: 300 }
             ],
             critters: [
-                { type: 'jackrabbit', x: 240, y: 260 },
+                { type: 'jackrabbit', x: 240, y: 300 },
                 { type: 'roadrunner', x: 420, y: 400 },
-                { type: 'lizard', x: 300, y: 160 },
-                { type: 'tortoise', x: 140, y: 400 },
-                { type: 'quail', x: 480, y: 250 }
+                { type: 'tortoise', x: 500, y: 200 }
             ]
         },
         canyon: {
@@ -302,7 +281,7 @@ export function getMaps() {
                 { type: 'sign', x: 200, y: 300, text: "Papago Park — City of Phoenix. Fishing ponds stocked seasonally. Please respect the buttes." },
                 { type: 'interactive_point', x: 380, y: 250, text: "Herons stalk the pond edge, ignoring the city entirely. The red buttes glow like coals at dusk." },
                 { type: 'campfire_remains', x: 460, y: 380 },
-                { type: 'cactus', x: 40, y: 250 },
+                { type: 'cactus', x: 40, y: 120 },
                 { type: 'cactus', x: 560, y: 300 },
                 { type: 'desert_flower', x: 300, y: 400 },
                 { type: 'tumbleweed', x: 200, y: 430 },
@@ -464,7 +443,7 @@ export function getMaps() {
         ghost_town: {
             name: 'Dusty Gulch Ghost Town', background: '#C9A876',
             objects: [
-                { type: 'saloon', x: 190, y: 55 },
+                { type: 'saloon', x: 150, y: 55 },
                 { type: 'old_building', x: 40, y: 65 },
                 { type: 'old_building', x: 380, y: 65 },
                 { type: 'well', x: 300, y: 230 },

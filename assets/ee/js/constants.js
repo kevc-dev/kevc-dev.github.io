@@ -40,6 +40,7 @@ export const ENEMY_WANDER_RADIUS = 80;
 
 export const GAME_STATE = {
     START_SCREEN: 'START_SCREEN',
+    INTRO: 'INTRO',
     LOADING: 'LOADING',
     PLAYING: 'PLAYING',
     PAUSED: 'PAUSED',
