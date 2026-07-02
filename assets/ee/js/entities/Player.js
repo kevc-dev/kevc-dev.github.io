@@ -299,7 +299,7 @@ export class Player extends Entity {
         if (!this.inventory.includes(itemKey)) {
             this.inventory.push(itemKey);
             this.game.ui.updateInventoryDisplay(this.inventory, this.game.itemTypes);
-            if (itemKey === 'artifact1' || itemKey === 'final_artifact') {
+            if (itemKey === 'artifact1' || itemKey === 'artifact2' || itemKey === 'artifact3' || itemKey === 'final_artifact') {
                 this.game.sound.playSound('getCoin');
             } else {
                 this.game.sound.playSound('getItem');

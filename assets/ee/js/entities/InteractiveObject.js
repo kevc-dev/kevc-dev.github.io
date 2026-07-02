@@ -39,9 +39,9 @@ export class InteractiveObject extends Entity {
             case 'rock': this.drawRock(ctx); break;
             case 'chest': this.drawChest(ctx); break;
             case 'sign':
-            case 'interactive_point':
-            case 'petroglyph_panel':
-            case 'ancient_symbol': this.drawSign(ctx); break;
+            case 'interactive_point': this.drawSign(ctx); break;
+            case 'petroglyph_panel': this.drawPetroglyphPanel(ctx); break;
+            case 'ancient_symbol': this.drawAncientSymbol(ctx); break;
             case 'water_source': this.drawWaterSource(ctx); break;
             case 'doorway': this.drawDoorway(ctx); break;
             case 'computer_terminal': this.drawComputerTerminal(ctx); break;
@@ -238,29 +238,19 @@ export class InteractiveObject extends Entity {
     }
 
     drawSign(ctx) {
+        // Post
         ctx.fillStyle = '#8B4513';
         ctx.fillRect(this.x + this.width / 2 - 4, this.y + this.height / 2, 8, this.height / 2);
+        ctx.fillStyle = '#6B3410';
+        ctx.fillRect(this.x + this.width / 2 + 2, this.y + this.height / 2, 2, this.height / 2);
+        // Board with grain lines
         ctx.fillStyle = '#DAA520';
         ctx.fillRect(this.x, this.y, this.width, this.height / 2);
-        if (this.type === 'petroglyph_panel') {
-            ctx.fillStyle = '#4A2A0A';
-            ctx.font = '6px "Press Start 2P"';
-            ctx.fillText("PETRO", this.x + 2, this.y + 8);
-            ctx.fillRect(this.x + 6, this.y + 12, 4, 8);
-            ctx.beginPath();
-            ctx.arc(this.x + 20, this.y + 10, 5, 0, Math.PI);
-            ctx.stroke();
-        }
-        if (this.type === 'ancient_symbol') {
-            ctx.fillStyle = '#E0E0E0';
-            ctx.font = '10px "Press Start 2P"';
-            ctx.fillText("?", this.x + this.width / 2 - 5, this.y + this.height / 2 + 5);
-            ctx.strokeStyle = '#333333';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(this.x + this.width / 2, this.y + this.height / 4, this.width / 4, 0, Math.PI * 1.5);
-            ctx.stroke();
-        }
+        ctx.fillStyle = '#B8860B';
+        ctx.fillRect(this.x, this.y, this.width, 2);
+        ctx.fillRect(this.x, this.y + this.height / 2 - 2, this.width, 2);
+        ctx.fillRect(this.x + 4, this.y + 5, this.width - 8, 1.5);
+        ctx.fillRect(this.x + 4, this.y + 9, this.width - 12, 1.5);
     }
 
     drawWaterSource(ctx) {
@@ -419,40 +409,158 @@ export class InteractiveObject extends Entity {
     }
 
     drawFirePit(ctx) {
-        ctx.fillStyle = '#A0522D';
-        ctx.fillRect(this.x, this.y + this.height * 0.6, this.width, this.height * 0.4);
-        const flameHeight = this.height * 0.7, flameWidth = this.width * 0.8;
-        const flameX = this.x + this.width * 0.1, flameYBase = this.y + this.height * 0.1;
-        const flicker = Math.sin(this.game.animationFrame * 0.3) * 5;
-        ctx.fillStyle = (this.game.animationFrame % 20 < 10) ? '#FF4500' : '#FFA500';
-        ctx.beginPath();
-        ctx.moveTo(flameX, flameYBase + flameHeight);
-        ctx.quadraticCurveTo(flameX + flameWidth / 2, flameYBase - flicker, flameX + flameWidth, flameYBase + flameHeight);
-        ctx.quadraticCurveTo(flameX + flameWidth * 0.7, flameYBase + flameHeight * 0.5 + flicker / 2, flameX + flameWidth * 0.5, flameYBase + flameHeight);
-        ctx.quadraticCurveTo(flameX + flameWidth * 0.3, flameYBase + flameHeight * 0.5 - flicker / 2, flameX, flameYBase + flameHeight);
-        ctx.closePath(); ctx.fill();
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const anim = this.game.animationFrame;
+        // Chunky warm glow (square, like a low-color light radius)
+        const glow = 0.1 + Math.sin(anim * 0.2) * 0.04;
+        ctx.fillStyle = `rgba(255, 140, 40, ${glow})`;
+        ctx.fillRect(x - w * 0.5, y - h * 1.1, w * 2, h * 2.4);
+        ctx.fillStyle = `rgba(255, 180, 80, ${glow * 0.7})`;
+        ctx.fillRect(x - w * 0.2, y - h * 0.6, w * 1.4, h * 1.7);
+
+        const P = { y: '#FFE066', o: '#FF9A2A', r: '#E24A1A', L: '#5C3D2E', D: '#3A2A1E', s: '#7D7064', d: '#5F534B' };
+        const F = [[
+            ".....y......",
+            "....yy......",
+            "....oyy.y...",
+            "...yooy.o...",
+            "...ooooo....",
+            "..yoooooo...",
+            "..ooorooo...",
+            ".rroorroor..",
+            ".LLLDLLDLL..",
+            "sdLLLLLLLds.",
+        ], [
+            "......y.....",
+            "...y.yy.....",
+            "...o.oyy....",
+            "....yooy.o..",
+            "....ooooo...",
+            "...ooooooy..",
+            "...ooroooo..",
+            "..roorroorr.",
+            ".LLLDLLDLL..",
+            "sdLLLLLLLds.",
+        ]];
+        const frame = Math.floor(anim / 6) % 2;
+        const rows = F[frame];
+        const scale = w / rows[0].length;
+        this.drawPixels(ctx, rows, P, x, y + h - rows.length * scale, scale);
+
+        // Rising embers
+        if (anim % 14 === 0 && this.game.particles) {
+            this.game.particles.emit(x + w * 0.3 + Math.random() * w * 0.4, y + h * 0.2, {
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: -0.6 - Math.random() * 0.4,
+                life: 25,
+                size: 2,
+                color: Math.random() < 0.5 ? '#FFB347' : '#FF6A2A',
+            });
+        }
     }
 
     drawSkullTurret(ctx) {
-        const skullColor = '#E0E0E0', socketColor = '#000000';
-        ctx.fillStyle = skullColor;
-        ctx.beginPath();
-        ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2.2, Math.PI * 0.1, Math.PI * 0.9, true);
-        ctx.rect(this.x + this.width * 0.1, this.y + this.height / 2, this.width * 0.8, this.height * 0.4);
-        ctx.fill();
-        ctx.fillStyle = socketColor;
-        ctx.beginPath();
-        ctx.arc(this.x + this.width * 0.3, this.y + this.height * 0.4, this.width * 0.15, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(this.x + this.width * 0.7, this.y + this.height * 0.4, this.width * 0.15, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(this.x + this.width / 2, this.y + this.height * 0.5);
-        ctx.lineTo(this.x + this.width * 0.4, this.y + this.height * 0.65);
-        ctx.lineTo(this.x + this.width * 0.6, this.y + this.height * 0.65);
-        ctx.closePath(); ctx.fill();
-        ctx.fillRect(this.x + this.width * 0.2, this.y + this.height * 0.8, this.width * 0.6, 2);
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const P = { w: '#E8E4D8', c: '#C8C4B0', k: '#141014', t: '#B8B4A0', p: '#5F534B' };
+        const rows = [
+            "....wwwwwwww....",
+            "..wwwwwwwwwwww..",
+            ".wwwwwwwwwwwwww.",
+            ".wwcwwwwwwwwcww.",
+            ".wkkkwwwwwwkkkw.",
+            ".wkkkkwwwwkkkkw.",
+            ".wwkkwwwwwwkkww.",
+            ".wwwwwwkkwwwwww.",
+            "..wwwwkkkkwwww..",
+            "..wwwwwwwwwwww..",
+            "...wtwtwtwtwt...",
+            "...wtwtwtwtwt...",
+            "....wwwwwwww....",
+            "......pp.pp.....",
+            "......pppp......",
+            "......pppp......",
+        ];
+        const scale = w / 16;
+        this.drawPixels(ctx, rows, P, x, y + h - rows.length * scale, scale);
+        // Eyes ignite red when the guardian sees you
+        const player = this.game.player;
+        if (player) {
+            const dist = Math.hypot(player.centerX - this.centerX, player.centerY - this.centerY);
+            const seen = dist < (this.aggroRange || 200);
+            const pulse = seen ? (0.7 + Math.sin(this.game.animationFrame * 0.25) * 0.3) : 0.25;
+            ctx.fillStyle = `rgba(255, 40, 30, ${pulse})`;
+            ctx.fillRect(Math.round(x + 3 * scale), Math.round(y + h - 11 * scale), Math.ceil(scale * 2), Math.ceil(scale * 2));
+            ctx.fillRect(Math.round(x + 11 * scale), Math.round(y + h - 11 * scale), Math.ceil(scale * 2), Math.ceil(scale * 2));
+        }
+    }
+
+    drawPetroglyphPanel(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Basalt slab with desert varnish, pecked glyphs in pale stone
+        const P = { B: '#3A3546', D: '#2E2A38', g: '#D8C8A8' };
+        const rows = [
+            "....BBBBBBBB....",
+            "..BBBBBBBBBBBB..",
+            ".BBBDBBBBBBDBBB.",
+            ".BBB.g..BBBBBBB.",
+            "BBB.g.g.BBg.gBBB",
+            "BBB.ggg.BB.g.BBB",
+            "BBBB..g.Bg.g.BBB",
+            "BBBDggg.B.....BB",
+            "BBBB....BBggBBB.",
+            ".BBBg.gBBg..gBB.",
+            ".BBB.g.BBBggBBB.",
+            ".BBBBgBBBDBBBB..",
+            "..BBBgBBBBBBB...",
+            "..BBg.gBBBBBB...",
+            "...BBBBBBBBB....",
+            "....BBBBBBB.....",
+        ];
+        const scale = w / 16;
+        this.drawPixels(ctx, rows, P, x, y + h - rows.length * scale, scale);
+    }
+
+    drawAncientSymbol(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const variant = (Math.round(x) + Math.round(y)) % 2;
+        const P = { B: '#3A3546', D: '#2E2A38', g: '#D8C8A8' };
+        // Variant 0: spiral glyph. Variant 1: figure with a crook, facing the sunrise.
+        const rows = variant === 0 ? [
+            "...BBBBBBBBBB...",
+            "..BBBBBBBBBBBB..",
+            ".BBBBggggggBBBB.",
+            ".BBBg.....gBBDB.",
+            "BBBg..ggg..gBBBB",
+            "BBBg.g...g.gBBBB",
+            "BBBg.g.gg..gBBBB",
+            "BBBg.g.....gBBDB",
+            "BBBg..ggggg.BBBB",
+            ".BBBg......BBBB.",
+            ".BBDBggggggBBBB.",
+            "..BBBBBBBBBBBB..",
+            "...BBBBBBBBBB...",
+        ] : [
+            "...BBBBBBBBBB...",
+            "..BBBBBBBBBBBB..",
+            ".BBBBB.g.BBBBBB.",
+            ".BBBB.ggg.BBgBB.",
+            "BBBBBB.g.BBBgBBB",
+            "BBBg.gggggg.gBBB",
+            "BBBBBB.g.BBggBBB",
+            "BBBDBB.g.BBBBBDB",
+            "BBBBB.g.g.BBBBBB",
+            ".BBBB.g.g.BBBBB.",
+            ".BBBBg.B.gBBBBB.",
+            "..BBBBBBBBBBBB..",
+            "...BBBBBBBBBB...",
+        ];
+        const scale = w / 16;
+        this.drawPixels(ctx, rows, P, x, y + h - rows.length * scale, scale);
+        // Faint shimmer, like low sun raking across the varnish
+        if (this.game.animationFrame % 100 < 8) {
+            ctx.fillStyle = 'rgba(255, 230, 180, 0.5)';
+            ctx.fillRect(Math.round(x + w * 0.45), Math.round(y + h * 0.2), 2, 2);
+        }
     }
 
     drawCrater(ctx) {
@@ -1267,17 +1375,26 @@ export class InteractiveObject extends Entity {
         ctx.lineTo(x + w, y + h * 0.5);
         ctx.lineTo(x + w, y + h);
         ctx.closePath(); ctx.fill();
-        // At dusk, the sun sits in the notch
+        // At dusk, a blocky pixel sun settles into the notch
         if (duskLight) {
             const glow = 0.7 + Math.sin(this.game.animationFrame * 0.04) * 0.15;
+            const sx = Math.round(x + w * 0.5) - 6, sy = Math.round(y + h * 0.35) - 6;
+            // Halo blocks
+            ctx.fillStyle = `rgba(255, 170, 80, ${glow * 0.35})`;
+            ctx.fillRect(sx - 4, sy - 4, 20, 20);
+            // Sun disc, stepped like a low-res circle
             ctx.fillStyle = `rgba(255, 90, 40, ${glow})`;
-            ctx.beginPath();
-            ctx.arc(x + w * 0.5, y + h * 0.35, 6, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = `rgba(255, 170, 80, ${glow * 0.4})`;
-            ctx.beginPath();
-            ctx.arc(x + w * 0.5, y + h * 0.35, 11, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(sx + 3, sy, 6, 12);
+            ctx.fillRect(sx, sy + 3, 12, 6);
+            ctx.fillRect(sx + 1, sy + 1, 10, 10);
+            // Hot core
+            ctx.fillStyle = `rgba(255, 220, 120, ${glow})`;
+            ctx.fillRect(sx + 4, sy + 4, 4, 4);
+            // Rays
+            ctx.fillStyle = `rgba(255, 130, 50, ${glow * 0.7})`;
+            ctx.fillRect(sx - 6, sy + 5, 4, 2);
+            ctx.fillRect(sx + 14, sy + 5, 4, 2);
+            ctx.fillRect(sx + 5, sy - 6, 2, 4);
         }
         // Worn standing-spot at the base
         ctx.fillStyle = '#6B5B45';
@@ -1355,6 +1472,21 @@ export class InteractiveObject extends Entity {
             this.game.startPuzzle(this.objData.puzzleDetails);
             return;
         }
+        // Multi-artifact lock: the door only opens once every required record is carried
+        if (this.objData.requiredItems && !this.objData.isNowPortal) {
+            const missing = this.objData.requiredItems.filter(k => !player.hasItem(k));
+            if (missing.length > 0) {
+                const names = missing.map(k => (this.game.itemTypes[k] ? this.game.itemTypes[k].name : k)).join(', ');
+                this.game.ui.showDialog((this.objData.lockedText || "It will not budge.") + " Still missing: " + names + ".", (this.objData.name || this.type).toUpperCase());
+                this.game.setGameState(GAME_STATE.DIALOG);
+                if (!player.quests.find(q => q.id === 'three_records')) {
+                    player.addQuest({ id: 'three_records', description: 'Recover the three records: stick fragment, olla shard, star rubbing.', completed: false });
+                }
+                return;
+            }
+            player.completeQuest('three_records');
+        }
+
         if (this.objData.portalOnInteract && this.objData.toMap && !this.objData.isNowPortal) {
             if (this.objData.interactionText) {
                 this.game.ui.showDialog(this.objData.interactionText, (this.objData.name || this.type).toUpperCase());
@@ -1399,6 +1531,7 @@ export class InteractiveObject extends Entity {
         }
         if (this.objData.questTrigger) {
             player.addQuest(this.objData.questTrigger);
+            if (this.objData.questTrigger.grantsItem) player.addItem(this.objData.questTrigger.grantsItem);
             this.game.ui.showDialog(this.objData.questTrigger.startText || `New Quest: ${this.objData.questTrigger.description}`, "INFO");
             this.game.setGameState(GAME_STATE.DIALOG);
             delete this.objData.questTrigger;

@@ -137,7 +137,9 @@ export function getItemTypes() {
         },
         old_pickaxe: { name: 'Old Pickaxe', description: "The Prospector's beloved pickaxe. Rusty but sturdy." },
         lucky_charm: { name: 'Lucky Rabbit Foot', description: 'A worn charm from a braver era. It feels... lucky.' },
-        artifact1: { name: 'Calendar Stick Fragment', description: 'Half of a notched wooden record. The counts are dates, day-counts toward something.' },
+        artifact1: { name: 'Calendar Stick Fragment', description: 'Half of a notched wooden record. The counts are dates, day-counts toward something. One of three records.' },
+        artifact2: { name: 'Etched Olla Shard', description: 'Pottery shard etched with canal lines and notch counts. One of three records.' },
+        artifact3: { name: 'Star Chart Rubbing', description: 'Charcoal rubbing of the 1006 star panel, made with your own hands. One of three records.' },
         final_artifact: { name: 'Calendar Stick', description: 'Four centuries of sky and water, carved notch by notch. It is not yours to keep.' },
     };
 }
@@ -333,6 +335,7 @@ export function getMaps() {
                 { type: 'survey_flag', x: 510, y: 220 },
                 { type: 'survey_flag', x: 540, y: 190 },
                 { type: 'looter_pit', x: 460, y: 380, text: "A fresh pit, dug at night, screened neatly. Pothunters. They knew exactly where to dig. That's the frightening part." },
+                { type: 'chest', x: 420, y: 430, contains: 'artifact2', text: "Tucked under a salvage tarp: an etched olla shard, canal lines and notch counts scored into the clay. The pothunters missed it by a shovel's width." },
                 { type: "interactive_point", x: 100, y: 50, text: "Salvage stakes and string grids. Two weeks to record nine hundred years, and then the concrete comes." },
                 { type: "rock", x: 500, y: 400 },
                 { type: 'campfire_remains', x: 60, y: 420 },
@@ -343,6 +346,7 @@ export function getMaps() {
                 { name: 'Dr. Delgado', x: 350, y: 200, dialog: [
                     "Dr. Delgado, city archaeology. We've got two weeks to salvage what we can before the pour. Two weeks, for nine hundred years of engineering.",
                     "Someone's been here at night. Neat holes, screened spoil: pothunters, professional ones. They knew where to dig, which scares me more than the bulldozers.",
+                    "We catalogued an etched olla shard last week and now it's missing from the tray. If the diggers dropped it in their hurry, it's still on this site. Under a tarp, maybe. Keep an eye out.",
                     "The doorway up on the mound? At summer solstice dawn it frames Hole-in-the-Rock, straight across the valley. Stand in it early some morning. It'll change how you see this whole city.",
                     "If you find anything out there, anything at all, document, don't dig. Promise me that, Professor."
                 ]}
@@ -397,6 +401,10 @@ export function getMaps() {
                 { type: "fire_pit", x: CANVAS_WIDTH / 2 - 24, y: 220 },
                 { type: "skull_turret", x: 100, y: 300 },
                 { type: "skull_turret", x: CANVAS_WIDTH - 132, y: 300 },
+                { type: 'ancient_symbol', x: 380, y: 300, text: "A bighorn sheep pecked in mid-leap. Hunters marked good ground here for a hundred generations." },
+                { type: 'rock', x: 60, y: 100, color: '#3A3546' },
+                { type: 'rock', x: 545, y: 60, width: 48, height: 36, color: '#3A3546' },
+                { type: 'rock', x: 200, y: 430, color: '#3A3546' },
                 { type: "interactive_point", x: 320, y: 40, text: "Thousands of petroglyphs spread across these ridges. Not messages from the vanished. Records, from people whose grandchildren live twenty minutes away." },
                 { type: 'campfire_remains', x: 520, y: 400 },
                 { type: "doorway", x: 0, y: 232, toMap: 'casa_grande', toX: CANVAS_WIDTH - 70, toY: 180, text: "To Ruins" },
@@ -424,7 +432,8 @@ export function getMaps() {
                 { type: "petroglyph_panel", x: 400, y: 250, width: 64, height: 64, text: "The star-scorpion panel. A circle with rays beside Scorpius. AD 1006, the anchor of the whole calendar.", questTrigger: {
                     id: 'supernova_read',
                     description: 'The star panel: the great star of AD 1006 anchors the calendar.',
-                    startText: "There it is. A scorpion of stars, and beside it, a circle with rays, far too bright to be the moon. Your 1956 sketch, line for line. If this records the great star of AD 1006, then every count on the calendar stick is a DATE. The whole stick is a ledger of the sky, and its last entry lands on a solstice."
+                    grantsItem: 'artifact3',
+                    startText: "There it is. A scorpion of stars, and beside it, a circle with rays, far too bright to be the moon. Your 1956 sketch, line for line. If this records the great star of AD 1006, then every count on the calendar stick is a DATE. You take out charcoal and paper and make a careful rubbing. (Star Chart Rubbing added.)"
                 }},
                 { type: "rock", x: 250, y: 150 },
                 { type: 'campfire_remains', x: 160, y: 400 },
@@ -439,7 +448,8 @@ export function getMaps() {
                 { name: "Petroglyph Researcher", x: 500, y: 100, dialog: [
                     "These panels are centuries old. The star-and-scorpion one? There's a claim it records the supernova of 1006: Scorpius rising, the guest star beside it. It's disputed. It should be disputed. That's how this works.",
                     "But disputed isn't debunked. If it's right, somebody here did naked-eye astronomy precise enough to date a stellar explosion. No telescope. Just patience and a chisel.",
-                    "People keep asking me if it's aliens. It's better than aliens. It's people."
+                    "People keep asking me if it's aliens. It's better than aliens. It's people.",
+                    "If you need a panel with you, do what we do: charcoal and butcher paper. A good rubbing is as true as the rock."
                 ]}
             ],
             enemies: [
@@ -562,7 +572,10 @@ export function getMaps() {
                 { type: 'potted_palm', x: 590, y: 410 },
                 { type: 'interactive_point', x: 420, y: 160, text: "Through the window: Palm Walk shimmers in the heat, and past it the gold 'A' on the butte above Tempe. People were pecking symbols into that hill a thousand years before anyone painted a letter on it." },
                 { type: 'interactive_point', x: 180, y: 300, text: "Microfiche: 1912 canal survey maps overlaid on last year's aerial photos. One alignment segment sits just outside the grading permit. Untouched. For now." },
-                { type: 'secret_panel', x: 300, y: 400, portalOnInteract: true, toMap: 'artifact_chamber', toX: CANVAS_WIDTH / 2 - 16, toY: CANVAS_HEIGHT - 80, interactionText: "Push what cannot fly. The statue grinds aside: a maintenance stair, down into the old utility vault beneath the building. The canal segment runs directly below." },
+                { type: 'secret_panel', x: 300, y: 400, portalOnInteract: true, toMap: 'artifact_chamber', toX: CANVAS_WIDTH / 2 - 16, toY: CANVAS_HEIGHT - 80,
+                    requiredItems: ['artifact1', 'artifact2', 'artifact3'],
+                    lockedText: "A panel, locked from behind. Three shallow slots are cut into the frame: one shaped like a notched stick, one like a curved shard, one a flat sheet.",
+                    interactionText: "The stick fragment, the olla shard, the rubbing. Each slips into its slot like a tooth of a key, and the counts line up into one unbroken calendar. Push what cannot fly. The statue grinds aside: a maintenance stair, down into the old utility vault. The canal segment runs directly below." },
                 { type: 'doorway', x: 0, y: 232, toMap: 'white_tanks_petroglyphs', toX: CANVAS_WIDTH - 70, toY: 120, text: "Exit" }
             ],
             npcs: [

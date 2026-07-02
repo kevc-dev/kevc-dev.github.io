@@ -158,11 +158,12 @@
             overflow-y: auto;
         }
 
-        /* Start screen: solid backdrop (hides HUD behind it) and top-anchored
-           layout so long text never clips the title or the START button */
+        /* Start screen: solid backdrop (hides HUD behind it), vertically centered.
+           'safe' prevents the title from clipping if content ever overflows. */
         #startScreen {
             background-color: #000;
-            justify-content: flex-start;
+            justify-content: center;
+            justify-content: safe center;
             padding: 16px 24px 14px 24px;
         }
 
