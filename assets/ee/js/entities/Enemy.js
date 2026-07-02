@@ -131,12 +131,12 @@ export class Enemy extends Entity {
     draw(ctx) {
         if (this.isEthereal) ctx.globalAlpha = 0.55 + Math.sin(this.enemyAnimationFrame * 0.1) * 0.2;
 
-        // Flying enemies cast a small ground shadow
+        // Flying enemies cast a small blocky ground shadow
         if (this.isFlying) {
+            const sw = Math.round(this.width * 0.35);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-            ctx.beginPath();
-            ctx.ellipse(this.centerX, this.y + this.height + 12, this.width * 0.35, 4, 0, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(Math.round(this.centerX - sw), Math.round(this.y + this.height + 10), sw * 2, 3);
+            ctx.fillRect(Math.round(this.centerX - sw * 0.6), Math.round(this.y + this.height + 13), Math.round(sw * 1.2), 2);
         }
 
         ctx.save();

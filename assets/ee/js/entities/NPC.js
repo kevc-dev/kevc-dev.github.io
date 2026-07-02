@@ -40,21 +40,36 @@ export class NPC extends Entity {
     }
 
     drawSpirit(ctx, x, y, w, h, bodyTopY, bodyHeight, headHeight) {
-        const npcTrouserColor = '#87CEEB', npcShirtColor = '#B0E0E6', npcHeadColor = '#ADD8E6';
         ctx.globalAlpha = 0.6 + Math.sin(this.npcAnimationFrame * 0.1) * 0.15;
-        ctx.fillStyle = npcTrouserColor;
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.2, y + h);
-        ctx.quadraticCurveTo(x + w * 0.5, y + h - 10, x + w * 0.8, y + h);
-        ctx.quadraticCurveTo(x + w * 0.5, y + h + 5, x + w * 0.2, y + h);
-        ctx.fill();
-        ctx.fillStyle = npcShirtColor;
-        ctx.fillRect(x + w * 0.15, bodyTopY, w * 0.7, bodyHeight * 0.6);
-        ctx.fillStyle = npcHeadColor;
-        ctx.fillRect(x + w * 0.25, y, w * 0.5, headHeight);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(x + w * 0.35, y + headHeight * 0.3, 2, 2);
-        ctx.fillRect(x + w * 0.55, y + headHeight * 0.3, 2, 2);
+        const P = { g: '#ADD8E6', b: '#B0E0E6', W: '#FFFFFF' };
+        const F = [[
+            "...bbbbbb...",
+            "..bbbbbbbb..",
+            ".bbWWbbWWbb.",
+            ".bbWWbbWWbb.",
+            ".bbbbbbbbbb.",
+            ".gggggggggg.",
+            ".gggggggggg.",
+            ".gggggggggg.",
+            ".gggggggggg.",
+            ".gggggggggg.",
+            ".g.gg.gg.g..",
+        ], [
+            "...bbbbbb...",
+            "..bbbbbbbb..",
+            ".bbWWbbWWbb.",
+            ".bbWWbbWWbb.",
+            ".bbbbbbbbbb.",
+            ".gggggggggg.",
+            ".gggggggggg.",
+            ".gggggggggg.",
+            ".gggggggggg.",
+            ".gggggggggg.",
+            "..gg.gg.gg..",
+        ]];
+        const rows = F[Math.floor(this.npcAnimationFrame / 14) % 2];
+        const scale = w / rows[0].length;
+        this.drawPixels(ctx, rows, P, x, y + h - rows.length * scale, scale);
         ctx.globalAlpha = 1.0;
     }
 
@@ -95,47 +110,34 @@ export class NPC extends Entity {
             ctx.fillStyle = '#F2C230';
             ctx.fillRect(x + w * 0.15, y - 3, w * 0.7, headHeight * 0.45);
             ctx.fillRect(x + w * 0.05, y + headHeight * 0.25, w * 0.9, headHeight * 0.2);
-            // Trowel in hand
+            // Trowel in hand: stepped pixel blade
             ctx.fillStyle = '#8A8078';
-            ctx.beginPath();
-            ctx.moveTo(x + w * 0.95, bodyTopY + bodyHeight * 0.35);
-            ctx.lineTo(x + w * 1.1, bodyTopY + bodyHeight * 0.5);
-            ctx.lineTo(x + w * 0.95, bodyTopY + bodyHeight * 0.55);
-            ctx.closePath(); ctx.fill();
+            ctx.fillRect(x + w * 0.92, bodyTopY + bodyHeight * 0.38, 5, 5);
+            ctx.fillRect(x + w * 1.02, bodyTopY + bodyHeight * 0.44, 4, 4);
+            ctx.fillRect(x + w * 1.1, bodyTopY + bodyHeight * 0.5, 3, 3);
         } else if (this.name === 'Morning Fisherman') {
             npcShirtColor = '#7A8B9A'; npcTrouserColor = '#4E5A42';
             // Bucket hat
             ctx.fillStyle = '#9AA382';
             ctx.fillRect(x + w * 0.1, y - 2, w * 0.8, headHeight * 0.4);
             ctx.fillRect(x, y + headHeight * 0.25, w, headHeight * 0.2);
-            // Fishing rod
-            ctx.strokeStyle = '#6B4226';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x + w * 0.9, bodyTopY + bodyHeight * 0.5);
-            ctx.lineTo(x + w * 1.4, y - h * 0.2);
-            ctx.stroke();
-            ctx.strokeStyle = '#CCCCCC';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(x + w * 1.4, y - h * 0.2);
-            ctx.lineTo(x + w * 1.4, bodyTopY + bodyHeight * 0.6);
-            ctx.stroke();
+            // Fishing rod: stepped pixel pole + hanging line
+            ctx.fillStyle = '#6B4226';
+            ctx.fillRect(x + w * 0.88, bodyTopY + bodyHeight * 0.45, 3, 5);
+            ctx.fillRect(x + w * 1.0, bodyTopY + bodyHeight * 0.25, 3, 6);
+            ctx.fillRect(x + w * 1.12, bodyTopY + bodyHeight * 0.05, 3, 6);
+            ctx.fillRect(x + w * 1.24, y - h * 0.12, 3, 6);
+            ctx.fillStyle = '#CCCCCC';
+            ctx.fillRect(x + w * 1.26, y - h * 0.12 + 6, 1.5, bodyTopY + bodyHeight * 0.6 - (y - h * 0.12) - 6);
         } else if (this.name === 'Sparky') {
             // Student in the Sparky suit: all maroon, gold horns, gold pitchfork
             npcShirtColor = '#8C1D40'; npcTrouserColor = '#8C1D40'; npcHeadColor = '#8C1D40';
             ctx.fillStyle = '#FFC627';
-            // Horns
-            ctx.beginPath();
-            ctx.moveTo(x + w * 0.28, y + 1);
-            ctx.lineTo(x + w * 0.32, y - 5);
-            ctx.lineTo(x + w * 0.38, y + 1);
-            ctx.closePath(); ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(x + w * 0.62, y + 1);
-            ctx.lineTo(x + w * 0.68, y - 5);
-            ctx.lineTo(x + w * 0.72, y + 1);
-            ctx.closePath(); ctx.fill();
+            // Horns: stepped pixel spikes
+            ctx.fillRect(x + w * 0.28, y - 1, 4, 3);
+            ctx.fillRect(x + w * 0.3, y - 5, 2, 4);
+            ctx.fillRect(x + w * 0.64, y - 1, 4, 3);
+            ctx.fillRect(x + w * 0.68, y - 5, 2, 4);
             // Pitchfork held at the side
             const fx = x + w + 1, fy = y + 2;
             ctx.fillRect(fx, fy, 2, h * 0.8);           // shaft
@@ -172,33 +174,27 @@ export class NPC extends Entity {
             // Bushy beard
             ctx.fillStyle = '#C0C0C0';
             ctx.fillRect(x + w * 0.15, y + headHeight * 0.5, w * 0.7, headHeight * 0.6);
-            // Pickaxe on back
+            // Pickaxe on back: stepped pixel handle + head
             ctx.fillStyle = '#8B8682';
-            ctx.save();
-            ctx.translate(x + w * 0.8, bodyTopY);
-            ctx.rotate(0.3);
-            ctx.fillRect(0, 0, 3, bodyHeight * 0.7);
+            ctx.fillRect(x + w * 0.78, bodyTopY + 2, 3, 6);
+            ctx.fillRect(x + w * 0.84, bodyTopY + 7, 3, 6);
+            ctx.fillRect(x + w * 0.9, bodyTopY + 12, 3, 5);
             ctx.fillStyle = '#A9A9A9';
-            ctx.fillRect(-3, -2, 9, 4);
-            ctx.restore();
+            ctx.fillRect(x + w * 0.72, bodyTopY - 2, 12, 4);
         } else if (this.name === 'UFO Watcher') {
             npcShirtColor = '#2F4F4F'; npcTrouserColor = '#3A3A3A';
-            // Foil hat
+            // Foil hat: stepped pixel cone
             ctx.fillStyle = '#C0C8D0';
-            ctx.beginPath();
-            ctx.moveTo(x + w * 0.2, y + headHeight * 0.35);
-            ctx.lineTo(x + w * 0.5, y - 5);
-            ctx.lineTo(x + w * 0.8, y + headHeight * 0.35);
-            ctx.closePath(); ctx.fill();
-            // Telescope pointing up
-            ctx.fillStyle = '#555';
-            ctx.save();
-            ctx.translate(x + w * 0.9, bodyTopY + 4);
-            ctx.rotate(-0.9);
-            ctx.fillRect(0, 0, 4, bodyHeight * 0.7);
-            ctx.fillStyle = '#777';
-            ctx.fillRect(-1, 0, 6, 4);
-            ctx.restore();
+            ctx.fillRect(x + w * 0.2, y + headHeight * 0.2, w * 0.6, 3);
+            ctx.fillRect(x + w * 0.32, y - 1, w * 0.36, headHeight * 0.35);
+            ctx.fillRect(x + w * 0.42, y - 5, w * 0.16, 5);
+            // Telescope: stepped diagonal tube aimed at the sky
+            ctx.fillStyle = '#555555';
+            ctx.fillRect(x + w * 0.82, bodyTopY + 8, 4, 4);
+            ctx.fillRect(x + w * 0.94, bodyTopY + 4, 4, 4);
+            ctx.fillRect(x + w * 1.06, bodyTopY, 4, 4);
+            ctx.fillStyle = '#777777';
+            ctx.fillRect(x + w * 1.14, bodyTopY - 4, 5, 5);
         } else if (this.name === 'Photographer') {
             npcShirtColor = '#8FBC8F'; npcTrouserColor = '#5F5F5F';
             // Backwards cap
@@ -228,21 +224,16 @@ export class NPC extends Entity {
             // Bandana
             ctx.fillStyle = '#CC2222';
             ctx.fillRect(x + w * 0.2, y - 1, w * 0.6, headHeight * 0.35);
-            // Guitar strapped across
-            ctx.save();
-            ctx.translate(x + w * 0.15, bodyTopY + bodyHeight * 0.15);
-            ctx.rotate(0.5);
+            // Guitar strapped across: pixel body + stepped neck
             ctx.fillStyle = '#8B5A2B';
-            ctx.beginPath();
-            ctx.ellipse(0, bodyHeight * 0.35, 7, 9, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#5C3D1E';
-            ctx.fillRect(-1.5, -bodyHeight * 0.25, 3, bodyHeight * 0.6);
+            ctx.fillRect(x - 4, bodyTopY + bodyHeight * 0.35, 12, 8);
+            ctx.fillRect(x - 2, bodyTopY + bodyHeight * 0.28, 8, 4);
             ctx.fillStyle = '#2A1A0A';
-            ctx.beginPath();
-            ctx.arc(0, bodyHeight * 0.35, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
+            ctx.fillRect(x - 1, bodyTopY + bodyHeight * 0.38, 4, 4);
+            ctx.fillStyle = '#5C3D1E';
+            ctx.fillRect(x + 5, bodyTopY + bodyHeight * 0.22, 3, 4);
+            ctx.fillRect(x + 8, bodyTopY + bodyHeight * 0.12, 3, 4);
+            ctx.fillRect(x + 11, bodyTopY + bodyHeight * 0.02, 4, 4);
         } else if (this.name === 'Petroglyph Researcher' || this.name === 'Grad Student') {
             npcShirtColor = '#4682B4';
             if (this.name === 'Grad Student') npcShirtColor = '#D2691E';

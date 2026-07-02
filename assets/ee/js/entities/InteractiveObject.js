@@ -94,12 +94,11 @@ export class InteractiveObject extends Entity {
         const trunkX = x + w * 0.32, trunkW = w * 0.36;
         const trunkTop = variant === 2 ? y + h * 0.25 : y;
 
-        // Trunk with rounded crown
+        // Trunk with stepped crown
         ctx.fillStyle = green;
         ctx.fillRect(trunkX, trunkTop + trunkW / 2, trunkW, y + h - trunkTop - trunkW / 2);
-        ctx.beginPath();
-        ctx.arc(trunkX + trunkW / 2, trunkTop + trunkW / 2, trunkW / 2, Math.PI, 0);
-        ctx.fill();
+        ctx.fillRect(trunkX + 2, trunkTop + trunkW * 0.2, trunkW - 4, trunkW * 0.35);
+        ctx.fillRect(trunkX + trunkW * 0.25, trunkTop, trunkW * 0.5, trunkW * 0.25);
 
         // Arms: out then up, rounded tips
         const arm = (ax, ay, dir, len) => {
@@ -107,9 +106,7 @@ export class InteractiveObject extends Entity {
             ctx.fillRect(dir > 0 ? ax : ax - w * 0.22, ay, w * 0.22, 7);          // elbow out
             const upX = dir > 0 ? ax + w * 0.22 - 7 : ax - w * 0.22;
             ctx.fillRect(upX, ay - len, 7, len + 7);                               // arm up
-            ctx.beginPath();
-            ctx.arc(upX + 3.5, ay - len, 3.5, Math.PI, 0);
-            ctx.fill();
+            ctx.fillRect(upX + 1, ay - len - 3, 5, 3);                             // stepped tip
             ctx.fillStyle = dark;                                                  // arm rib
             ctx.fillRect(upX + 2, ay - len, 1, len);
         };
@@ -188,20 +185,36 @@ export class InteractiveObject extends Entity {
         }
     }
 
+    // Shade a hex color toward black (f < 0) or white (f > 0)
+    shade(hex, f) {
+        const n = parseInt(hex.slice(1), 16);
+        const ch = (v) => Math.max(0, Math.min(255, Math.round(v + (f > 0 ? (255 - v) : v) * f)));
+        return `rgb(${ch((n >> 16) & 255)},${ch((n >> 8) & 255)},${ch(n & 255)})`;
+    }
+
     drawRock(ctx) {
-        const rockColor = '#7D7064', darkRockColor = '#5F534B';
-        ctx.fillStyle = rockColor;
-        ctx.beginPath();
-        ctx.moveTo(this.x + this.width * 0.2, this.y + this.height);
-        ctx.quadraticCurveTo(this.x, this.y + this.height * 0.5, this.x + this.width * 0.3, this.y + this.height * 0.2);
-        ctx.quadraticCurveTo(this.x + this.width * 0.5, this.y, this.x + this.width * 0.8, this.y + this.height * 0.3);
-        ctx.quadraticCurveTo(this.x + this.width, this.y + this.height * 0.7, this.x + this.width * 0.7, this.y + this.height);
-        ctx.closePath(); ctx.fill();
-        ctx.fillStyle = darkRockColor;
-        ctx.beginPath();
-        ctx.moveTo(this.x + this.width * 0.3, this.y + this.height);
-        ctx.quadraticCurveTo(this.x + this.width * 0.5, this.y + this.height * 0.7, this.x + this.width * 0.7, this.y + this.height);
-        ctx.fill();
+        const base = this.objData.color || '#7D7064';
+        const P = { b: base, d: this.shade(base, -0.3), l: this.shade(base, 0.22) };
+        const variant = (Math.round(this.x) * 3 + Math.round(this.y)) % 2;
+        const rows = variant === 0 ? [
+            "....dddd....",
+            "..ddbbbbdd..",
+            ".dblbbbbbbd.",
+            ".dbllbbbbbbd",
+            "dbbbbbbbbdbd",
+            "dbbbbbbdbbbd",
+            ".ddbbddbbdd.",
+        ] : [
+            "..ddd..dd...",
+            ".dbbbddbbd..",
+            "dblbbbbbbbd.",
+            "dbllbbbbbbbd",
+            "dbbbbbdbbbbd",
+            ".dbbbbbbdbd.",
+            "..dddddddd..",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
     drawChest(ctx) {
@@ -214,11 +227,9 @@ export class InteractiveObject extends Entity {
         if (!this.objData.opened) {
             ctx.fillRect(this.x - 2, this.y, this.width + 4, 6);
         } else {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(-0.8);
-            ctx.fillRect(0, 0, this.width, 6);
-            ctx.restore();
+            // Open lid: stepped back panel
+            ctx.fillRect(this.x - 2, this.y - 9, this.width + 4, 4);
+            ctx.fillRect(this.x, this.y - 5, this.width, 3);
         }
         ctx.fillStyle = chestBandColor;
         ctx.fillRect(this.x, this.y + this.height * 0.3, this.width, 4);
@@ -256,47 +267,33 @@ export class InteractiveObject extends Entity {
     drawWaterSource(ctx) {
         const x = this.x, y = this.y, w = this.width, h = this.height;
         const t = this.game.animationFrame;
-        const cx = x + w / 2, cy = y + h / 2;
-        // Muddy bank
-        ctx.fillStyle = '#8A7355';
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, w * 0.62, h * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Water
-        ctx.fillStyle = '#2A5A8A';
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, w * 0.5, h * 0.38, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#3B77AC';
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, w * 0.36, h * 0.26, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Expanding ripple rings
-        for (let r = 0; r < 2; r++) {
-            const phase = ((t + r * 45) % 90) / 90;
-            ctx.strokeStyle = `rgba(200, 230, 255, ${0.5 * (1 - phase)})`;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.ellipse(cx, cy, w * 0.1 + phase * w * 0.36, (h * 0.07 + phase * h * 0.26), 0, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-        // Sun glints
+        const P = { k: '#8A7355', b: '#2A5A8A', m: '#3B77AC', M: '#4E8FC4', g: '#3A6B2A' };
+        const F = [[
+            "...kkkkkkkkkk..g",
+            ".kkbbbbbbbbbbkgg",
+            "kbbmmmmmmmmmbbkg",
+            "kbmmMMmmmmMmmbkk",
+            "kbbmmmmMMmmmbbk.",
+            ".kkbbbbbbbbbbkk.",
+            "...kkkkkkkkkk...",
+        ], [
+            "...kkkkkkkkkk..g",
+            ".kkbbbbbbbbbbkgg",
+            "kbbmmmMMmmmmbbkg",
+            "kbmmmmmmmMMmmbkk",
+            "kbbmMMmmmmmmbbk.",
+            ".kkbbbbbbbbbbkk.",
+            "...kkkkkkkkkk...",
+        ]];
+        const frame = Math.floor(t / 20) % 2;
+        const rows = F[frame];
+        const scale = w / rows[0].length;
+        this.drawPixels(ctx, rows, P, x, y + h - rows.length * scale, scale);
+        // Sun glint pixel
         if (t % 50 < 12) {
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(cx - 6 + (t % 3) * 4, cy - 3, 2, 2);
-            ctx.fillRect(cx + 4, cy + 4, 2, 2);
+            ctx.fillRect(Math.round(x + w * 0.4 + (t % 3) * 4), Math.round(y + h * 0.4), 2, 2);
         }
-        // Reeds on the bank
-        ctx.strokeStyle = '#3A6B2A';
-        ctx.lineWidth = 1.5;
-        const sway = Math.sin(t * 0.04) * 1.5;
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.85, cy + h * 0.3);
-        ctx.lineTo(x + w * 0.85 + sway, cy - h * 0.15);
-        ctx.moveTo(x + w * 0.92, cy + h * 0.28);
-        ctx.lineTo(x + w * 0.94 + sway, cy - h * 0.05);
-        ctx.stroke();
-        ctx.lineWidth = 1;
     }
 
     drawDoorway(ctx) {
@@ -382,30 +379,32 @@ export class InteractiveObject extends Entity {
     drawSkyHoleWall(ctx) {
         ctx.fillStyle = '#A08C78';
         ctx.fillRect(this.x, this.y, this.width, this.height);
+        // Circular port, stepped like a low-res circle
         ctx.fillStyle = '#000020';
-        ctx.beginPath();
-        ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 6, 0, Math.PI * 2);
-        ctx.fill();
+        const px = Math.round(this.x + this.width / 2), py = Math.round(this.y + this.height / 2);
+        ctx.fillRect(px - 6, py - 3, 12, 6);
+        ctx.fillRect(px - 3, py - 6, 6, 12);
+        ctx.fillRect(px - 5, py - 5, 10, 10);
     }
 
     drawPhoenixStatue(ctx) {
-        const mainColor = '#FF8C00', accentColor = '#FF4500';
-        ctx.fillStyle = mainColor;
-        ctx.beginPath();
-        ctx.moveTo(this.x + this.width / 2, this.y + this.height * 0.2);
-        ctx.lineTo(this.x, this.y + this.height * 0.5);
-        ctx.lineTo(this.x + this.width * 0.1, this.y + this.height * 0.1);
-        ctx.closePath(); ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(this.x + this.width / 2, this.y + this.height * 0.2);
-        ctx.lineTo(this.x + this.width, this.y + this.height * 0.5);
-        ctx.lineTo(this.x + this.width * 0.9, this.y + this.height * 0.1);
-        ctx.closePath(); ctx.fill();
-        ctx.fillStyle = accentColor;
-        ctx.fillRect(this.x + this.width * 0.4, this.y + this.height * 0.1, this.width * 0.2, this.height * 0.8);
-        ctx.beginPath();
-        ctx.arc(this.x + this.width / 2, this.y + this.height * 0.1, this.width * 0.15, 0, Math.PI * 2);
-        ctx.fill();
+        const P = { o: '#FF8C00', r: '#FF4500', y: '#FFD24A', s: '#7A7068' };
+        const rows = [
+            "......rr......",
+            ".....ryyr.....",
+            "o.....rr.....o",
+            "oo...rrrr...oo",
+            "ooo..rrrr..ooo",
+            ".oooorrrroooo.",
+            "..oo.rrrr.oo..",
+            ".....rrrr.....",
+            "....rrrrrr....",
+            "...rr.rr.rr...",
+            ".....ssss.....",
+            "....ssssss....",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
     drawFirePit(ctx) {
@@ -564,257 +563,153 @@ export class InteractiveObject extends Entity {
     }
 
     drawCrater(ctx) {
-        ctx.fillStyle = '#5B3A29';
-        ctx.beginPath();
-        ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 2.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#40281C';
-        ctx.beginPath();
-        ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 3, this.height / 4, 0, 0, Math.PI * 2);
-        ctx.fill();
+        const P = { r: '#5B3A29', d: '#40281C', k: '#2E1C12' };
+        const rows = [
+            "....rrrrrrrrrrrr....",
+            "..rrrrddddddddrrrr..",
+            ".rrddddkkkkkkddddrr.",
+            ".rrddkkkkkkkkkkddrr.",
+            "..rrddddkkkkddddrr..",
+            "....rrrrddddrrrr....",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
     drawTumbleweed(ctx) {
-        const x = this.x, y = this.y, w = this.width, h = this.height;
         const anim = this.game.animationFrame;
-        const roll = Math.sin(anim * 0.04) * 2;
-        const bounce = Math.abs(Math.sin(anim * 0.06)) * 3;
-        ctx.save();
-        ctx.translate(x + w / 2 + roll, y + h / 2 - bounce);
-        ctx.rotate(anim * 0.02);
-        ctx.strokeStyle = '#8B7355';
-        ctx.lineWidth = 1.5;
-        for (let i = 0; i < 8; i++) {
-            const angle = (i / 8) * Math.PI * 2;
-            const r = w * 0.4;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.quadraticCurveTo(
-                Math.cos(angle + 0.3) * r * 0.6,
-                Math.sin(angle + 0.3) * r * 0.6,
-                Math.cos(angle) * r,
-                Math.sin(angle) * r
-            );
-            ctx.stroke();
-        }
-        ctx.fillStyle = '#A08050';
-        ctx.beginPath();
-        ctx.arc(0, 0, w * 0.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        const roll = Math.round(Math.sin(anim * 0.04) * 2);
+        const bounce = Math.round(Math.abs(Math.sin(anim * 0.06)) * 3);
+        const P = { t: '#8B7355', c: '#A08050', d: '#6E5A42' };
+        // Two "rotation" frames: the twig pattern flips, reading as a rolling ball
+        const F = [[
+            "..t.tt.t..",
+            ".t.d..d.t.",
+            "td.tcct.dt",
+            ".t.cccc.t.",
+            "td.tcct.dt",
+            ".t.d..d.t.",
+            "..t.tt.t..",
+        ], [
+            ".t..tt..t.",
+            "t.d.tt.d.t",
+            ".d.tcct.d.",
+            "tt.cccc.tt",
+            ".d.tcct.d.",
+            "t.d.tt.d.t",
+            ".t..tt..t.",
+        ]];
+        const frame = Math.floor(anim / 10) % 2;
+        const rows = F[frame];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x + roll, this.y + this.height - rows.length * scale - bounce, scale);
     }
 
     drawDeadTree(ctx) {
-        const x = this.x, y = this.y, w = this.width, h = this.height;
-        // Trunk
-        ctx.fillStyle = '#5C3D2E';
-        ctx.fillRect(x + w * 0.35, y + h * 0.3, w * 0.3, h * 0.7);
-        // Bark texture
-        ctx.fillStyle = '#4A2F20';
-        ctx.fillRect(x + w * 0.4, y + h * 0.4, w * 0.05, h * 0.3);
-        ctx.fillRect(x + w * 0.55, y + h * 0.5, w * 0.05, h * 0.2);
-        // Left branch
-        ctx.fillStyle = '#6B4226';
-        ctx.save();
-        ctx.translate(x + w * 0.35, y + h * 0.35);
-        ctx.rotate(-0.5);
-        ctx.fillRect(0, 0, w * 0.45, 4);
-        // Twig
-        ctx.save();
-        ctx.translate(w * 0.35, 0);
-        ctx.rotate(-0.4);
-        ctx.fillRect(0, 0, w * 0.2, 3);
-        ctx.restore();
-        ctx.restore();
-        // Right branch
-        ctx.save();
-        ctx.translate(x + w * 0.65, y + h * 0.4);
-        ctx.rotate(0.6);
-        ctx.fillRect(0, 0, w * 0.5, 4);
-        // Twig
-        ctx.save();
-        ctx.translate(w * 0.3, 0);
-        ctx.rotate(0.5);
-        ctx.fillRect(0, 0, w * 0.2, 3);
-        ctx.restore();
-        ctx.restore();
-        // Top broken branch
-        ctx.fillStyle = '#7A5438';
-        ctx.save();
-        ctx.translate(x + w * 0.45, y + h * 0.3);
-        ctx.rotate(-0.2);
-        ctx.fillRect(0, 0, 3, -h * 0.25);
-        ctx.restore();
+        const P = { b: '#5C3D2E', d: '#4A2F20', t: '#6B4226' };
+        const rows = [
+            ".t......t.",
+            ".tt....tt.",
+            "..t.t.tt..",
+            "..ttttt...",
+            "t..tbt....",
+            "tt.tbbt...",
+            "..ttbdb...",
+            "...bbdb...",
+            "...bdbb...",
+            "...bbdb...",
+            "...bdbb...",
+            "..bbbbbb..",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
     drawAnimalBones(ctx) {
-        const x = this.x, y = this.y, w = this.width, h = this.height;
-        ctx.strokeStyle = '#E8DCC8';
-        ctx.fillStyle = '#E8DCC8';
-        ctx.lineWidth = 2;
-        // Spine
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.1, y + h * 0.5);
-        ctx.lineTo(x + w * 0.7, y + h * 0.5);
-        ctx.stroke();
-        // Ribs
-        for (let i = 0; i < 4; i++) {
-            const rx = x + w * (0.2 + i * 0.12);
-            ctx.beginPath();
-            ctx.moveTo(rx, y + h * 0.5);
-            ctx.quadraticCurveTo(rx + 4, y + h * 0.1, rx + 8, y + h * 0.3);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(rx, y + h * 0.5);
-            ctx.quadraticCurveTo(rx + 4, y + h * 0.9, rx + 8, y + h * 0.7);
-            ctx.stroke();
-        }
-        // Skull
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.82, y + h * 0.5, w * 0.12, h * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#333';
-        ctx.fillRect(x + w * 0.85, y + h * 0.4, 2, 2);
-        ctx.lineWidth = 1;
+        const P = { w: '#E8DCC8', d: '#C8BCA0', k: '#333333' };
+        const rows = [
+            "...........ww",
+            ".w.w.w.w..www",
+            "wwwwwwwwww.wk",
+            ".w.w.w.w..www",
+            "..w...w....w.",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
     drawCampfireRemains(ctx) {
         const x = this.x, y = this.y, w = this.width, h = this.height;
         const anim = this.game.animationFrame;
-        // Ash circle
-        ctx.fillStyle = '#3A3A3A';
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h * 0.7, w * 0.45, h * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Charred logs
-        ctx.fillStyle = '#2A1A0A';
-        ctx.save();
-        ctx.translate(x + w * 0.3, y + h * 0.6);
-        ctx.rotate(0.3);
-        ctx.fillRect(0, 0, w * 0.5, 5);
-        ctx.restore();
-        ctx.save();
-        ctx.translate(x + w * 0.2, y + h * 0.5);
-        ctx.rotate(-0.4);
-        ctx.fillRect(0, 0, w * 0.55, 4);
-        ctx.restore();
-        // Ring of stones
-        ctx.fillStyle = '#666';
-        for (let i = 0; i < 6; i++) {
-            const angle = (i / 6) * Math.PI * 2;
-            const sx = x + w / 2 + Math.cos(angle) * w * 0.38;
-            const sy = y + h * 0.7 + Math.sin(angle) * h * 0.25;
-            ctx.fillRect(sx - 3, sy - 2, 6, 4);
-        }
-        // Faint smoke wisps
+        const P = { s: '#666666', d: '#4A4A4A', a: '#3A3A3A', L: '#2A1A0A' };
+        const rows = [
+            "..s..ss..s..",
+            ".saaaaaaaas.",
+            "saaLLaaLLaas",
+            "saLLaaaaLLas",
+            ".saaLLLLaas.",
+            "..ss.dd.ss..",
+        ];
+        const scale = w / rows[0].length;
+        this.drawPixels(ctx, rows, P, x, y + h - rows.length * scale, scale);
+        // Pixel smoke puffs drifting up
         if (anim % 120 < 80) {
-            ctx.fillStyle = 'rgba(150, 150, 150, 0.3)';
-            const smokeY = y + h * 0.3 - (anim % 40) * 0.5;
-            const drift = Math.sin(anim * 0.05) * 3;
-            ctx.beginPath();
-            ctx.arc(x + w / 2 + drift, smokeY, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x + w / 2 - drift * 0.5, smokeY - 8, 2, 0, Math.PI * 2);
-            ctx.fill();
+            const rise = (anim % 40) * 0.5;
+            const drift = Math.round(Math.sin(anim * 0.05) * 3);
+            ctx.fillStyle = 'rgba(150, 150, 150, 0.35)';
+            ctx.fillRect(Math.round(x + w / 2 + drift), Math.round(y + h * 0.2 - rise), 3, 3);
+            ctx.fillRect(Math.round(x + w / 2 - drift * 0.5), Math.round(y + h * 0.2 - rise - 8), 2, 2);
         }
     }
 
     drawDesertFlower(ctx) {
-        const x = this.x, y = this.y, w = this.width, h = this.height;
         const anim = this.game.animationFrame;
-        const sway = Math.sin(anim * 0.03) * 1.5;
-        // Stem
-        ctx.strokeStyle = '#3A6B2A';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(x + w / 2, y + h);
-        ctx.quadraticCurveTo(x + w / 2 + sway, y + h * 0.5, x + w / 2 + sway * 0.5, y + h * 0.3);
-        ctx.stroke();
-        // Leaves
-        ctx.fillStyle = '#4A8B3A';
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2 + sway * 0.3 - 4, y + h * 0.65, 4, 2, -0.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2 + sway * 0.5 + 4, y + h * 0.55, 4, 2, 0.5, 0, Math.PI * 2);
-        ctx.fill();
-        // Petals
-        const cx = x + w / 2 + sway * 0.5, cy = y + h * 0.25;
-        const petalColors = ['#FF69B4', '#FF85C2', '#FF5BA0'];
-        for (let i = 0; i < 5; i++) {
-            const angle = (i / 5) * Math.PI * 2 + anim * 0.005;
-            ctx.fillStyle = petalColors[i % 3];
-            ctx.beginPath();
-            ctx.ellipse(
-                cx + Math.cos(angle) * 4,
-                cy + Math.sin(angle) * 4,
-                3, 5, angle, 0, Math.PI * 2
-            );
-            ctx.fill();
-        }
-        // Center
-        ctx.fillStyle = '#FFD700';
-        ctx.beginPath();
-        ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.lineWidth = 1;
+        const sway = Math.round(Math.sin(anim * 0.03) * 1.5);
+        const P = { p: '#FF69B4', P: '#FF85C2', y: '#FFD700', g: '#3A6B2A', l: '#4A8B3A' };
+        const rows = [
+            ".pPp.",
+            "pPyPp",
+            ".ppp.",
+            "..g..",
+            ".lgl.",
+            "..g..",
+            "..g..",
+        ];
+        const scale = this.width / rows[0].length;
+        // Head sways, base stays planted
+        this.drawPixels(ctx, rows.slice(0, 3), P, this.x + sway, this.y + this.height - rows.length * scale, scale);
+        this.drawPixels(ctx, rows.slice(3), P, this.x, this.y + this.height - (rows.length - 3) * scale, scale);
     }
 
     drawTrailMarker(ctx) {
-        const x = this.x, y = this.y, w = this.width, h = this.height;
-        // Stacked stones (cairn)
-        ctx.fillStyle = '#8B8178';
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h * 0.9, w * 0.45, h * 0.1, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#7A7068';
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h * 0.72, w * 0.38, h * 0.1, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#696058';
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h * 0.55, w * 0.3, h * 0.09, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#585048';
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h * 0.4, w * 0.22, h * 0.08, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#484038';
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h * 0.27, w * 0.15, h * 0.06, 0, 0, Math.PI * 2);
-        ctx.fill();
+        const P = { a: '#8B8178', b: '#7A7068', c: '#696058', d: '#585048', e: '#484038' };
+        const rows = [
+            "...ee.....",
+            "..eeee....",
+            "..dddd....",
+            ".dddddd...",
+            ".cccccc...",
+            "cccccccc..",
+            ".bbbbbbb..",
+            "bbbbbbbbb.",
+            "aaaaaaaaaa",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
     drawSandDune(ctx) {
-        const x = this.x, y = this.y, w = this.width, h = this.height;
-        // Main dune shape
-        ctx.fillStyle = '#D4B483';
-        ctx.beginPath();
-        ctx.moveTo(x, y + h);
-        ctx.quadraticCurveTo(x + w * 0.25, y, x + w * 0.5, y + h * 0.3);
-        ctx.quadraticCurveTo(x + w * 0.75, y + h * 0.1, x + w, y + h);
-        ctx.closePath();
-        ctx.fill();
-        // Wind lines
-        ctx.strokeStyle = '#C4A473';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.15, y + h * 0.6);
-        ctx.quadraticCurveTo(x + w * 0.35, y + h * 0.45, x + w * 0.55, y + h * 0.55);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.4, y + h * 0.75);
-        ctx.quadraticCurveTo(x + w * 0.6, y + h * 0.6, x + w * 0.8, y + h * 0.7);
-        ctx.stroke();
-        // Highlight
-        ctx.fillStyle = 'rgba(255, 255, 230, 0.15)';
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.1, y + h);
-        ctx.quadraticCurveTo(x + w * 0.25, y + h * 0.1, x + w * 0.45, y + h * 0.4);
-        ctx.lineTo(x + w * 0.3, y + h);
-        ctx.closePath();
-        ctx.fill();
+        const P = { s: '#D4B483', d: '#C4A473', l: '#E2CA9A' };
+        const rows = [
+            ".....lll..ll....",
+            "...llsssllssl...",
+            "..lssssssssssl..",
+            ".lssdssssssdssl.",
+            "lssssssdsssssssl",
+            "ssdssssssssdssss",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
     drawOldBuilding(ctx) {
@@ -906,30 +801,25 @@ export class InteractiveObject extends Entity {
             ctx.lineTo(x + w * 0.05 + i * (w * 0.9 / 4), y + h * 0.7);
             ctx.stroke();
         }
-        // Intact wheel
-        ctx.strokeStyle = '#3A2A18';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(x + w * 0.75, y + h * 0.78, h * 0.22, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.75 - h * 0.22, y + h * 0.78);
-        ctx.lineTo(x + w * 0.75 + h * 0.22, y + h * 0.78);
-        ctx.moveTo(x + w * 0.75, y + h * 0.56);
-        ctx.lineTo(x + w * 0.75, y + h);
-        ctx.stroke();
-        // Broken wheel on the ground
-        ctx.beginPath();
-        ctx.arc(x + w * 0.15, y + h * 0.95, h * 0.18, Math.PI, Math.PI * 2);
-        ctx.stroke();
-        ctx.lineWidth = 1;
-        // Tilted tongue beam
+        // Intact wheel: blocky ring with cross spokes
+        const wc = '#3A2A18';
+        const wx = x + w * 0.75, wy = y + h * 0.78, r = h * 0.22;
+        ctx.fillStyle = wc;
+        ctx.fillRect(Math.round(wx - r), Math.round(wy - r * 0.5), 3, r);           // left rim
+        ctx.fillRect(Math.round(wx + r - 3), Math.round(wy - r * 0.5), 3, r);       // right rim
+        ctx.fillRect(Math.round(wx - r * 0.5), Math.round(wy - r), r, 3);           // top rim
+        ctx.fillRect(Math.round(wx - r * 0.5), Math.round(wy + r - 3), r, 3);       // bottom rim
+        ctx.fillRect(Math.round(wx - r), Math.round(wy - 1), r * 2, 3);             // spoke
+        ctx.fillRect(Math.round(wx - 1), Math.round(wy - r), 3, r * 2);             // spoke
+        // Broken wheel half-buried
+        ctx.fillRect(Math.round(x + w * 0.06), Math.round(y + h * 0.88), h * 0.36, 3);
+        ctx.fillRect(Math.round(x + w * 0.06), Math.round(y + h * 0.8), 3, h * 0.12);
+        ctx.fillRect(Math.round(x + w * 0.06 + h * 0.36 - 3), Math.round(y + h * 0.8), 3, h * 0.12);
+        // Fallen tongue beam, stepped diagonal
         ctx.fillStyle = '#4A2F18';
-        ctx.save();
-        ctx.translate(x, y + h * 0.6);
-        ctx.rotate(0.4);
-        ctx.fillRect(0, 0, w * 0.3, 3);
-        ctx.restore();
+        ctx.fillRect(x, y + h * 0.72, 8, 3);
+        ctx.fillRect(x + 6, y + h * 0.66, 8, 3);
+        ctx.fillRect(x + 12, y + h * 0.6, 8, 3);
     }
 
     drawBarrel(ctx) {
@@ -1028,86 +918,64 @@ export class InteractiveObject extends Entity {
     }
 
     drawMineCart(ctx) {
-        const x = this.x, y = this.y, w = this.width, h = this.height;
-        // Body
-        ctx.fillStyle = '#4A4A52';
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + w, y);
-        ctx.lineTo(x + w * 0.85, y + h * 0.7);
-        ctx.lineTo(x + w * 0.15, y + h * 0.7);
-        ctx.closePath(); ctx.fill();
-        // Ore inside
-        ctx.fillStyle = '#B87333';
-        ctx.fillRect(x + w * 0.2, y - 4, w * 0.15, 5);
-        ctx.fillRect(x + w * 0.45, y - 6, w * 0.2, 7);
-        ctx.fillRect(x + w * 0.7, y - 3, w * 0.12, 4);
-        // Rivets
-        ctx.fillStyle = '#2A2A32';
-        ctx.fillRect(x + w * 0.1, y + h * 0.25, 3, 3);
-        ctx.fillRect(x + w * 0.85, y + h * 0.25, 3, 3);
-        // Wheels
-        ctx.fillStyle = '#1A1A1E';
-        ctx.beginPath();
-        ctx.arc(x + w * 0.28, y + h * 0.82, h * 0.18, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(x + w * 0.72, y + h * 0.82, h * 0.18, 0, Math.PI * 2);
-        ctx.fill();
+        const P = { b: '#4A4A52', d: '#2A2A32', o: '#B87333', O: '#D89153', k: '#1A1A1E' };
+        const rows = [
+            "..o.Oo..o..",
+            ".oOooOOoOo.",
+            "bbbbbbbbbbb",
+            "bdbbbbbbbdb",
+            "bbbbbbbbbbb",
+            ".bbbbbbbbb.",
+            ".bdbbbbbdb.",
+            "..kk...kk..",
+            ".kkkk.kkkk.",
+            "..kk...kk..",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
     drawCrystal(ctx) {
         const x = this.x, y = this.y, w = this.width, h = this.height;
         const pulse = 0.5 + Math.sin(this.game.animationFrame * 0.08) * 0.3;
-        // Glow halo
-        ctx.fillStyle = `rgba(102, 221, 238, ${pulse * 0.25})`;
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h * 0.6, w * 0.9, h * 0.6, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Crystal shards
-        const shards = [
-            { cx: 0.5, top: 0, base: 0.45, hw: 0.22 },
-            { cx: 0.25, top: 0.3, base: 0.35, hw: 0.14 },
-            { cx: 0.75, top: 0.25, base: 0.38, hw: 0.15 },
+        // Chunky square glow
+        ctx.fillStyle = `rgba(102, 221, 238, ${pulse * 0.18})`;
+        ctx.fillRect(x - w * 0.4, y - h * 0.2, w * 1.8, h * 1.4);
+        const P = { c: '#66DDEE', h: '#B8F4FA', d: '#3A9AAC' };
+        const rows = [
+            ".....hc.....",
+            ".....cc.....",
+            "....hccd....",
+            "..h.cccd.c..",
+            "..cchccd.cc.",
+            ".hcccccdhccd",
+            ".ccdcccdcccd",
+            "hcccdccccccd",
+            "ccccdccdcccd",
         ];
-        shards.forEach(s => {
-            ctx.fillStyle = `rgba(102, 221, 238, ${0.6 + pulse * 0.4})`;
-            ctx.beginPath();
-            ctx.moveTo(x + w * s.cx, y + h * s.top);
-            ctx.lineTo(x + w * (s.cx + s.hw), y + h);
-            ctx.lineTo(x + w * (s.cx - s.hw), y + h);
-            ctx.closePath(); ctx.fill();
-            // Highlight edge
-            ctx.strokeStyle = `rgba(220, 255, 255, ${pulse})`;
-            ctx.beginPath();
-            ctx.moveTo(x + w * s.cx, y + h * s.top);
-            ctx.lineTo(x + w * (s.cx - s.hw * 0.5), y + h * 0.85);
-            ctx.stroke();
-        });
+        const scale = w / rows[0].length;
+        this.drawPixels(ctx, rows, P, x, y + h - rows.length * scale, scale);
         // Twinkle
         if (this.game.animationFrame % 50 < 6) {
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(x + w * 0.5 - 1, y + h * 0.25, 2, 2);
+            ctx.fillRect(Math.round(x + w * 0.45), Math.round(y + h * 0.2), 2, 2);
         }
     }
 
     drawStalagmite(ctx) {
-        const x = this.x, y = this.y, w = this.width, h = this.height;
-        ctx.fillStyle = '#5F534B';
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.5, y);
-        ctx.lineTo(x + w * 0.75, y + h * 0.5);
-        ctx.lineTo(x + w, y + h);
-        ctx.lineTo(x, y + h);
-        ctx.lineTo(x + w * 0.3, y + h * 0.45);
-        ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#4A4038';
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.5, y);
-        ctx.lineTo(x + w * 0.62, y + h * 0.5);
-        ctx.lineTo(x + w * 0.72, y + h);
-        ctx.lineTo(x + w * 0.45, y + h);
-        ctx.closePath(); ctx.fill();
+        const P = { s: '#5F534B', d: '#4A4038' };
+        const rows = [
+            "....sd....",
+            "....sd....",
+            "...ssdd...",
+            "...ssdd...",
+            "..sssddd..",
+            "..sssddd..",
+            ".ssssdddd.",
+            "ssssssdddd",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
     drawSparkyStatue(ctx) {
@@ -1265,22 +1133,16 @@ export class InteractiveObject extends Entity {
         ctx.fillRect(x + w * 0.44, y + h * 0.38, 4, 2);
         ctx.fillRect(x + w * 0.44, y + h * 0.5, 4, 2);
         ctx.fillRect(x + w * 0.44, y + h * 0.62, 4, 2);
-        // Fronds
-        ctx.strokeStyle = '#3E7C4A';
-        ctx.lineWidth = 3;
+        // Fronds: stepped pixel segments fanning out
         const cx = x + w * 0.5, cy = y + h * 0.3;
         const fronds = [[-0.9, -0.3], [-0.5, -0.7], [0, -0.9], [0.5, -0.7], [0.9, -0.3]];
         fronds.forEach(([dx, dy]) => {
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + dx * w * 0.42 + sway, cy + dy * h * 0.24);
-            ctx.stroke();
-        });
-        ctx.lineWidth = 1;
-        // Frond tips
-        ctx.fillStyle = '#4E9C5A';
-        fronds.forEach(([dx, dy]) => {
-            ctx.fillRect(cx + dx * w * 0.42 + sway - 2, cy + dy * h * 0.24 - 2, 4, 4);
+            for (let s = 1; s <= 3; s++) {
+                const fx = cx + dx * w * 0.14 * s + (s === 3 ? Math.round(sway) : 0);
+                const fy = cy + dy * h * 0.08 * s;
+                ctx.fillStyle = s === 3 ? '#4E9C5A' : '#3E7C4A';
+                ctx.fillRect(Math.round(fx) - 2, Math.round(fy) - 2, 4, 4);
+            }
         });
     }
 
@@ -1288,40 +1150,33 @@ export class InteractiveObject extends Entity {
         const x = this.x, y = this.y, w = this.width, h = this.height;
         const hour = Math.floor((this.game.gameTime % 86400) / 3600);
         const dawnLight = hour >= 5 && hour < 8;
-        // Sandstone butte
-        ctx.fillStyle = '#C97B5A';
-        ctx.beginPath();
-        ctx.moveTo(x, y + h);
-        ctx.quadraticCurveTo(x + w * 0.05, y + h * 0.25, x + w * 0.3, y + h * 0.1);
-        ctx.quadraticCurveTo(x + w * 0.55, y - h * 0.05, x + w * 0.75, y + h * 0.15);
-        ctx.quadraticCurveTo(x + w * 1.0, y + h * 0.4, x + w, y + h);
-        ctx.closePath(); ctx.fill();
-        // Weathering bands
-        ctx.strokeStyle = '#B06A4C';
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.1, y + h * 0.55);
-        ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.45, x + w * 0.9, y + h * 0.6);
-        ctx.stroke();
-        // The hole
-        ctx.fillStyle = '#2A1A12';
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.5, y + h * 0.45, w * 0.13, h * 0.2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Dawn: light shaft through the opening onto the ground
+        // Sandstone butte, stepped like coarse strata
+        const P = { r: '#C97B5A', d: '#B06A4C', s: '#A05A40', k: '#2A1A12' };
+        const rows = [
+            "......rrrrrrrr......",
+            "....rrrrrrrrrrrr....",
+            "...rrrrrrrrrrrrrr...",
+            "..rrrrrrrrkkrrrrrr..",
+            "..rrddrrrkkkkrrrrr..",
+            ".rrrrrrrkkkkkkrrddr.",
+            ".rrrrrrrkkkkkkrrrrr.",
+            "rrddrrrrrkkkkrrrrrrr",
+            "rrrrrrrrrrkkrrrddrrr",
+            "rsrrrrddrrrrrrrrrrsr",
+            "rrrrsrrrrrrsrrrrrrrr",
+        ];
+        const scale = w / rows[0].length;
+        this.drawPixels(ctx, rows, P, x, y + h - rows.length * scale, scale);
+        // Dawn: stepped light shaft through the opening onto the ground
         if (dawnLight) {
             const flicker = 0.5 + Math.sin(this.game.animationFrame * 0.05) * 0.1;
             ctx.fillStyle = `rgba(255, 215, 120, ${flicker})`;
-            ctx.beginPath();
-            ctx.moveTo(x + w * 0.44, y + h * 0.38);
-            ctx.lineTo(x + w * 0.56, y + h * 0.38);
-            ctx.lineTo(x + w * 0.7, y + h + 10);
-            ctx.lineTo(x + w * 0.3, y + h + 10);
-            ctx.closePath(); ctx.fill();
+            ctx.fillRect(Math.round(x + w * 0.44), Math.round(y + h * 0.42), Math.round(w * 0.12), Math.round(h * 0.3));
+            ctx.fillRect(Math.round(x + w * 0.4), Math.round(y + h * 0.72), Math.round(w * 0.2), Math.round(h * 0.2));
+            ctx.fillRect(Math.round(x + w * 0.36), Math.round(y + h * 0.92), Math.round(w * 0.28), Math.round(h * 0.14) + 8);
             // Lit basin on the floor
-            ctx.fillStyle = `rgba(255, 240, 180, ${flicker + 0.2})`;
-            ctx.beginPath();
-            ctx.ellipse(x + w * 0.5, y + h + 6, w * 0.12, 4, 0, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillStyle = `rgba(255, 240, 180, ${Math.min(1, flicker + 0.2)})`;
+            ctx.fillRect(Math.round(x + w * 0.42), Math.round(y + h + 4), Math.round(w * 0.16), 4);
         }
     }
 
@@ -1398,9 +1253,8 @@ export class InteractiveObject extends Entity {
         }
         // Worn standing-spot at the base
         ctx.fillStyle = '#6B5B45';
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.5, y + h - 3, 10, 3, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(Math.round(x + w * 0.5) - 10, Math.round(y + h) - 6, 20, 4);
+        ctx.fillRect(Math.round(x + w * 0.5) - 6, Math.round(y + h) - 2, 12, 2);
     }
 
     drawSurveyFlag(ctx) {
@@ -1419,24 +1273,18 @@ export class InteractiveObject extends Entity {
     }
 
     drawLooterPit(ctx) {
-        const x = this.x, y = this.y, w = this.width, h = this.height;
-        // Spoil pile
-        ctx.fillStyle = '#A88B62';
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.78, y + h * 0.4, w * 0.22, h * 0.28, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // The pit
-        ctx.fillStyle = '#3A2B1A';
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.4, y + h * 0.6, w * 0.34, h * 0.32, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#241A0F';
-        ctx.beginPath();
-        ctx.ellipse(x + w * 0.4, y + h * 0.62, w * 0.24, h * 0.2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Discarded screen frame
-        ctx.strokeStyle = '#6B5B45';
-        ctx.strokeRect(x + w * 0.6, y + h * 0.75, w * 0.3, h * 0.2);
+        const P = { p: '#3A2B1A', k: '#241A0F', m: '#A88B62', f: '#6B5B45' };
+        const rows = [
+            "..........mm..",
+            ".........mmmm.",
+            "..pppp...mmmm.",
+            ".ppkkpp..mmmm.",
+            "ppkkkkpp..mm..",
+            ".ppkkpp.ffff..",
+            "..pppp..f..f..",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
     onInteract(player) {

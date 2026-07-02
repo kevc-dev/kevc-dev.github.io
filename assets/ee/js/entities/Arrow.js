@@ -29,17 +29,14 @@ export class Arrow extends Entity {
     }
 
     draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-        ctx.rotate(this.rotation);
+        // Pixel bolt: a chain of squares along the flight path, bright head first
+        const cx = this.x + this.width / 2, cy = this.y + this.height / 2;
+        const dx = Math.cos(this.rotation), dy = Math.sin(this.rotation);
         ctx.fillStyle = '#CD853F';
-        ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-        ctx.fillStyle = '#A9A9A9';
-        ctx.beginPath();
-        ctx.moveTo(this.width / 2, 0);
-        ctx.lineTo(this.width / 2 - 4, -this.height / 2 - 1);
-        ctx.lineTo(this.width / 2 - 4, this.height / 2 + 1);
-        ctx.closePath(); ctx.fill();
-        ctx.restore();
+        ctx.fillRect(Math.round(cx - dx * 8) - 1, Math.round(cy - dy * 8) - 1, 3, 3);
+        ctx.fillRect(Math.round(cx - dx * 4) - 1, Math.round(cy - dy * 4) - 1, 3, 3);
+        ctx.fillRect(Math.round(cx) - 2, Math.round(cy) - 2, 4, 4);
+        ctx.fillStyle = '#E8E4D8';
+        ctx.fillRect(Math.round(cx + dx * 4) - 2, Math.round(cy + dy * 4) - 2, 4, 4);
     }
 }

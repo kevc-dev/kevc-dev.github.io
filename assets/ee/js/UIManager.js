@@ -160,23 +160,19 @@ export class UIManager {
     }
 
     drawInteractionIndicator(x, y) {
-        // Bouncing arrow with outline. Reads clearly against any background
-        const bounce = Math.sin(this.game.animationFrame * 0.15) * 3;
-        const ty = y - 34 + bounce;
+        // Bouncing stepped pixel arrow with outline. Reads clearly on any background
+        const bounce = Math.round(Math.sin(this.game.animationFrame * 0.15) * 3);
+        const px = Math.round(x), py = Math.round(y - 40 + bounce);
+        // Black outline (one pixel larger each step)
         this.ctx.fillStyle = '#000000';
-        this.ctx.beginPath();
-        this.ctx.moveTo(x - 7, ty - 9);
-        this.ctx.lineTo(x + 7, ty - 9);
-        this.ctx.lineTo(x, ty + 2);
-        this.ctx.closePath();
-        this.ctx.fill();
+        this.ctx.fillRect(px - 8, py, 16, 5);
+        this.ctx.fillRect(px - 5, py + 4, 10, 4);
+        this.ctx.fillRect(px - 2, py + 7, 4, 4);
+        // Gold arrow steps
         this.ctx.fillStyle = '#FFDD33';
-        this.ctx.beginPath();
-        this.ctx.moveTo(x - 5, ty - 8);
-        this.ctx.lineTo(x + 5, ty - 8);
-        this.ctx.lineTo(x, ty);
-        this.ctx.closePath();
-        this.ctx.fill();
+        this.ctx.fillRect(px - 6, py + 1, 12, 3);
+        this.ctx.fillRect(px - 3, py + 4, 6, 3);
+        this.ctx.fillRect(px - 1, py + 7, 2, 2);
     }
 
     showSaveNotification() {

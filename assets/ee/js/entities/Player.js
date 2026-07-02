@@ -159,23 +159,20 @@ export class Player extends Entity {
             case 'up': baseAngle = -Math.PI / 2; break;
         }
         const swing = (progress - 0.5) * Math.PI * 0.9;
-        ctx.save();
-        ctx.translate(this.centerX, this.centerY);
-        ctx.rotate(baseAngle + swing);
-        // Stick
+        const a = baseAngle + swing;
+        const dx = Math.cos(a), dy = Math.sin(a);
+        // Stick as a chain of pixel segments along the swing angle
         ctx.fillStyle = '#8B5A2B';
-        ctx.fillRect(8, -2, 20, 4);
+        for (let s = 2; s <= 5; s++) {
+            ctx.fillRect(Math.round(this.centerX + dx * s * 5) - 2, Math.round(this.centerY + dy * s * 5) - 2, 4, 4);
+        }
         ctx.fillStyle = '#6B4226';
-        ctx.fillRect(24, -3, 6, 6);
-        ctx.restore();
-        // Swoosh arc
-        ctx.save();
-        ctx.strokeStyle = `rgba(255, 255, 255, ${0.6 * (1 - progress)})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(this.centerX, this.centerY, PLAYER_ATTACK_RANGE * 0.8, baseAngle - 0.6, baseAngle + swing);
-        ctx.stroke();
-        ctx.restore();
+        ctx.fillRect(Math.round(this.centerX + dx * 30) - 3, Math.round(this.centerY + dy * 30) - 3, 6, 6);
+        // Pixel swoosh trail behind the tip
+        const trail = a - 0.5;
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * (1 - progress)})`;
+        ctx.fillRect(Math.round(this.centerX + Math.cos(trail) * 26) - 1, Math.round(this.centerY + Math.sin(trail) * 26) - 1, 3, 3);
+        ctx.fillRect(Math.round(this.centerX + Math.cos(trail - 0.35) * 24) - 1, Math.round(this.centerY + Math.sin(trail - 0.35) * 24) - 1, 2, 2);
     }
 
     attack() {

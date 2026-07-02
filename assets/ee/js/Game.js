@@ -387,11 +387,12 @@ export class Game {
             ctx.fillStyle = c;
             ctx.fillRect(px, py + i * bandH, pw, bandH + 1);
         });
-        // Rising sun
+        // Rising sun, stepped semicircle
         ctx.fillStyle = '#FFD778';
-        ctx.beginPath();
-        ctx.arc(px + pw * 0.72, py + ph * 0.52, 26, Math.PI, 0);
-        ctx.fill();
+        const sunX = Math.round(px + pw * 0.72), sunY = Math.round(py + ph * 0.52);
+        ctx.fillRect(sunX - 26, sunY - 9, 52, 9);
+        ctx.fillRect(sunX - 20, sunY - 17, 40, 8);
+        ctx.fillRect(sunX - 12, sunY - 23, 24, 6);
         // Ground
         ctx.fillStyle = '#3A2A20';
         ctx.fillRect(px, py + ph * 0.55, pw, ph * 0.45);
@@ -476,12 +477,14 @@ export class Game {
         ctx.fillRect(nx + 5, ny + 5, nw, nh);
         ctx.fillStyle = '#E8DCB8';
         ctx.fillRect(nx, ny, nw, nh);
-        // Spiral binding
+        // Spiral binding, square rings
         ctx.fillStyle = '#4A4A4A';
         for (let i = 0; i < 9; i++) {
-            ctx.beginPath();
-            ctx.arc(nx + 8, ny + 16 + i * (nh - 32) / 8, 4, 0, Math.PI * 2);
-            ctx.fill();
+            const ry = Math.round(ny + 13 + i * (nh - 32) / 8);
+            ctx.fillRect(nx + 4, ry, 8, 8);
+            ctx.fillStyle = '#E8DCB8';
+            ctx.fillRect(nx + 6, ry + 2, 4, 4);
+            ctx.fillStyle = '#4A4A4A';
         }
         // Header
         ctx.fillStyle = '#4A3A28';
@@ -494,20 +497,20 @@ export class Game {
         ctx.fillStyle = '#4A3A28';
         const scorpStars = [[0,0],[14,-6],[28,-8],[42,-4],[52,6],[56,20],[50,32],[38,36]];
         scorpStars.forEach(([dx, dy]) => ctx.fillRect(cx + dx - 40, cy + dy - 10, 4, 4));
-        // The great star: a circle with rays
+        // The great star: stepped pixel burst
         const gx = cx + 44, gy = cy - 26;
-        ctx.beginPath();
-        ctx.arc(gx, gy, 9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#4A3A28';
-        ctx.lineWidth = 2;
-        for (let i = 0; i < 8; i++) {
-            const a = (i / 8) * Math.PI * 2;
-            ctx.beginPath();
-            ctx.moveTo(gx + Math.cos(a) * 13, gy + Math.sin(a) * 13);
-            ctx.lineTo(gx + Math.cos(a) * (20 + (i % 2) * 5), gy + Math.sin(a) * (20 + (i % 2) * 5));
-            ctx.stroke();
-        }
+        ctx.fillRect(gx - 9, gy - 3, 18, 6);
+        ctx.fillRect(gx - 3, gy - 9, 6, 18);
+        ctx.fillRect(gx - 6, gy - 6, 12, 12);
+        // Rays
+        ctx.fillRect(gx - 21, gy - 1, 8, 3);
+        ctx.fillRect(gx + 13, gy - 1, 8, 3);
+        ctx.fillRect(gx - 1, gy - 21, 3, 8);
+        ctx.fillRect(gx - 1, gy + 13, 3, 8);
+        ctx.fillRect(gx - 15, gy - 15, 4, 4);
+        ctx.fillRect(gx + 11, gy - 15, 4, 4);
+        ctx.fillRect(gx - 15, gy + 11, 4, 4);
+        ctx.fillRect(gx + 11, gy + 11, 4, 4);
         // Handwriting
         ctx.font = '7px "Press Start 2P"';
         ctx.fillText('what is this?', nx + 30, ny + nh - 40);
@@ -520,11 +523,12 @@ export class Game {
         ctx.fillRect(px, py, pw, ph * 0.5);
         ctx.fillStyle = '#E8A85A';
         ctx.fillRect(px, py + ph * 0.32, pw, ph * 0.18);
-        // Sun high
+        // Sun high, stepped disc
         ctx.fillStyle = '#FFF0C0';
-        ctx.beginPath();
-        ctx.arc(px + pw * 0.18, py + 44, 18, 0, Math.PI * 2);
-        ctx.fill();
+        const dsX = Math.round(px + pw * 0.18), dsY = py + 44;
+        ctx.fillRect(dsX - 9, dsY - 18, 18, 36);
+        ctx.fillRect(dsX - 15, dsY - 12, 30, 24);
+        ctx.fillRect(dsX - 18, dsY - 6, 36, 12);
         // Distant mountains
         ctx.fillStyle = '#8A5A6A';
         ctx.beginPath();
@@ -539,11 +543,10 @@ export class Game {
         // Ground
         ctx.fillStyle = '#D8B488';
         ctx.fillRect(px, py + ph * 0.5, pw, ph * 0.5);
-        // Long shadow
+        // Long shadow, blocky
         ctx.fillStyle = 'rgba(60, 40, 20, 0.35)';
-        ctx.beginPath();
-        ctx.ellipse(px + pw * 0.56, py + ph * 0.86, 70, 8, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(Math.round(px + pw * 0.56) - 70, Math.round(py + ph * 0.86) - 4, 140, 6);
+        ctx.fillRect(Math.round(px + pw * 0.56) - 45, Math.round(py + ph * 0.86) + 2, 90, 4);
         // Walker, back to us, hat on
         const wx = px + pw * 0.45, wy = py + ph * 0.56;
         ctx.fillStyle = '#8B4513';                    // hat
@@ -558,11 +561,10 @@ export class Game {
         ctx.fillStyle = '#4A3B31';                    // pants
         ctx.fillRect(wx + 8, wy + 34, 7, 18);
         ctx.fillRect(wx + 17, wy + 34, 7, 18);
-        // Canteen on hip
+        // Canteen on hip, stepped disc
         ctx.fillStyle = '#5A6A7A';
-        ctx.beginPath();
-        ctx.arc(wx + 28, wy + 30, 6, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(wx + 23, wy + 27, 11, 7);
+        ctx.fillRect(wx + 25, wy + 25, 7, 11);
         // Distant saguaro
         ctx.fillStyle = '#2D7D40';
         ctx.fillRect(px + pw * 0.82, py + ph * 0.56, 8, 40);

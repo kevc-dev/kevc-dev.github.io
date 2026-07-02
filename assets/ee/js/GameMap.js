@@ -57,25 +57,22 @@ export class GameMap {
                 ctx.fillStyle = d.light ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.08)';
                 ctx.fillRect(d.x, d.y, d.s, d.s);
             } else if (d.kind === 'stone') {
+                const s = Math.round(d.s);
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.13)';
-                ctx.beginPath();
-                ctx.ellipse(d.x, d.y, d.s, d.s * 0.7, 0, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(Math.round(d.x - s), Math.round(d.y - s * 0.6), s * 2, Math.max(2, Math.round(s * 1.2)));
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.09)';
-                ctx.beginPath();
-                ctx.ellipse(d.x - 1, d.y - 1, d.s * 0.5, d.s * 0.35, 0, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(Math.round(d.x - s * 0.5), Math.round(d.y - s * 0.6), s, Math.max(1, Math.round(s * 0.5)));
             } else {
-                // Dry grass tuft, swaying faintly
-                const sway = this.indoor ? 0 : Math.sin(t * 0.03 + d.phase) * 1.5;
-                ctx.strokeStyle = 'rgba(0, 0, 0, 0.14)';
-                ctx.lineWidth = 1;
-                for (let b = -1; b <= 1; b++) {
-                    ctx.beginPath();
-                    ctx.moveTo(d.x + b * 2, d.y);
-                    ctx.lineTo(d.x + b * 3 + sway, d.y - 6 - Math.abs(b));
-                    ctx.stroke();
-                }
+                // Dry grass tuft: pixel blades, top pixels sway
+                const sway = this.indoor ? 0 : Math.round(Math.sin(t * 0.03 + d.phase) * 2);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+                const bx = Math.round(d.x), by = Math.round(d.y);
+                ctx.fillRect(bx - 3, by - 4, 2, 4);
+                ctx.fillRect(bx, by - 6, 2, 6);
+                ctx.fillRect(bx + 3, by - 4, 2, 4);
+                ctx.fillRect(bx - 3 + sway, by - 6, 2, 2);
+                ctx.fillRect(bx + sway, by - 8, 2, 2);
+                ctx.fillRect(bx + 3 + sway, by - 6, 2, 2);
             }
         });
     }
@@ -154,10 +151,10 @@ export class GameMap {
             else if (e.type === 'enemy' && !e.isFlying) sw = e.width * 0.4;
             else if (shadowObjTypes.has(e.type)) sw = e.width * 0.45;
             if (sw > 0) {
+                // Blocky two-step blob shadow
                 ctx.fillStyle = 'rgba(40, 25, 10, 0.22)';
-                ctx.beginPath();
-                ctx.ellipse(e.centerX, e.y + e.height - 1, sw, 3.5, 0, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(Math.round(e.centerX - sw), Math.round(e.y + e.height - 3), Math.round(sw * 2), 3);
+                ctx.fillRect(Math.round(e.centerX - sw * 0.6), Math.round(e.y + e.height), Math.round(sw * 1.2), 2);
             }
         });
 
@@ -192,13 +189,13 @@ export class GameMap {
         const t = this.game.animationFrame;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
         for (let i = 0; i < 2; i++) {
-            const cx = ((t * (0.15 + i * 0.08) + i * 390) % (CANVAS_WIDTH + 260)) - 130;
+            const cx = Math.round(((t * (0.15 + i * 0.08) + i * 390) % (CANVAS_WIDTH + 260)) - 130);
             const cy = 90 + i * 210;
-            ctx.beginPath();
-            ctx.ellipse(cx, cy, 70, 24, 0, 0, Math.PI * 2);
-            ctx.ellipse(cx + 45, cy + 10, 50, 18, 0, 0, Math.PI * 2);
-            ctx.ellipse(cx - 40, cy + 8, 40, 15, 0, 0, Math.PI * 2);
-            ctx.fill();
+            // Blocky cloud silhouette: stacked offset rects
+            ctx.fillRect(cx - 70, cy - 10, 140, 22);
+            ctx.fillRect(cx - 40, cy - 20, 90, 12);
+            ctx.fillRect(cx - 90, cy + 2, 40, 14);
+            ctx.fillRect(cx + 60, cy - 2, 36, 16);
         }
     }
 
@@ -209,19 +206,21 @@ export class GameMap {
         if (progress > 0.35) return; // birds only cross occasionally
         const flockX = progress / 0.35 * (CANVAS_WIDTH + 120) - 60;
         const flockY = 50 + Math.sin(progress * 8) * 10;
-        ctx.strokeStyle = 'rgba(40, 30, 20, 0.75)';
-        ctx.lineWidth = 2;
+        ctx.fillStyle = 'rgba(40, 30, 20, 0.8)';
         for (let i = 0; i < 4; i++) {
-            const bx = flockX - i * 22 - (i % 2) * 8;
-            const by = flockY + (i % 2) * 12 + Math.floor(i / 2) * 7;
-            const flap = Math.sin(t * 0.25 + i) * 3;
-            ctx.beginPath();
-            ctx.moveTo(bx - 5, by - flap);
-            ctx.lineTo(bx, by + 2);
-            ctx.lineTo(bx + 5, by - flap);
-            ctx.stroke();
+            const bx = Math.round(flockX - i * 22 - (i % 2) * 8);
+            const by = Math.round(flockY + (i % 2) * 12 + Math.floor(i / 2) * 7);
+            const up = (Math.floor(t / 7) + i) % 2 === 0;
+            // Pixel bird: body + two 2px wings, up or down frame
+            ctx.fillRect(bx - 1, by, 3, 2);
+            if (up) {
+                ctx.fillRect(bx - 5, by - 3, 4, 2);
+                ctx.fillRect(bx + 2, by - 3, 4, 2);
+            } else {
+                ctx.fillRect(bx - 5, by + 2, 4, 2);
+                ctx.fillRect(bx + 2, by + 2, 4, 2);
+            }
         }
-        ctx.lineWidth = 1;
     }
 
     drawDustDevil(ctx) {
@@ -232,14 +231,17 @@ export class GameMap {
         const prog = p / 0.4;
         const x = -40 + prog * (CANVAS_WIDTH + 80);
         const baseY = 280 + Math.sin(prog * 5 + this.name.length) * 70;
+        // Blocky spinning column: stacked rects widening upward, alternating offset
         for (let i = 0; i < 7; i++) {
-            const yy = baseY - i * 10;
-            const r = 4 + i * 2.2;
-            const wob = Math.sin(t * 0.3 + i * 1.3) * (2 + i * 0.9);
+            const yy = Math.round(baseY - i * 9);
+            const hw = Math.round(4 + i * 2.2);
+            const wob = Math.round(Math.sin(t * 0.3 + i * 1.3) * (2 + i * 0.9));
             ctx.fillStyle = `rgba(210, 180, 140, ${0.26 - i * 0.025})`;
-            ctx.beginPath();
-            ctx.ellipse(x + wob, yy, r, r * 0.5, 0, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(Math.round(x) + wob - hw, yy - 4, hw * 2, 8);
+            // Spin streak pixels on alternating sides
+            ctx.fillStyle = `rgba(230, 205, 165, ${0.3 - i * 0.03})`;
+            const side = (Math.floor(t / 4) + i) % 2 === 0 ? -1 : 1;
+            ctx.fillRect(Math.round(x) + wob + side * hw - 2, yy - 2, 4, 4);
         }
         // Kicked-up grit at the base
         if (t % 6 === 0 && this.game.particles) this.game.particles.dust(x, baseY + 4);
@@ -253,29 +255,33 @@ export class GameMap {
             ctx.fillStyle = `rgba(255, 255, 230, ${twinkle})`;
             ctx.fillRect(star.x, star.y, star.size, star.size);
         });
-        // Moon
+        // Pixel crescent moon: stepped disc with a dark bite
+        const mx = CANVAS_WIDTH - 98, my = 42;
         ctx.fillStyle = '#E8E8D8';
-        ctx.beginPath();
-        ctx.arc(CANVAS_WIDTH - 80, 60, 18, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(mx + 9, my, 18, 36);
+        ctx.fillRect(mx + 3, my + 6, 30, 24);
+        ctx.fillRect(mx, my + 12, 36, 12);
         ctx.fillStyle = 'rgba(0, 0, 30, 0.85)';
-        ctx.beginPath();
-        ctx.arc(CANVAS_WIDTH - 88, 54, 15, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(mx + 3, my, 16, 28);
+        ctx.fillRect(mx - 2, my + 4, 14, 18);
+        // Crater pixels
+        ctx.fillStyle = '#C8C8B8';
+        ctx.fillRect(mx + 24, my + 10, 3, 3);
+        ctx.fillRect(mx + 20, my + 24, 4, 4);
+        ctx.fillRect(mx + 28, my + 18, 2, 2);
         // Occasional shooting star (or something else...?)
         const cycle = 900;
         const sp = (t % cycle) / cycle;
         if (sp < 0.06) {
             const p = sp / 0.06;
-            const sx = 100 + p * 300;
-            const sy = 40 + p * 90;
-            ctx.strokeStyle = `rgba(255, 255, 255, ${1 - p})`;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(sx - 22, sy - 8);
-            ctx.lineTo(sx, sy);
-            ctx.stroke();
-            ctx.lineWidth = 1;
+            const sx = Math.round(100 + p * 300);
+            const sy = Math.round(40 + p * 90);
+            ctx.fillStyle = `rgba(255, 255, 255, ${1 - p})`;
+            ctx.fillRect(sx, sy, 3, 3);
+            ctx.fillStyle = `rgba(255, 255, 255, ${(1 - p) * 0.6})`;
+            ctx.fillRect(sx - 7, sy - 3, 3, 3);
+            ctx.fillStyle = `rgba(255, 255, 255, ${(1 - p) * 0.3})`;
+            ctx.fillRect(sx - 14, sy - 6, 3, 3);
         }
     }
 
