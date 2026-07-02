@@ -96,13 +96,24 @@ export class GameMap {
             if (entity && typeof entity.draw === 'function') entity.draw(ctx);
         });
 
-        // Night falls over everything (outdoor maps only)
-        if (!this.indoor && !this.game.dayTime) {
-            ctx.fillStyle = 'rgba(0, 0, 30, 0.55)';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            this.drawNightSky(ctx);
+        // Time-of-day light over everything (outdoor maps only)
+        if (!this.indoor) {
+            const hour = Math.floor((this.game.gameTime % 86400) / 3600);
+            if (!this.game.dayTime) {
+                ctx.fillStyle = 'rgba(0, 0, 30, 0.55)';
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                this.drawNightSky(ctx);
+            } else if (hour >= 18) {
+                // The crimson evening
+                ctx.fillStyle = 'rgba(190, 45, 25, 0.18)';
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            } else if (hour < 8) {
+                // Golden dawn — the hour the alignments read
+                ctx.fillStyle = 'rgba(255, 180, 80, 0.14)';
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            }
+            if (this.game.dayTime) this.drawBirds(ctx);
         }
-        if (!this.indoor && this.game.dayTime) this.drawBirds(ctx);
     }
 
     drawCloudShadows(ctx) {

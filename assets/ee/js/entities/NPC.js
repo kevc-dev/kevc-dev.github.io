@@ -34,7 +34,8 @@ export class NPC extends Entity {
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '8px "Press Start 2P"';
         ctx.textAlign = 'center';
-        ctx.fillText(this.name.substring(0, 10), this.x + this.width / 2, this.y - 8);
+        const label = this.name.length > 12 ? this.name.split(' ')[0] : this.name;
+        ctx.fillText(label, this.x + this.width / 2, this.y - 8);
         ctx.textAlign = 'left';
     }
 
@@ -58,11 +59,68 @@ export class NPC extends Entity {
     }
 
     drawHuman(ctx, x, y, w, h, bodyTopY, bodyHeight, headHeight, npcHeadColor, npcShirtColor, npcTrouserColor, eyeColor) {
-        if (this.name === 'Ranger Rick') {
+        if (this.name.startsWith('Ranger')) {
             npcShirtColor = '#556B2F'; npcTrouserColor = '#8B4513';
             ctx.fillStyle = '#6B4226';
             ctx.fillRect(x, y, w, headHeight * 0.6);
             ctx.fillRect(x - 4, y + headHeight * 0.4, w + 8, headHeight * 0.4);
+        } else if (this.name === 'Frances Antone') {
+            npcShirtColor = '#2E8B8B'; npcTrouserColor = '#3B3B3B';
+            // Dark hair
+            ctx.fillStyle = '#1A1414';
+            ctx.fillRect(x + w * 0.2, y - 2, w * 0.6, headHeight * 0.45);
+            ctx.fillRect(x + w * 0.18, y + headHeight * 0.2, w * 0.12, headHeight * 0.9);
+            ctx.fillRect(x + w * 0.7, y + headHeight * 0.2, w * 0.12, headHeight * 0.9);
+            // District clipboard under one arm
+            ctx.fillStyle = '#C8B888';
+            ctx.fillRect(x + w * 0.78, bodyTopY + 4, 7, 10);
+            ctx.fillStyle = '#8A7A55';
+            ctx.fillRect(x + w * 0.78, bodyTopY + 4, 7, 2);
+        } else if (this.name === 'Vance Cutler') {
+            npcShirtColor = '#C8A868'; npcTrouserColor = '#5A4A3A';
+            // Cream panama hat with dark band
+            ctx.fillStyle = '#E8DCC0';
+            ctx.fillRect(x - 3, y + headHeight * 0.3, w + 6, headHeight * 0.35);
+            ctx.fillRect(x + w * 0.15, y - 3, w * 0.7, headHeight * 0.5);
+            ctx.fillStyle = '#4A3A28';
+            ctx.fillRect(x + w * 0.15, y + headHeight * 0.15, w * 0.7, 2);
+            // Bolo tie
+            ctx.fillStyle = '#2A2A2A';
+            ctx.fillRect(x + w * 0.48, bodyTopY, 2, bodyHeight * 0.35);
+            ctx.fillStyle = '#40C4B0';
+            ctx.fillRect(x + w * 0.44, bodyTopY + 2, 5, 5);
+        } else if (this.name === 'Dr. Delgado') {
+            npcShirtColor = '#B8A070'; npcTrouserColor = '#6B5B45';
+            // Yellow hard hat
+            ctx.fillStyle = '#F2C230';
+            ctx.fillRect(x + w * 0.15, y - 3, w * 0.7, headHeight * 0.45);
+            ctx.fillRect(x + w * 0.05, y + headHeight * 0.25, w * 0.9, headHeight * 0.2);
+            // Trowel in hand
+            ctx.fillStyle = '#8A8078';
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.95, bodyTopY + bodyHeight * 0.35);
+            ctx.lineTo(x + w * 1.1, bodyTopY + bodyHeight * 0.5);
+            ctx.lineTo(x + w * 0.95, bodyTopY + bodyHeight * 0.55);
+            ctx.closePath(); ctx.fill();
+        } else if (this.name === 'Morning Fisherman') {
+            npcShirtColor = '#7A8B9A'; npcTrouserColor = '#4E5A42';
+            // Bucket hat
+            ctx.fillStyle = '#9AA382';
+            ctx.fillRect(x + w * 0.1, y - 2, w * 0.8, headHeight * 0.4);
+            ctx.fillRect(x, y + headHeight * 0.25, w, headHeight * 0.2);
+            // Fishing rod
+            ctx.strokeStyle = '#6B4226';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.9, bodyTopY + bodyHeight * 0.5);
+            ctx.lineTo(x + w * 1.4, y - h * 0.2);
+            ctx.stroke();
+            ctx.strokeStyle = '#CCCCCC';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x + w * 1.4, y - h * 0.2);
+            ctx.lineTo(x + w * 1.4, bodyTopY + bodyHeight * 0.6);
+            ctx.stroke();
         } else if (this.name === 'Old Hermit') {
             npcShirtColor = '#778899'; npcTrouserColor = '#5A4D41';
             ctx.fillStyle = '#A9A9A9';

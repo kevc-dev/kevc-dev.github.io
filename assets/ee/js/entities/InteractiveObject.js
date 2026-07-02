@@ -72,6 +72,11 @@ export class InteractiveObject extends Entity {
             case 'mine_cart': this.drawMineCart(ctx); break;
             case 'crystal': this.drawCrystal(ctx); break;
             case 'stalagmite': this.drawStalagmite(ctx); break;
+            case 'hole_in_the_rock': this.drawHoleInTheRock(ctx); break;
+            case 'aligned_doorway': this.drawAlignedDoorway(ctx); break;
+            case 'horizon_marker': this.drawHorizonMarker(ctx); break;
+            case 'survey_flag': this.drawSurveyFlag(ctx); break;
+            case 'looter_pit': this.drawLooterPit(ctx); break;
             default: ctx.fillRect(this.x, this.y, this.width, this.height); break;
         }
     }
@@ -867,7 +872,181 @@ export class InteractiveObject extends Entity {
         ctx.closePath(); ctx.fill();
     }
 
+    drawHoleInTheRock(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const hour = Math.floor((this.game.gameTime % 86400) / 3600);
+        const dawnLight = hour >= 5 && hour < 8;
+        // Sandstone butte
+        ctx.fillStyle = '#C97B5A';
+        ctx.beginPath();
+        ctx.moveTo(x, y + h);
+        ctx.quadraticCurveTo(x + w * 0.05, y + h * 0.25, x + w * 0.3, y + h * 0.1);
+        ctx.quadraticCurveTo(x + w * 0.55, y - h * 0.05, x + w * 0.75, y + h * 0.15);
+        ctx.quadraticCurveTo(x + w * 1.0, y + h * 0.4, x + w, y + h);
+        ctx.closePath(); ctx.fill();
+        // Weathering bands
+        ctx.strokeStyle = '#B06A4C';
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.1, y + h * 0.55);
+        ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.45, x + w * 0.9, y + h * 0.6);
+        ctx.stroke();
+        // The hole
+        ctx.fillStyle = '#2A1A12';
+        ctx.beginPath();
+        ctx.ellipse(x + w * 0.5, y + h * 0.45, w * 0.13, h * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Dawn: light shaft through the opening onto the ground
+        if (dawnLight) {
+            const flicker = 0.5 + Math.sin(this.game.animationFrame * 0.05) * 0.1;
+            ctx.fillStyle = `rgba(255, 215, 120, ${flicker})`;
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.44, y + h * 0.38);
+            ctx.lineTo(x + w * 0.56, y + h * 0.38);
+            ctx.lineTo(x + w * 0.7, y + h + 10);
+            ctx.lineTo(x + w * 0.3, y + h + 10);
+            ctx.closePath(); ctx.fill();
+            // Lit basin on the floor
+            ctx.fillStyle = `rgba(255, 240, 180, ${flicker + 0.2})`;
+            ctx.beginPath();
+            ctx.ellipse(x + w * 0.5, y + h + 6, w * 0.12, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    drawAlignedDoorway(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const hour = Math.floor((this.game.gameTime % 86400) / 3600);
+        const dawnLight = hour >= 5 && hour < 8;
+        // Adobe wall
+        ctx.fillStyle = '#B08D57';
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = '#9A7B4F';
+        for (let i = 1; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + i * (h / 4));
+            ctx.lineTo(x + w, y + i * (h / 4));
+            ctx.stroke();
+        }
+        // Doorway gap
+        ctx.fillStyle = dawnLight ? '#FFD778' : '#3A2B1A';
+        ctx.fillRect(x + w * 0.38, y + h * 0.25, w * 0.24, h * 0.75);
+        if (dawnLight) {
+            // Light spills through toward the viewer
+            ctx.fillStyle = 'rgba(255, 215, 120, 0.45)';
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.38, y + h);
+            ctx.lineTo(x + w * 0.62, y + h);
+            ctx.lineTo(x + w * 0.8, y + h + 14);
+            ctx.lineTo(x + w * 0.2, y + h + 14);
+            ctx.closePath(); ctx.fill();
+        }
+        // Lintel
+        ctx.fillStyle = '#8A6B3F';
+        ctx.fillRect(x + w * 0.34, y + h * 0.2, w * 0.32, 5);
+    }
+
+    drawHorizonMarker(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const hour = Math.floor((this.game.gameTime % 86400) / 3600);
+        const duskLight = hour >= 17 && hour < 20;
+        // Ridge silhouette with a cut notch
+        ctx.fillStyle = '#4A3B2A';
+        ctx.beginPath();
+        ctx.moveTo(x, y + h);
+        ctx.lineTo(x, y + h * 0.4);
+        ctx.lineTo(x + w * 0.35, y + h * 0.15);
+        ctx.lineTo(x + w * 0.44, y + h * 0.15);
+        ctx.lineTo(x + w * 0.44, y + h * 0.45);   // notch left wall
+        ctx.lineTo(x + w * 0.56, y + h * 0.45);   // notch floor
+        ctx.lineTo(x + w * 0.56, y + h * 0.1);    // notch right wall
+        ctx.lineTo(x + w * 0.7, y + h * 0.1);
+        ctx.lineTo(x + w, y + h * 0.5);
+        ctx.lineTo(x + w, y + h);
+        ctx.closePath(); ctx.fill();
+        // At dusk, the sun sits in the notch
+        if (duskLight) {
+            const glow = 0.7 + Math.sin(this.game.animationFrame * 0.04) * 0.15;
+            ctx.fillStyle = `rgba(255, 90, 40, ${glow})`;
+            ctx.beginPath();
+            ctx.arc(x + w * 0.5, y + h * 0.35, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = `rgba(255, 170, 80, ${glow * 0.4})`;
+            ctx.beginPath();
+            ctx.arc(x + w * 0.5, y + h * 0.35, 11, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        // Worn standing-spot at the base
+        ctx.fillStyle = '#6B5B45';
+        ctx.beginPath();
+        ctx.ellipse(x + w * 0.5, y + h - 3, 10, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    drawSurveyFlag(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const flutter = Math.sin(this.game.animationFrame * 0.15) * 2;
+        // Stake
+        ctx.fillStyle = '#C8BCA0';
+        ctx.fillRect(x + w / 2 - 1, y + h * 0.25, 2, h * 0.75);
+        // Orange flag
+        ctx.fillStyle = '#FF6A00';
+        ctx.beginPath();
+        ctx.moveTo(x + w / 2 + 1, y);
+        ctx.lineTo(x + w / 2 + 1 + w * 0.7 + flutter, y + h * 0.12);
+        ctx.lineTo(x + w / 2 + 1, y + h * 0.25);
+        ctx.closePath(); ctx.fill();
+    }
+
+    drawLooterPit(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Spoil pile
+        ctx.fillStyle = '#A88B62';
+        ctx.beginPath();
+        ctx.ellipse(x + w * 0.78, y + h * 0.4, w * 0.22, h * 0.28, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // The pit
+        ctx.fillStyle = '#3A2B1A';
+        ctx.beginPath();
+        ctx.ellipse(x + w * 0.4, y + h * 0.6, w * 0.34, h * 0.32, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#241A0F';
+        ctx.beginPath();
+        ctx.ellipse(x + w * 0.4, y + h * 0.62, w * 0.24, h * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Discarded screen frame
+        ctx.strokeStyle = '#6B5B45';
+        ctx.strokeRect(x + w * 0.6, y + h * 0.75, w * 0.3, h * 0.2);
+    }
+
     onInteract(player) {
+        // Camp: rest until dawn
+        if (this.objData.rest) {
+            const daySec = 24 * 3600;
+            const cur = this.game.gameTime % daySec;
+            const dawn = 6 * 3600;
+            let advance = dawn - cur;
+            if (advance <= 0) advance += daySec;
+            this.game.gameTime += advance;
+            player.heal(20);
+            player.hydration = Math.max(10, player.hydration - 15);
+            this.game.ui.updateHydration(player.hydration, player.maxHydration);
+            this.game.ui.updateClock(this.game.gameTime);
+            this.game.ui.showDialog("You bank the coals and sleep under more stars than the city ever shows you. Dawn comes up gold and quiet. (You rest until first light. +20 HP, -15 H2O)", "CAMP");
+            this.game.setGameState(GAME_STATE.DIALOG);
+            return;
+        }
+
+        // Time-gated alignments: only read at the right hour
+        if (this.objData.timeGated) {
+            const tg = this.objData.timeGated;
+            const hour = Math.floor((this.game.gameTime % 86400) / 3600);
+            const inWindow = hour >= tg.startHour && hour < tg.endHour;
+            this.game.ui.showDialog(inWindow ? tg.successText : tg.failText, (this.objData.name || this.type).toUpperCase());
+            this.game.setGameState(GAME_STATE.DIALOG);
+            if (inWindow && tg.record) player.addQuest(tg.record);
+            return;
+        }
+
         if (this.objData.triggersPuzzle && (!this.game.player || !this.game.player.hasItem('final_artifact')) && !this.objData.opened) {
             this.game.startPuzzle(this.objData.puzzleDetails);
             return;

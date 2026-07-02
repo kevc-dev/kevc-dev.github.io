@@ -46,6 +46,7 @@ export class SoundManager {
         this.music.chamberTheme = new Audio('sounds/chamber_theme.mp3');
         this.music.ghostTownTheme = new Audio('sounds/another_scenario.mp3');
         this.music.mineTheme = new Audio('sounds/y_scenario.mp3');
+        this.music.papagoTheme = new Audio('sounds/fourth_scenario2.mp3');
 
         this.sounds.selectOption = new Audio('sounds/select_options.mp3');
         this.sounds.gameStart = new Audio('sounds/game_start.mp3');

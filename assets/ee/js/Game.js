@@ -70,7 +70,7 @@ export class Game {
             case GAME_STATE.WIN:
                 this.sound.stopMusic();
                 this.sound.playSound('winGame');
-                this.ui.showWinScreen("You solved the puzzle and claim the Arizona Artifact!");
+                this.ui.showWinScreen("The stick comes out of the olla whole. Four centuries of sky and water — the great star of 1006, the floods, the drought years, and one final, deliberate mark. Cutler makes his offer. You make a phone call instead: Salt River, cultural office, Frances Antone's desk. Some things aren't found, Professor. They're returned.");
                 break;
             case GAME_STATE.GAME_OVER:
                 this.sound.stopMusic();
@@ -181,7 +181,7 @@ export class Game {
             setTimeout(() => { this.setGameState(GAME_STATE.WIN); }, 500);
         } else {
             this.sound.playSound('puzzleIncorrect');
-            this.gameOver("Incorrect. The artifact's secrets remain elusive.");
+            this.gameOver("The counts don't align. Cutler smiles, and the moment — centuries in the making — passes to him.");
         }
         this.currentPuzzle = null;
     }

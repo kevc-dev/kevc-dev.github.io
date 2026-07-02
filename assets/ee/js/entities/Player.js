@@ -17,8 +17,8 @@ export class Player extends Entity {
         this.maxHealth = 100;
         this.hydration = 100;
         this.maxHydration = 100;
-        this.inventory = ['canteen', 'compass'];
-        this.quests = [{ id: "main_artifact", description: "Find the Arizona Artifact.", completed: false }];
+        this.inventory = ['canteen', 'compass', 'newspaper', 'field_notebook'];
+        this.quests = [{ id: "main_artifact", description: "Follow the alignments. Solstice: June 21.", completed: false }];
         this.isMoving = false;
         this.isAttacking = false;
         this.attackTimer = 0;
@@ -78,7 +78,11 @@ export class Player extends Entity {
             this.attack();
         }
 
-        this.hydration -= HYDRATION_RATE / 60;
+        // Midday lethality band: 11am-4pm outdoors drains hydration much faster.
+        const hour = Math.floor((this.game.gameTime % 86400) / 3600);
+        const indoors = this.game.currentMap && this.game.currentMap.indoor;
+        const heatMult = (!indoors && hour >= 11 && hour < 16) ? 2.5 : 1;
+        this.hydration -= (HYDRATION_RATE * heatMult) / 60;
         if (this.hydration < 0) this.hydration = 0;
         if (this.hydration === 0 && this.animationFrame % DEHYDRATION_DAMAGE_INTERVAL === 0) {
             this.takeDamage(DEHYDRATION_DAMAGE, "Dehydration");

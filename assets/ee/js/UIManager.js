@@ -76,13 +76,20 @@ export class UIManager {
     updateMapName(name) { this.mapNameDisplay.textContent = name; }
 
     updateClock(gameTimeInSeconds) {
+        // Day 1 = June 5, 1986. Summer solstice = June 21.
         const day = Math.floor(gameTimeInSeconds / (24 * 60 * 60)) + 1;
         const totalSecondsInDay = gameTimeInSeconds % (24 * 60 * 60);
         const hours = Math.floor(totalSecondsInDay / 3600);
         const minutes = Math.floor((totalSecondsInDay % 3600) / 60);
         const ampm = hours >= 12 ? 'PM' : 'AM';
         const displayHours = hours % 12 === 0 ? 12 : hours % 12;
-        this.clockDisplay.textContent = `Day ${day} - ${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+        const date = day + 4;
+        const dateLabel = date <= 30 ? `Jun ${date}` : `Jul ${date - 30}`;
+        const toSolstice = 21 - date;
+        let suffix = '';
+        if (toSolstice > 0) suffix = ` · Solstice in ${toSolstice}d`;
+        else if (toSolstice === 0) suffix = ' · SOLSTICE';
+        this.clockDisplay.textContent = `${dateLabel}, 1986 - ${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}${suffix}`;
     }
 
     showDialog(text, speaker) {
