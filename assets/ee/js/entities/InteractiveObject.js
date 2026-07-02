@@ -82,15 +82,70 @@ export class InteractiveObject extends Entity {
     }
 
     drawCactus(ctx) {
-        const cactusGreen = '#2D7D40', darkCactusGreen = '#1E532D';
-        ctx.fillStyle = cactusGreen;
-        ctx.fillRect(this.x + this.width * 0.3, this.y, this.width * 0.4, this.height);
-        ctx.fillRect(this.x, this.y + this.height * 0.2, this.width * 0.4, this.height * 0.2);
-        ctx.fillRect(this.x, this.y + this.height * 0.2, this.width * 0.2, this.height * 0.5);
-        ctx.fillRect(this.x + this.width * 0.6, this.y + this.height * 0.3, this.width * 0.4, this.height * 0.2);
-        ctx.fillRect(this.x + this.width * 0.8, this.y + this.height * 0.3, this.width * 0.2, this.height * 0.5);
-        ctx.fillStyle = darkCactusGreen;
-        for (let i = 0; i < 3; i++) ctx.fillRect(this.x + this.width * 0.3 + i * 4, this.y, 2, this.height);
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const green = '#2D7D40', dark = '#1E532D', light = '#3E9A52';
+        const variant = (Math.round(x) * 7 + Math.round(y) * 13) % 3; // 0: two arms+blooms, 1: one arm+wren, 2: young
+        const trunkX = x + w * 0.32, trunkW = w * 0.36;
+        const trunkTop = variant === 2 ? y + h * 0.25 : y;
+
+        // Trunk with rounded crown
+        ctx.fillStyle = green;
+        ctx.fillRect(trunkX, trunkTop + trunkW / 2, trunkW, y + h - trunkTop - trunkW / 2);
+        ctx.beginPath();
+        ctx.arc(trunkX + trunkW / 2, trunkTop + trunkW / 2, trunkW / 2, Math.PI, 0);
+        ctx.fill();
+
+        // Arms: out then up, rounded tips
+        const arm = (ax, ay, dir, len) => {
+            ctx.fillStyle = green;
+            ctx.fillRect(dir > 0 ? ax : ax - w * 0.22, ay, w * 0.22, 7);          // elbow out
+            const upX = dir > 0 ? ax + w * 0.22 - 7 : ax - w * 0.22;
+            ctx.fillRect(upX, ay - len, 7, len + 7);                               // arm up
+            ctx.beginPath();
+            ctx.arc(upX + 3.5, ay - len, 3.5, Math.PI, 0);
+            ctx.fill();
+            ctx.fillStyle = dark;                                                  // arm rib
+            ctx.fillRect(upX + 2, ay - len, 1, len);
+        };
+        if (variant === 0) {
+            arm(trunkX, y + h * 0.32, -1, h * 0.24);
+            arm(trunkX + trunkW, y + h * 0.42, 1, h * 0.3);
+        } else if (variant === 1) {
+            arm(trunkX + trunkW, y + h * 0.35, 1, h * 0.28);
+        }
+
+        // Ribs and sun-side highlight
+        ctx.fillStyle = dark;
+        for (let i = 0; i < 3; i++) ctx.fillRect(trunkX + 3 + i * (trunkW / 3), trunkTop + trunkW / 2, 1.5, y + h - trunkTop - trunkW / 2);
+        ctx.fillStyle = light;
+        ctx.fillRect(trunkX + 1, trunkTop + trunkW / 2, 2, y + h - trunkTop - trunkW / 2);
+
+        // June crown blossoms (saguaros bloom white in May-June)
+        if (variant === 0) {
+            const bx = trunkX + trunkW / 2, by = trunkTop + 2;
+            ctx.fillStyle = '#F5F0DC';
+            ctx.fillRect(bx - 6, by, 4, 4);
+            ctx.fillRect(bx + 3, by - 1, 4, 4);
+            ctx.fillRect(bx - 1, by - 3, 4, 4);
+            ctx.fillStyle = '#E8C84A';
+            ctx.fillRect(bx - 5, by + 1, 2, 2);
+            ctx.fillRect(bx + 4, by, 2, 2);
+            ctx.fillRect(bx, by - 2, 2, 2);
+        }
+
+        // Cactus wren perched on variant 1, bobbing occasionally
+        if (variant === 1) {
+            const bob = (this.game.animationFrame % 90 < 12) ? -2 : 0;
+            const wx = trunkX + trunkW / 2 - 3, wy = trunkTop - 5 + bob;
+            ctx.fillStyle = '#8A6B4F';
+            ctx.fillRect(wx, wy, 7, 4);            // body
+            ctx.fillRect(wx + 5, wy - 3, 4, 4);    // head
+            ctx.fillStyle = '#5C4433';
+            ctx.fillRect(wx - 3, wy, 4, 2);        // tail
+            ctx.fillStyle = '#2A1A0A';
+            ctx.fillRect(wx + 8, wy - 2, 1, 1);    // eye
+            ctx.fillRect(wx + 9, wy - 1, 2, 1);    // beak
+        }
     }
 
     drawRock(ctx) {
@@ -169,14 +224,49 @@ export class InteractiveObject extends Entity {
     }
 
     drawWaterSource(ctx) {
-        ctx.fillStyle = '#3377CC';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.fillStyle = '#66AADD';
-        ctx.fillRect(this.x + 4, this.y + 4, this.width - 8, this.height - 8);
-        if (this.game.animationFrame % 60 < 10) {
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(this.x + 8 + (this.game.animationFrame % 5) * 2, this.y + 8, 2, 2);
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const t = this.game.animationFrame;
+        const cx = x + w / 2, cy = y + h / 2;
+        // Muddy bank
+        ctx.fillStyle = '#8A7355';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, w * 0.62, h * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Water
+        ctx.fillStyle = '#2A5A8A';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, w * 0.5, h * 0.38, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#3B77AC';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, w * 0.36, h * 0.26, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Expanding ripple rings
+        for (let r = 0; r < 2; r++) {
+            const phase = ((t + r * 45) % 90) / 90;
+            ctx.strokeStyle = `rgba(200, 230, 255, ${0.5 * (1 - phase)})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, w * 0.1 + phase * w * 0.36, (h * 0.07 + phase * h * 0.26), 0, 0, Math.PI * 2);
+            ctx.stroke();
         }
+        // Sun glints
+        if (t % 50 < 12) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(cx - 6 + (t % 3) * 4, cy - 3, 2, 2);
+            ctx.fillRect(cx + 4, cy + 4, 2, 2);
+        }
+        // Reeds on the bank
+        ctx.strokeStyle = '#3A6B2A';
+        ctx.lineWidth = 1.5;
+        const sway = Math.sin(t * 0.04) * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.85, cy + h * 0.3);
+        ctx.lineTo(x + w * 0.85 + sway, cy - h * 0.15);
+        ctx.moveTo(x + w * 0.92, cy + h * 0.28);
+        ctx.lineTo(x + w * 0.94 + sway, cy - h * 0.05);
+        ctx.stroke();
+        ctx.lineWidth = 1;
     }
 
     drawDoorway(ctx) {

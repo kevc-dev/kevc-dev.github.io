@@ -147,9 +147,22 @@ export class UIManager {
     }
 
     drawInteractionIndicator(x, y) {
-        this.ctx.fillStyle = '#FFFF00';
+        // Bouncing arrow with outline — reads clearly against any background
+        const bounce = Math.sin(this.game.animationFrame * 0.15) * 3;
+        const ty = y - 34 + bounce;
+        this.ctx.fillStyle = '#000000';
         this.ctx.beginPath();
-        this.ctx.arc(x, y - 35, 5, 0, Math.PI * 2);
+        this.ctx.moveTo(x - 7, ty - 9);
+        this.ctx.lineTo(x + 7, ty - 9);
+        this.ctx.lineTo(x, ty + 2);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.fillStyle = '#FFDD33';
+        this.ctx.beginPath();
+        this.ctx.moveTo(x - 5, ty - 8);
+        this.ctx.lineTo(x + 5, ty - 8);
+        this.ctx.lineTo(x, ty);
+        this.ctx.closePath();
         this.ctx.fill();
     }
 

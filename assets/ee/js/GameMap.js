@@ -25,7 +25,59 @@ export class GameMap {
                 phase: i * 0.7,
             });
         }
+        this.decor = this.generateDecor();
         this.loadEntities(mapData);
+    }
+
+    // Deterministic ground texture: sand speckles, pebbles, dry grass tufts
+    generateDecor() {
+        let seed = 7;
+        for (const c of this.name) seed = ((seed * 31 + c.charCodeAt(0)) >>> 0);
+        const rand = () => {
+            seed = (seed * 1103515245 + 12345) >>> 0;
+            return (seed >>> 8) / 16777216;
+        };
+        const decor = [];
+        for (let i = 0; i < 70; i++) {
+            decor.push({ kind: 'speck', x: rand() * CANVAS_WIDTH, y: rand() * CANVAS_HEIGHT, light: rand() < 0.4, s: rand() < 0.3 ? 3 : 2 });
+        }
+        for (let i = 0; i < 12; i++) {
+            decor.push({ kind: 'stone', x: rand() * CANVAS_WIDTH, y: rand() * CANVAS_HEIGHT, s: 3 + rand() * 4 });
+        }
+        for (let i = 0; i < 9; i++) {
+            decor.push({ kind: 'tuft', x: rand() * CANVAS_WIDTH, y: rand() * CANVAS_HEIGHT, phase: rand() * 6 });
+        }
+        return decor;
+    }
+
+    drawGroundDetail(ctx) {
+        const t = this.game.animationFrame;
+        this.decor.forEach(d => {
+            if (d.kind === 'speck') {
+                ctx.fillStyle = d.light ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.08)';
+                ctx.fillRect(d.x, d.y, d.s, d.s);
+            } else if (d.kind === 'stone') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.13)';
+                ctx.beginPath();
+                ctx.ellipse(d.x, d.y, d.s, d.s * 0.7, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.09)';
+                ctx.beginPath();
+                ctx.ellipse(d.x - 1, d.y - 1, d.s * 0.5, d.s * 0.35, 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Dry grass tuft, swaying faintly
+                const sway = this.indoor ? 0 : Math.sin(t * 0.03 + d.phase) * 1.5;
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.14)';
+                ctx.lineWidth = 1;
+                for (let b = -1; b <= 1; b++) {
+                    ctx.beginPath();
+                    ctx.moveTo(d.x + b * 2, d.y);
+                    ctx.lineTo(d.x + b * 3 + sway, d.y - 6 - Math.abs(b));
+                    ctx.stroke();
+                }
+            }
+        });
     }
 
     loadEntities(mapData) {
@@ -85,6 +137,7 @@ export class GameMap {
     draw(ctx) {
         ctx.fillStyle = this.background;
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        this.drawGroundDetail(ctx);
 
         // Daytime ground effects (outdoor maps only)
         if (!this.indoor && this.game.dayTime) this.drawCloudShadows(ctx);
@@ -92,9 +145,28 @@ export class GameMap {
         const allDrawableEntities = [...this.objects, ...this.npcs, ...this.critters, ...this.enemies, ...this.projectiles];
         if (this.game.player) allDrawableEntities.push(this.game.player);
         allDrawableEntities.sort((a, b) => (a.y + a.height) - (b.y + b.height));
+
+        // Soft contact shadows under characters and standing objects
+        const shadowObjTypes = new Set(['cactus', 'dead_tree', 'chest', 'barrel', 'trail_marker', 'phoenix_statue', 'pedestal', 'mine_cart', 'stalagmite', 'well', 'sign', 'skull_turret', 'rock']);
+        allDrawableEntities.forEach(e => {
+            let sw = 0;
+            if (e.type === 'player' || e.type === 'npc' || e.type === 'critter') sw = e.width * 0.42;
+            else if (e.type === 'enemy' && !e.isFlying) sw = e.width * 0.4;
+            else if (shadowObjTypes.has(e.type)) sw = e.width * 0.45;
+            if (sw > 0) {
+                ctx.fillStyle = 'rgba(40, 25, 10, 0.22)';
+                ctx.beginPath();
+                ctx.ellipse(e.centerX, e.y + e.height - 1, sw, 3.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+
         allDrawableEntities.forEach(entity => {
             if (entity && typeof entity.draw === 'function') entity.draw(ctx);
         });
+
+        // Wandering dust devil (outdoor daytime only)
+        if (!this.indoor && this.game.dayTime) this.drawDustDevil(ctx);
 
         // Time-of-day light over everything (outdoor maps only)
         if (!this.indoor) {
@@ -150,6 +222,27 @@ export class GameMap {
             ctx.stroke();
         }
         ctx.lineWidth = 1;
+    }
+
+    drawDustDevil(ctx) {
+        const t = this.game.animationFrame;
+        const cycle = 1700;
+        const p = (t % cycle) / cycle;
+        if (p > 0.4) return; // passes through occasionally, then the air goes still
+        const prog = p / 0.4;
+        const x = -40 + prog * (CANVAS_WIDTH + 80);
+        const baseY = 280 + Math.sin(prog * 5 + this.name.length) * 70;
+        for (let i = 0; i < 7; i++) {
+            const yy = baseY - i * 10;
+            const r = 4 + i * 2.2;
+            const wob = Math.sin(t * 0.3 + i * 1.3) * (2 + i * 0.9);
+            ctx.fillStyle = `rgba(210, 180, 140, ${0.26 - i * 0.025})`;
+            ctx.beginPath();
+            ctx.ellipse(x + wob, yy, r, r * 0.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        // Kicked-up grit at the base
+        if (t % 6 === 0 && this.game.particles) this.game.particles.dust(x, baseY + 4);
     }
 
     drawNightSky(ctx) {

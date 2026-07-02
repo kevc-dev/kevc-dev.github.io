@@ -29,10 +29,12 @@ export class Enemy extends Entity {
         this.wanderY = 0;
         this.circleAngle = Math.random() * Math.PI * 2;
         this.facing = 1; // 1 = right, -1 = left
+        this.isMoving = false;
     }
 
     update() {
         this.enemyAnimationFrame++;
+        const prevX = this.x, prevY = this.y;
         if (this.currentAttackCooldown > 0) this.currentAttackCooldown--;
         const player = this.game.player;
         if (!player) return;
@@ -54,8 +56,10 @@ export class Enemy extends Entity {
                     const burst = 1 + Math.max(0, Math.sin(this.enemyAnimationFrame * 0.05)) * 0.8;
                     vx *= burst; vy *= burst;
                 }
-                this.x += vx;
-                this.y += vy;
+                // Ground enemies respect solid objects; flyers pass over
+                const nx = this.x + vx, ny = this.y + vy;
+                if (this.isFlying || !this.game.currentMap.checkCollision(nx, this.y, this.width, this.height)) this.x = nx;
+                if (this.isFlying || !this.game.currentMap.checkCollision(this.x, ny, this.width, this.height)) this.y = ny;
             } else if (this.currentAttackCooldown === 0) {
                 player.takeDamage(this.damage, this.enemyType.name);
                 this.currentAttackCooldown = this.attackCooldown;
@@ -65,11 +69,21 @@ export class Enemy extends Entity {
             }
             if (Math.abs(distX) > 2) this.facing = distX > 0 ? 1 : -1;
         } else if (this.enemyType.circles) {
-            // Vultures circle their roost when idle
+            // Vultures glide back onto their circling path — no teleporting
             this.circleAngle += 0.02;
-            this.x = this.spawnX + Math.cos(this.circleAngle) * 50;
-            this.y = this.spawnY + Math.sin(this.circleAngle) * 32;
-            this.facing = Math.cos(this.circleAngle + Math.PI / 2) >= 0 ? 1 : -1;
+            const tx = this.spawnX + Math.cos(this.circleAngle) * 50;
+            const ty = this.spawnY + Math.sin(this.circleAngle) * 32;
+            const ddx = tx - this.x, ddy = ty - this.y;
+            const dd = Math.hypot(ddx, ddy);
+            if (dd > this.speed * 1.5) {
+                this.x += (ddx / dd) * this.speed;
+                this.y += (ddy / dd) * this.speed;
+                if (Math.abs(ddx) > 2) this.facing = ddx > 0 ? 1 : -1;
+            } else {
+                this.x = tx;
+                this.y = ty;
+                this.facing = Math.cos(this.circleAngle + Math.PI / 2) >= 0 ? 1 : -1;
+            }
         } else {
             // Ground enemies wander lazily around their spawn point
             if (--this.wanderTimer <= 0) {
@@ -83,15 +97,21 @@ export class Enemy extends Entity {
                 }
             }
             if (this.wanderX !== 0 || this.wanderY !== 0) {
+                const map = this.game.currentMap;
                 const nx = this.x + this.wanderX * this.speed * ENEMY_WANDER_SPEED_FACTOR;
                 const ny = this.y + this.wanderY * this.speed * ENEMY_WANDER_SPEED_FACTOR;
-                if (Math.abs(nx - this.spawnX) < ENEMY_WANDER_RADIUS && nx > 0 && nx + this.width < CANVAS_WIDTH) this.x = nx;
+                if (Math.abs(nx - this.spawnX) < ENEMY_WANDER_RADIUS && !map.checkCollision(nx, this.y, this.width, this.height)) this.x = nx;
                 else this.wanderX *= -1;
-                if (Math.abs(ny - this.spawnY) < ENEMY_WANDER_RADIUS && ny > 0 && ny + this.height < CANVAS_HEIGHT) this.y = ny;
+                if (Math.abs(ny - this.spawnY) < ENEMY_WANDER_RADIUS && !map.checkCollision(this.x, ny, this.width, this.height)) this.y = ny;
                 else this.wanderY *= -1;
                 if (Math.abs(this.wanderX) > 0.1) this.facing = this.wanderX > 0 ? 1 : -1;
             }
         }
+
+        // Keep on screen (knockback can shove enemies out) and record real movement
+        this.x = Math.max(0, Math.min(this.x, CANVAS_WIDTH - this.width));
+        this.y = Math.max(0, Math.min(this.y, CANVAS_HEIGHT - this.height));
+        this.isMoving = Math.abs(this.x - prevX) + Math.abs(this.y - prevY) > 0.05;
     }
 
     draw(ctx) {
@@ -175,11 +195,11 @@ export class Enemy extends Entity {
         ctx.fillRect(x + w * 0.7 - pincerMove, y + h * 0.2, w * 0.4, h * 0.3);
         ctx.fillRect(x + w * 1.0 - pincerMove, y + h * 0.1, w * 0.2, h * 0.2);
 
-        // Legs
+        // Legs (only scuttle when moving)
         ctx.fillStyle = darkBodyColor;
         for (let i = 0; i < 4; i++) {
             const legY = y + h * (0.5 + i * 0.1);
-            const legMove = Math.sin(animFrame * 0.3 + i) * 3;
+            const legMove = this.isMoving ? Math.sin(animFrame * 0.3 + i) * 3 : 0;
             ctx.fillRect(x + w * 0.05, legY + legMove, w * 0.2, 2);
             ctx.fillRect(x + w * 0.75, legY - legMove, w * 0.2, 2);
         }
@@ -188,7 +208,8 @@ export class Enemy extends Entity {
     drawSnake(ctx, x, y, w, h, animFrame) {
         const bodyColor = '#556B2F', bellyColor = '#8FBC8F', eyeColor = '#FF0000', tongueColor = '#FF4500';
         const segments = 8, segmentWidth = w / segments, segmentHeight = h;
-        const waveAmplitude = h * 0.3, waveSpeed = 0.15;
+        // Coiled and nearly still at rest; full slither when moving
+        const waveAmplitude = h * 0.3 * (this.isMoving ? 1 : 0.3), waveSpeed = this.isMoving ? 0.15 : 0.05;
 
         for (let i = 0; i < segments; i++) {
             const offsetY = Math.sin(animFrame * waveSpeed + i * 0.5) * waveAmplitude;
@@ -222,7 +243,7 @@ export class Enemy extends Entity {
 
     drawCoyote(ctx, x, y, w, h, animFrame) {
         const bodyColor = '#B8860B', underbellyColor = '#D2B48C', darkFurColor = '#8B4513', eyeColor = '#000000';
-        const legMovement = Math.sin(animFrame * 0.2) * 3;
+        const legMovement = this.isMoving ? Math.sin(animFrame * 0.2) * 3 : 0;
         const tailWag = Math.sin(animFrame * 0.15) * 4;
 
         // Legs
@@ -276,7 +297,7 @@ export class Enemy extends Entity {
 
     drawGiantSpider(ctx, x, y, w, h, animFrame) {
         const bodyColor = '#3A3A3A', legColor = '#2A2A2A', eyeColor = '#FF0000', fangColor = '#E0E0E0';
-        const legMovement = Math.sin(animFrame * 0.25);
+        const legMovement = this.isMoving ? Math.sin(animFrame * 0.25) : 0;
         const bodyBob = Math.sin(animFrame * 0.1) * 2;
 
         // Abdomen
@@ -373,7 +394,7 @@ export class Enemy extends Entity {
 
     drawGilaMonster(ctx, x, y, w, h, animFrame) {
         const bodyColor = '#E2725B', bandColor = '#2A2A2A', eyeColor = '#000000';
-        const legMove = Math.sin(animFrame * 0.2) * 2;
+        const legMove = this.isMoving ? Math.sin(animFrame * 0.2) * 2 : 0;
         const tailSway = Math.sin(animFrame * 0.1) * 3;
 
         // Fat tail
@@ -462,7 +483,7 @@ export class Enemy extends Entity {
 
     drawJavelina(ctx, x, y, w, h, animFrame) {
         const furColor = '#4A4038', darkFur = '#332B24', snoutColor = '#5C5148', tuskColor = '#E8DCC8';
-        const trot = Math.sin(animFrame * 0.25) * 3;
+        const trot = this.isMoving ? Math.sin(animFrame * 0.25) * 3 : 0;
 
         // Legs
         ctx.fillStyle = darkFur;

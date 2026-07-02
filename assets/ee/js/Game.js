@@ -154,6 +154,7 @@ export class Game {
             npcs: mapData.npcs || [],
         };
         this.particles.clear();
+        this.mapFade = 1; // fade in from black on map change
         this.currentMap = new GameMap(this, freshMapData);
         if (this.player) {
             this.player.x = playerX;
@@ -266,6 +267,12 @@ export class Game {
             this.particles.draw(this.ctx);
             if (this.interactionTarget && this.gameState === GAME_STATE.PLAYING) {
                 this.ui.drawInteractionIndicator(this.interactionTarget.centerX, this.interactionTarget.y);
+            }
+            // Fade in after a map transition
+            if (this.mapFade > 0) {
+                this.ctx.fillStyle = `rgba(0, 0, 0, ${this.mapFade})`;
+                this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                this.mapFade = Math.max(0, this.mapFade - 0.05);
             }
         }
     }

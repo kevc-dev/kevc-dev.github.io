@@ -56,8 +56,10 @@ export class Critter extends Entity {
                 this.x = nx;
                 this.y = ny;
             } else {
-                this.dirX *= -1;
-                this.dirY *= -1;
+                // Blocked: turn 90° and skitter along the obstacle instead of jamming into it
+                const t = this.dirX;
+                this.dirX = -this.dirY;
+                this.dirY = t;
             }
             if (Math.abs(this.dirX) > 0.1) this.facing = this.dirX > 0 ? 1 : -1;
         }
