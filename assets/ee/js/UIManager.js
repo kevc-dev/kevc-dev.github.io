@@ -27,6 +27,9 @@ export class UIManager {
         this.winMessage = document.getElementById('winMessage');
         this.questLogPinned = false;
         this.questLogTimer = null;
+        this.inventoryPinned = false;
+        this.inventoryTimer = null;
+        this.inventoryDiv.style.display = 'none';
 
         document.getElementById('startButton').addEventListener('click', () => {
             this.game.sound.initializeAudio();
@@ -127,6 +130,22 @@ export class UIManager {
             itemDiv.addEventListener('click', () => this.game.useItem(itemKey));
             this.inventoryDiv.appendChild(itemDiv);
         });
+        // Pop up briefly on changes (game start, pickups), then hide unless pinned open
+        this.inventoryDiv.style.display = 'flex';
+        if (this.inventoryTimer) clearTimeout(this.inventoryTimer);
+        this.inventoryTimer = setTimeout(() => {
+            this.inventoryTimer = null;
+            if (!this.inventoryPinned) this.inventoryDiv.style.display = 'none';
+        }, 2000);
+    }
+
+    toggleInventory() {
+        if (this.inventoryTimer) {
+            clearTimeout(this.inventoryTimer);
+            this.inventoryTimer = null;
+        }
+        this.inventoryPinned = !this.inventoryPinned;
+        this.inventoryDiv.style.display = this.inventoryPinned ? 'flex' : 'none';
     }
 
     updateQuestLog(quests) {

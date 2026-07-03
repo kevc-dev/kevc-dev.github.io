@@ -285,10 +285,7 @@ export class Game {
         if (this.gameState === GAME_STATE.PLAYING) {
             if (key === 'e' || key === ' ') this.player.interact();
             else if (key === 'p') this.togglePause();
-            else if (key === 'i') {
-                this.ui.showDialog("Inventory: " + this.player.inventory.map(itemKey => this.itemTypes[itemKey].name).join(', '), "System");
-                this.setGameState(GAME_STATE.DIALOG);
-            }
+            else if (key === 'i') this.ui.toggleInventory();
             else if (key === 'q') this.ui.toggleQuestLog();
         } else if (this.gameState === GAME_STATE.DIALOG) {
             if (key === 'e' || key === ' ' || key === 'enter') {
