@@ -30,6 +30,8 @@ export class UIManager {
         this.inventoryPinned = false;
         this.inventoryTimer = null;
         this.inventoryDiv.style.display = 'none';
+        this.inventoryInfo = document.getElementById('inventoryInfo');
+        this.inventoryList = document.getElementById('inventoryList');
 
         document.getElementById('startButton').addEventListener('click', () => {
             this.game.sound.initializeAudio();
@@ -120,23 +122,43 @@ export class UIManager {
 
     updateInventoryDisplay(inventory, itemTypes) {
         this.inventoryDiv.innerHTML = '';
+        this.inventoryList.innerHTML = '';
         inventory.forEach(itemKey => {
             const item = itemTypes[itemKey];
             if (!item) return;
+            // Icon box (top-left)
             const itemDiv = document.createElement('div');
             itemDiv.className = 'invItem';
             itemDiv.textContent = item.name.charAt(0).toUpperCase();
             itemDiv.title = `${item.name}: ${item.description}`;
             itemDiv.addEventListener('click', () => this.game.useItem(itemKey));
             this.inventoryDiv.appendChild(itemDiv);
+            // Readable name row (reference panel)
+            const li = document.createElement('li');
+            const key = document.createElement('span');
+            key.className = 'invKey';
+            key.textContent = item.name.charAt(0).toUpperCase();
+            li.appendChild(key);
+            li.appendChild(document.createTextNode(item.name));
+            this.inventoryList.appendChild(li);
         });
-        // Pop up briefly on changes (game start, pickups), then hide unless pinned open
-        this.inventoryDiv.style.display = 'flex';
+        this.showInventory();
+        // Auto-hide after 2s unless pinned open
         if (this.inventoryTimer) clearTimeout(this.inventoryTimer);
         this.inventoryTimer = setTimeout(() => {
             this.inventoryTimer = null;
-            if (!this.inventoryPinned) this.inventoryDiv.style.display = 'none';
+            if (!this.inventoryPinned) this.hideInventory();
         }, 2000);
+    }
+
+    showInventory() {
+        this.inventoryDiv.style.display = 'flex';
+        this.inventoryInfo.style.display = 'block';
+    }
+
+    hideInventory() {
+        this.inventoryDiv.style.display = 'none';
+        this.inventoryInfo.style.display = 'none';
     }
 
     toggleInventory() {
@@ -145,7 +167,8 @@ export class UIManager {
             this.inventoryTimer = null;
         }
         this.inventoryPinned = !this.inventoryPinned;
-        this.inventoryDiv.style.display = this.inventoryPinned ? 'flex' : 'none';
+        if (this.inventoryPinned) this.showInventory();
+        else this.hideInventory();
     }
 
     updateQuestLog(quests) {

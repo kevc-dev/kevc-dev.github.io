@@ -287,6 +287,37 @@
         #questLogDisplay li {
             margin-bottom: 3px;
         }
+        #inventoryInfo {
+            position: absolute;
+            bottom: 30px;
+            right: 10px;
+            color: #FFF;
+            font-size: 10px;
+            background-color: rgba(0,0,0,0.75);
+            padding: 8px;
+            border: 1px solid #8B4513;
+            z-index: 50;
+            max-width: 200px;
+            display: none;
+        }
+        #inventoryInfo h3 {
+            margin: 0 0 5px 0;
+            font-size: 11px;
+            color: #FFAA33;
+        }
+        #inventoryInfo ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #inventoryInfo li {
+            margin-bottom: 3px;
+        }
+        #inventoryInfo .invKey {
+            color: #FFAA33;
+            display: inline-block;
+            width: 12px;
+        }
         #clockDisplay {
             position: absolute;
             bottom: 5px;
@@ -503,6 +534,10 @@
                 <h3>Active Quests:</h3>
                 <ul id="questList"></ul>
             </div>
+            <div id="inventoryInfo">
+                <h3>Satchel:</h3>
+                <ul id="inventoryList"></ul>
+            </div>
             <div id="dialogBox"></div>
             <div id="puzzleScreen">
                 <h1 id="puzzleQuestion">Puzzle Question</h1>
@@ -525,9 +560,7 @@
         <div id="startScreen">
             <h1>DESERT CHRONICLES</h1>
             <h2>The Arizona Artifact</h2>
-            <p>JUNE 5, 1986. SCOTTSDALE, ARIZONA. The canal behind your house is older than the city. The engineers who dug it in 1912 were following a ditch that had already been there seven hundred years. Nobody thinks about that. The water just comes.</p>
-            <p>You are Professor James Walker, retired. Thirty years digging in other people's deserts, and you never once worked the one in your backyard. Then this morning's Republic runs two stories on the same page: a grading crew has cut into an ancient canal near the airport, salvage crews get two weeks, and a letter from a crank who swears a mountain carving shows an exploding star. You've seen that carving. You sketched it in 1956, and you never understood it.</p>
-            <p>The solstice is in sixteen days. The bulldozers pour concrete the Monday after. Fill your canteen.</p>
+            <p>Arizona, 1986. One retired archaeologist. Sixteen days to the solstice. A desert that remembers more than it lets on.</p>
             <button id="startButton">START</button>
             <div id="loadingText" style="display: none;">Loading...</div>
         </div>
