@@ -158,13 +158,20 @@
             overflow-y: auto;
         }
 
-        /* Start screen: solid backdrop (hides HUD behind it), vertically centered.
-           'safe' prevents the title from clipping if content ever overflows. */
+        /* Start screen: pixel key art with a dark gradient for readability.
+           Solid fallback hides the HUD behind it; 'safe' prevents title clipping. */
         #startScreen {
             background-color: #000;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.5) 35%, rgba(0, 0, 0, 0.74)), url('img/menu_bg.png');
+            background-size: cover;
+            background-position: center;
+            image-rendering: pixelated;
             justify-content: center;
             justify-content: safe center;
             padding: 16px 24px 14px 24px;
+        }
+        #startScreen p {
+            text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000;
         }
 
         #startScreen h1, #pauseScreen h1, #gameOverScreen h1, #winScreen h1 {
