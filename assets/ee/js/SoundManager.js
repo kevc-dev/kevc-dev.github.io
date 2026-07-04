@@ -42,11 +42,11 @@ export class SoundManager {
         this.music.casaGrandeTheme = new Audio('sounds/casa_grande_theme.mp3');
         this.music.skyPeopleTheme = new Audio('sounds/sky_people_theme.mp3');
         this.music.whiteTanksTheme = new Audio('sounds/white_tanks_theme.mp3');
-        this.music.asuLabTheme = new Audio('sounds/fourth_scenario.mp3');
+        this.music.asuLabTheme = new Audio('sounds/asu_scenario_theme.mp3');
         this.music.chamberTheme = new Audio('sounds/chamber_theme.mp3');
-        this.music.ghostTownTheme = new Audio('sounds/another_scenario.mp3');
-        this.music.mineTheme = new Audio('sounds/y_scenario.mp3');
-        this.music.papagoTheme = new Audio('sounds/fourth_scenario2.mp3');
+        this.music.ghostTownTheme = new Audio('sounds/western.mp3');
+        this.music.mineTheme = new Audio('sounds/mine_scenario_theme.mp3');
+        this.music.papagoTheme = new Audio('sounds/papago_scenario_theme.mp3');
 
         this.sounds.selectOption = new Audio('sounds/select_options.mp3');
         this.sounds.gameStart = new Audio('sounds/game_start.mp3');
@@ -63,7 +63,11 @@ export class SoundManager {
         this.sounds.enemyDie = new Audio('sounds/enemy_die.mp3');
         this.sounds.drink = new Audio('sounds/drink.mp3');
         this.sounds.toinkArrow = new Audio('sounds/toink_arrow.mp3');
+        this.sounds.knock = new Audio('sounds/knock.wav');
+        this.sounds.western = new Audio('sounds/western.mp3');
         this.sounds.thunder = new Audio('sounds/thunder.mp3');
+        this.sounds.pause = new Audio('sounds/pause.wav');
+        this.sounds.pause = new Audio('sounds/pause.wav');
 
         this.preloadAudio();
 

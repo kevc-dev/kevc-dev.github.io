@@ -66,6 +66,7 @@ export class Game {
                 this.sound.resumeCurrentMusic();
                 break;
             case GAME_STATE.PAUSED:
+                this.sound.playSound('pause');
                 this.ui.showPauseScreen();
                 this.sound.pauseCurrentMusic();
                 break;

@@ -7,6 +7,122 @@ import {
     PLAYER_ATTACK_DURATION, PLAYER_ATTACK_KNOCKBACK
 } from '../constants.js';
 
+// Professor Walker: 12x16 pixel sprite. H=hat, h=brim shadow, s=skin, e=eye,
+// B=grey beard/hair, r=shirt, d=shirt shadow, p=pants, o=boots, g=satchel.
+const PLAYER_PALETTE = {
+    H: '#8B5A2B', h: '#6B4522', s: '#E8C49C', e: '#2A1A0A', B: '#9A8C78',
+    r: '#9E2B2B', d: '#7A1E1E', p: '#4A3B31', o: '#241608', g: '#C8A868',
+};
+
+const PLAYER_SPRITES = {
+    down: [[
+        "....HHHH....",
+        "..HHHHHHHH..",
+        ".hhHHHHHHhh.",
+        "..ssssssss..",
+        "..ssessess..",
+        "..sBBBBBBs..",
+        "...BBBBBB...",
+        "..srrddrrs..",
+        "..srrrrrrs..",
+        "...rrrrrr...",
+        "...pppppp...",
+        "...pppppp...",
+        "...pp..pp...",
+        "...pp..pp...",
+        "...oo..oo...",
+        "..ooo..ooo..",
+    ], [
+        "....HHHH....",
+        "..HHHHHHHH..",
+        ".hhHHHHHHhh.",
+        "..ssssssss..",
+        "..ssessess..",
+        "..sBBBBBBs..",
+        "...BBBBBB...",
+        "..srrddrrs..",
+        "..srrrrrrs..",
+        "...rrrrrr...",
+        "...pppppp...",
+        "...pppppp...",
+        "...pp..pp...",
+        "..pp....pp..",
+        "..oo....oo..",
+        ".ooo....ooo.",
+    ]],
+    up: [[
+        "....HHHH....",
+        "..HHHHHHHH..",
+        ".hhHHHHHHhh.",
+        "..BBBBBBBB..",
+        "..BBBBBBBB..",
+        "..sBBBBBBs..",
+        "...gggggg...",
+        "..srrggrrs..",
+        "..srrrrrrs..",
+        "...rrrrrr...",
+        "...pppppp...",
+        "...pppppp...",
+        "...pp..pp...",
+        "...pp..pp...",
+        "...oo..oo...",
+        "..ooo..ooo..",
+    ], [
+        "....HHHH....",
+        "..HHHHHHHH..",
+        ".hhHHHHHHhh.",
+        "..BBBBBBBB..",
+        "..BBBBBBBB..",
+        "..sBBBBBBs..",
+        "...gggggg...",
+        "..srrggrrs..",
+        "..srrrrrrs..",
+        "...rrrrrr...",
+        "...pppppp...",
+        "...pppppp...",
+        "...pp..pp...",
+        "..pp....pp..",
+        "..oo....oo..",
+        ".ooo....ooo.",
+    ]],
+    // Drawn facing right; flipped horizontally for 'left'
+    side: [[
+        "..HHHH......",
+        ".HHHHHH.....",
+        ".hHHHHHhhh..",
+        "..sssss.....",
+        "..ssses.....",
+        "..sBBBB.....",
+        "..sBBB......",
+        "..rrrrs.....",
+        "..rrrrrs....",
+        "..rrrr......",
+        "..pppp......",
+        "..pppp......",
+        "..pp.pp.....",
+        ".pp..pp.....",
+        ".oo..oo.....",
+        "ooo..oo.....",
+    ], [
+        "..HHHH......",
+        ".HHHHHH.....",
+        ".hHHHHHhhh..",
+        "..sssss.....",
+        "..ssses.....",
+        "..sBBBB.....",
+        "..sBBB......",
+        "..rrrrs.....",
+        "..rrrrrs....",
+        "..rrrr......",
+        "..pppp......",
+        "..pppp......",
+        "..pp.pp.....",
+        "..pp...pp...",
+        "..oo...oo...",
+        ".ooo...ooo..",
+    ]],
+};
+
 export class Player extends Entity {
     constructor(game, x, y) {
         super(game, x, y, 24, 32, 'player');
@@ -41,6 +157,13 @@ export class Player extends Entity {
             moveX = -this.speed; this.direction = 'left'; this.isMoving = true;
         } else if (this.game.input.isPressed('d') || this.game.input.isPressed('arrowright')) {
             moveX = this.speed; this.direction = 'right'; this.isMoving = true;
+        }
+
+        // Normalize diagonal movement so it isn't ~40% faster than straight lines
+        if (moveX !== 0 && moveY !== 0) {
+            const inv = 1 / Math.SQRT2;
+            moveX *= inv;
+            moveY *= inv;
         }
 
         nextX += moveX;
@@ -95,55 +218,21 @@ export class Player extends Entity {
     }
 
     draw(ctx) {
-        const x = this.x, y = this.y, w = this.width, h = this.height;
-        const hatColor = '#8B4513', beardColor = '#5A2D0C', skinColor = '#F0D8C0';
-        const eyeColor = '#000000', shirtColor = '#8B0000', pantsColor = '#4A3B31', shoesColor = '#2C1C0A';
-        const headHeight = 8, hatHeight = 6, torsoHeight = 12;
-        const legHeight = h - hatHeight - headHeight - torsoHeight;
-        const frame = this.spriteIndex;
+        const frame = this.isMoving ? (this.spriteIndex % 2) : 0;
+        const key = this.direction === 'up' ? 'up'
+                  : (this.direction === 'left' || this.direction === 'right') ? 'side'
+                  : 'down';
+        const rows = PLAYER_SPRITES[key][frame];
+        const scale = this.width / 12;
 
-        // Hat
-        ctx.fillStyle = hatColor;
-        ctx.fillRect(x + w * 0.1, y, w * 0.8, hatHeight);
-        ctx.fillRect(x, y + hatHeight * 0.5, w, hatHeight * 0.5);
-
-        // Head
-        ctx.fillStyle = skinColor;
-        ctx.fillRect(x + w * 0.2, y + hatHeight, w * 0.6, headHeight);
-
-        // Beard
-        ctx.fillStyle = beardColor;
-        if (this.direction === 'left' || this.direction === 'right' || this.direction === 'down') {
-            ctx.fillRect(x + w * 0.1, y + hatHeight + 2, w * 0.1, headHeight - 2);
-            ctx.fillRect(x + w * 0.8, y + hatHeight + 2, w * 0.1, headHeight - 2);
-            ctx.fillRect(x + w * 0.2, y + hatHeight + headHeight * 0.65, w * 0.6, headHeight * 0.35);
-            ctx.fillRect(x + w * 0.3, y + hatHeight + headHeight * 0.45, w * 0.4, 2);
+        ctx.save();
+        if (this.direction === 'left') {
+            ctx.translate(this.centerX, 0);
+            ctx.scale(-1, 1);
+            ctx.translate(-this.centerX, 0);
         }
-        if (this.direction === 'up') {
-            ctx.fillRect(x + w * 0.2, y + hatHeight + headHeight * 0.6, w * 0.6, headHeight * 0.4);
-        }
-
-        // Eyes
-        ctx.fillStyle = eyeColor;
-        if (this.direction !== 'up') {
-            const eyeY = y + hatHeight + headHeight * 0.3;
-            ctx.fillRect(x + w * 0.3, eyeY, 2, 2);
-            ctx.fillRect(x + w * 0.6, eyeY, 2, 2);
-        }
-
-        // Torso
-        const torsoTopY = y + hatHeight + headHeight;
-        ctx.fillStyle = shirtColor;
-        ctx.fillRect(x + w * 0.15, torsoTopY, w * 0.7, torsoHeight);
-
-        // Arms
-        const armWidth = 4, armLength = torsoHeight * 0.8;
-        this.drawArms(ctx, x, w, torsoTopY, armWidth, armLength, frame);
-
-        // Legs
-        const pantsTopY = torsoTopY + torsoHeight;
-        const legWidth = w * 0.35, shoeHeight = 4;
-        this.drawLegs(ctx, x, w, pantsTopY, pantsColor, shoesColor, legWidth, legHeight, shoeHeight, frame);
+        this.drawPixels(ctx, rows, PLAYER_PALETTE, this.x, this.y, scale);
+        ctx.restore();
 
         // Walking stick swing when attacking
         if (this.isAttacking) this.drawAttackSwing(ctx);
@@ -206,78 +295,10 @@ export class Player extends Entity {
                 enemy.takeDamage(PLAYER_ATTACK_DAMAGE);
             }
         });
-        if (!hitSomething) this.game.sound.playSound('toinkArrow');
+        //if (!hitSomething) this.game.sound.playSound('toinkArrow');
+        if (!hitSomething) this.game.sound.playSound('knock');
     }
 
-    drawArms(ctx, x, w, torsoTopY, armWidth, armLength, frame) {
-        if (this.direction === 'down') {
-            if (this.isMoving) {
-                if (frame === 0 || frame === 2) {
-                    ctx.fillRect(x, torsoTopY + 2, armWidth, armLength);
-                    ctx.fillRect(x + w - armWidth, torsoTopY + 4, armWidth, armLength);
-                } else {
-                    ctx.fillRect(x, torsoTopY + 4, armWidth, armLength);
-                    ctx.fillRect(x + w - armWidth, torsoTopY + 2, armWidth, armLength);
-                }
-            } else {
-                ctx.fillRect(x, torsoTopY + 2, armWidth, armLength);
-                ctx.fillRect(x + w - armWidth, torsoTopY + 2, armWidth, armLength);
-            }
-        } else if (this.direction === 'up') {
-            ctx.fillRect(x, torsoTopY + 2, armWidth, armLength * 0.7);
-            ctx.fillRect(x + w - armWidth, torsoTopY + 2, armWidth, armLength * 0.7);
-        } else if (this.direction === 'left') {
-            ctx.fillRect(x + w * 0.4, torsoTopY + 2, armWidth, armLength);
-            if (this.isMoving) ctx.fillRect(x + w * 0.6, torsoTopY + ((frame === 0 || frame === 2) ? 4 : 2), armWidth, armLength * 0.8);
-        } else if (this.direction === 'right') {
-            ctx.fillRect(x + w * 0.6 - armWidth, torsoTopY + 2, armWidth, armLength);
-            if (this.isMoving) ctx.fillRect(x + w * 0.4 - armWidth, torsoTopY + ((frame === 0 || frame === 2) ? 4 : 2), armWidth, armLength * 0.8);
-        }
-    }
-
-    drawLegs(ctx, x, w, pantsTopY, pantsColor, shoesColor, legWidth, legHeight, shoeHeight, frame) {
-        ctx.fillStyle = pantsColor;
-        if (this.direction === 'down' || this.direction === 'up') {
-            if (this.isMoving) {
-                const legOffset = (frame === 1 || frame === 3) ? 2 : 0;
-                ctx.fillRect(x + w * 0.1, pantsTopY + ((frame === 0 || frame === 2) ? 0 : legOffset), legWidth, legHeight - shoeHeight);
-                ctx.fillStyle = shoesColor;
-                ctx.fillRect(x + w * 0.1, pantsTopY + legHeight - shoeHeight + ((frame === 0 || frame === 2) ? 0 : legOffset), legWidth, shoeHeight);
-                ctx.fillStyle = pantsColor;
-                ctx.fillRect(x + w * 0.9 - legWidth, pantsTopY + ((frame === 1 || frame === 3) ? 0 : legOffset), legWidth, legHeight - shoeHeight);
-                ctx.fillStyle = shoesColor;
-                ctx.fillRect(x + w * 0.9 - legWidth, pantsTopY + legHeight - shoeHeight + ((frame === 1 || frame === 3) ? 0 : legOffset), legWidth, shoeHeight);
-            } else {
-                ctx.fillRect(x + w * 0.1, pantsTopY, legWidth, legHeight - shoeHeight);
-                ctx.fillStyle = shoesColor;
-                ctx.fillRect(x + w * 0.1, pantsTopY + legHeight - shoeHeight, legWidth, shoeHeight);
-                ctx.fillStyle = pantsColor;
-                ctx.fillRect(x + w * 0.9 - legWidth, pantsTopY, legWidth, legHeight - shoeHeight);
-                ctx.fillStyle = shoesColor;
-                ctx.fillRect(x + w * 0.9 - legWidth, pantsTopY + legHeight - shoeHeight, legWidth, shoeHeight);
-            }
-        } else {
-            const legX = this.direction === 'left' ? (x + w * 0.2) : (x + w * 0.45);
-            if (this.isMoving) {
-                const forward = (frame === 0 || frame === 2) ? 0 : 2;
-                const back = (frame === 1 || frame === 3) ? 0 : 2;
-                ctx.fillStyle = pantsColor;
-                ctx.fillRect(legX + (this.direction === 'left' ? 4 : -4), pantsTopY + back, legWidth * 0.8, legHeight - shoeHeight);
-                ctx.fillStyle = shoesColor;
-                ctx.fillRect(legX + (this.direction === 'left' ? 4 : -4), pantsTopY + legHeight - shoeHeight + back, legWidth * 0.8, shoeHeight);
-                ctx.fillStyle = pantsColor;
-                ctx.fillRect(legX, pantsTopY + forward, legWidth, legHeight - shoeHeight);
-                ctx.fillStyle = shoesColor;
-                ctx.fillRect(legX, pantsTopY + legHeight - shoeHeight + forward, legWidth, shoeHeight);
-            } else {
-                ctx.fillRect(legX, pantsTopY, legWidth, legHeight - shoeHeight);
-                ctx.fillStyle = shoesColor;
-                ctx.fillRect(legX, pantsTopY + legHeight - shoeHeight, legWidth, shoeHeight);
-                ctx.fillStyle = pantsColor;
-                ctx.fillRect(legX + (this.direction === 'left' ? 4 : -4), pantsTopY, legWidth * 0.7, legHeight - shoeHeight);
-            }
-        }
-    }
 
     interact() {
         const checkRange = 20;
