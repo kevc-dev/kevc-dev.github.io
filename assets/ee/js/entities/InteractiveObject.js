@@ -78,6 +78,13 @@ export class InteractiveObject extends Entity {
             case 'trophy_case': this.drawTrophyCase(ctx); break;
             case 'bulletin_board': this.drawBulletinBoard(ctx); break;
             case 'potted_palm': this.drawPottedPalm(ctx); break;
+            case 'tinaja': this.drawTinaja(ctx); break;
+            case 'granite_boulder': this.drawGraniteBoulder(ctx); break;
+            case 'petroglyph_cliff': this.drawPetroglyphCliff(ctx); break;
+            case 'great_house': this.drawGreatHouse(ctx); break;
+            case 'canopy_post': this.drawCanopyPost(ctx); break;
+            case 'compound_wall': this.drawCompoundWall(ctx); break;
+            case 'ballcourt': this.drawBallcourt(ctx); break;
             case 'hole_in_the_rock': this.drawHoleInTheRock(ctx); break;
             case 'aligned_doorway': this.drawAlignedDoorway(ctx); break;
             case 'horizon_marker': this.drawHorizonMarker(ctx); break;
@@ -1146,6 +1153,189 @@ export class InteractiveObject extends Entity {
         });
     }
 
+    drawTinaja(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const t = this.game.animationFrame;
+        const R = (bx, by, bw, bh, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x + bx), Math.round(y + by), Math.round(bw), Math.round(bh)); };
+        // Pale granite basin (cross of rects reads as a rounded tank)
+        R(w * 0.14, 0, w * 0.72, h, '#C8C0B0');
+        R(0, h * 0.25, w, h * 0.5, '#C8C0B0');
+        // Shadowed inner rim
+        R(w * 0.2, h * 0.18, w * 0.6, h * 0.64, '#A69C88');
+        R(w * 0.1, h * 0.34, w * 0.8, h * 0.32, '#A69C88');
+        // Water
+        R(w * 0.26, h * 0.24, w * 0.48, h * 0.52, '#2A5A8A');
+        R(w * 0.16, h * 0.38, w * 0.68, h * 0.24, '#2A5A8A');
+        R(w * 0.3, h * 0.32, w * 0.4, h * 0.36, '#3B77AC');
+        // Ripple + glints
+        const rp = (t % 80) / 80;
+        ctx.fillStyle = `rgba(200, 230, 255, ${0.5 * (1 - rp)})`;
+        ctx.fillRect(Math.round(x + w * 0.5 - (2 + rp * 10)), Math.round(y + h * 0.5), Math.round(4 + rp * 20), 1);
+        if (t % 50 < 12) { ctx.fillStyle = '#FFFFFF'; ctx.fillRect(Math.round(x + w * 0.4), Math.round(y + h * 0.44), 2, 2); }
+        // Granite highlight
+        R(w * 0.14, 0, w * 0.08, h, 'rgba(255,255,255,0.12)');
+    }
+
+    drawGraniteBoulder(ctx) {
+        const base = this.objData.color || '#C8BEA8';
+        const P = { b: base, d: this.shade(base, -0.28), l: this.shade(base, 0.2) };
+        const variant = (Math.round(this.x) + Math.round(this.y)) % 2;
+        const rows = variant === 0 ? [
+            "...dddddd...",
+            ".ddbbbbbbdd.",
+            "dblbbbbbbbbd",
+            "dllbbbbbbbbd",
+            "dbbbbbbbbdbd",
+            "dbbbbbbdbbbd",
+            ".ddbbbbbbdd.",
+            "..dddddddd..",
+        ] : [
+            "..dd...ddd..",
+            ".dbbdddbbbd.",
+            "dblbbbbbbbbd",
+            "dllbbbbdbbbd",
+            "dbbbbbbbbbbd",
+            "dbbdbbbbbdbd",
+            ".dbbbbbbbbd.",
+            "..dddddddd..",
+        ];
+        const scale = this.width / rows[0].length;
+        this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
+    }
+
+    drawPetroglyphCliff(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const B = '#3A3546', D = '#2E2A38', L = '#4A4557', g = '#D8C8A8';
+        const R = (bx, by, bw, bh, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x + bx), Math.round(y + by), Math.round(bw), Math.round(bh)); };
+        // Blocky basalt cliff face
+        R(w * 0.04, h * 0.14, w * 0.92, h * 0.86, B);
+        R(w * 0.1, h * 0.04, w * 0.78, h * 0.14, B);
+        R(0, h * 0.4, w, h * 0.5, B);
+        R(0, h * 0.82, w, h * 0.18, D);          // shadowed base
+        R(w * 0.04, h * 0.14, w * 0.06, h * 0.7, L);  // sunlit left edge
+        // Desert-varnish streaks
+        R(w * 0.3, h * 0.16, 2, h * 0.5, D);
+        R(w * 0.62, h * 0.2, 2, h * 0.45, D);
+        // Pecked glyphs stamped across the face
+        const stamp = (rows, gx, gy, s) => this.drawPixels(ctx, rows, { g }, x + gx, y + gy, s);
+        const spiral = ["ggggg", "g....", "g.gg.", "g..g.", "gggg."];
+        const star = ["..g..", "g.g.g", ".ggg.", "g.g.g", "..g.."];
+        const figure = [".g.", "ggg", ".g.", ".g.", "g.g"];
+        const sheep = ["g...g.", "gggggg", "g....g"];
+        stamp(spiral, w * 0.12, h * 0.24, 3);
+        stamp(star, w * 0.74, h * 0.2, 3);
+        stamp(figure, w * 0.46, h * 0.34, 4);
+        stamp(sheep, w * 0.28, h * 0.62, 3);
+        stamp(figure, w * 0.62, h * 0.58, 3);
+    }
+
+    drawGreatHouse(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const hour = Math.floor((this.game.gameTime % 86400) / 3600);
+        const duskLight = hour >= 17 && hour < 20;
+        const tan = '#C9A876', light = '#D8B98A', dark = '#A67C4E', shadow = '#8A6238', port = '#241A10';
+        const blk = (bx, by, bw, bh, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x + bx), Math.round(y + by), Math.round(bw), Math.round(bh)); };
+
+        // Battered base (wider at the foot, like the real caliche walls)
+        blk(-5, h - 12, w + 10, 12, shadow);
+        blk(-3, h - 20, w + 6, 10, dark);
+        // Main body
+        blk(2, h * 0.08, w - 4, h * 0.92, tan);
+        // Sunlit left face
+        blk(2, h * 0.08, w * 0.12, h * 0.9, light);
+        // Eroded parapet top with crenellation gaps
+        blk(6, 0, w - 12, h * 0.1, tan);
+        blk(w * 0.28, 0, w * 0.1, h * 0.05, shadow);
+        blk(w * 0.62, 0, w * 0.1, h * 0.05, shadow);
+        // Floor string-courses (four stories)
+        for (const fy of [0.3, 0.5, 0.7]) blk(2, h * fy, w - 4, 3, shadow);
+        // Rectangular window ports in a grid
+        ctx.fillStyle = port;
+        for (const py of [0.2, 0.4, 0.6, 0.82]) {
+            for (const px of [0.28, 0.5, 0.72]) {
+                if (py > 0.75 && px === 0.5) continue; // doorway takes the center-bottom
+                ctx.fillRect(Math.round(x + w * px - 5), Math.round(y + h * py), 10, 12);
+            }
+        }
+        // Ground-floor doorway
+        blk(w * 0.42, h * 0.8, w * 0.16, h * 0.2, port);
+        // Vertical erosion crack
+        blk(w * 0.6, h * 0.12, 2, h * 0.6, shadow);
+        // The famous solstice port: a stepped round aperture high on the wall
+        const cx = x + w * 0.5, cy = y + h * 0.16;
+        ctx.fillStyle = duskLight ? '#FFD24A' : port;
+        ctx.fillRect(Math.round(cx - 4), Math.round(cy - 7), 8, 14);
+        ctx.fillRect(Math.round(cx - 7), Math.round(cy - 4), 14, 8);
+        ctx.fillRect(Math.round(cx - 6), Math.round(cy - 6), 12, 12);
+        if (duskLight) {
+            // A shaft of light spears out through the port at dusk
+            const glow = 0.6 + Math.sin(this.game.animationFrame * 0.05) * 0.15;
+            ctx.fillStyle = `rgba(255, 210, 100, ${glow})`;
+            ctx.fillRect(Math.round(cx - 3), Math.round(cy + 6), 6, Math.round(h * 0.2));
+            ctx.fillRect(Math.round(cx - 6), Math.round(cy + h * 0.2), 12, 10);
+            ctx.fillStyle = '#FFEC9A';
+            ctx.fillRect(Math.round(cx - 2), Math.round(cy - 2), 4, 4);
+        }
+    }
+
+    drawCanopyPost(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const steel = '#8A8A8A', dk = '#5F5F5F', lt = '#B0B0B0';
+        ctx.fillStyle = steel;
+        ctx.fillRect(Math.round(x + w * 0.3), y, Math.round(w * 0.4), h);
+        ctx.fillStyle = lt;
+        ctx.fillRect(Math.round(x + w * 0.3), y, 2, h);
+        ctx.fillStyle = dk;
+        ctx.fillRect(Math.round(x + w * 0.6), y, 2, h);
+        // Riveted top bracket where the roof beam would sit
+        ctx.fillStyle = steel;
+        ctx.fillRect(x, y, w, 6);
+        ctx.fillStyle = dk;
+        ctx.fillRect(x + 1, y + 2, 2, 2);
+        ctx.fillRect(x + w - 3, y + 2, 2, 2);
+        // Concrete footing
+        ctx.fillStyle = '#7A7068';
+        ctx.fillRect(x, y + h - 5, w, 5);
+    }
+
+    drawCompoundWall(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const tan = '#B89A6E', dark = '#96794F', cap = '#C9AE82';
+        ctx.fillStyle = tan;
+        ctx.fillRect(x, y + 4, w, h - 4);
+        // Capstone
+        ctx.fillStyle = cap;
+        ctx.fillRect(x, y, w, 5);
+        // Adobe block seams
+        ctx.fillStyle = dark;
+        for (let i = 1; i * 20 < w; i++) ctx.fillRect(x + i * 20, y + 5, 1.5, h - 5);
+        ctx.fillRect(x, y + h * 0.55, w, 1.5);
+        // Eroded top gaps
+        ctx.fillStyle = tan;
+        ctx.fillRect(x + w * 0.3, y, 8, 3);
+        ctx.fillRect(x + w * 0.7, y, 6, 3);
+    }
+
+    drawBallcourt(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const rim = '#C3A374', slope = '#A6844F', floor = '#8A6A3E', shad = '#6E5230';
+        // Raised rim berms (top and bottom)
+        ctx.fillStyle = rim;
+        ctx.fillRect(Math.round(x + w * 0.1), Math.round(y), Math.round(w * 0.8), Math.round(h * 0.2));
+        ctx.fillRect(Math.round(x + w * 0.1), Math.round(y + h * 0.8), Math.round(w * 0.8), Math.round(h * 0.2));
+        // Sunken oval, stepped inward
+        ctx.fillStyle = slope;
+        ctx.fillRect(Math.round(x + w * 0.06), Math.round(y + h * 0.18), Math.round(w * 0.88), Math.round(h * 0.64));
+        ctx.fillStyle = floor;
+        ctx.fillRect(Math.round(x + w * 0.14), Math.round(y + h * 0.3), Math.round(w * 0.72), Math.round(h * 0.4));
+        ctx.fillStyle = shad;
+        ctx.fillRect(Math.round(x + w * 0.14), Math.round(y + h * 0.3), Math.round(w * 0.72), 3);
+        // End goals (rounded ends read as darker notches)
+        ctx.fillStyle = shad;
+        ctx.fillRect(Math.round(x + w * 0.02), Math.round(y + h * 0.42), Math.round(w * 0.06), Math.round(h * 0.16));
+        ctx.fillRect(Math.round(x + w * 0.92), Math.round(y + h * 0.42), Math.round(w * 0.06), Math.round(h * 0.16));
+    }
+
     drawHoleInTheRock(ctx) {
         const x = this.x, y = this.y, w = this.width, h = this.height;
         const hour = Math.floor((this.game.gameTime % 86400) / 3600);
@@ -1309,7 +1499,10 @@ export class InteractiveObject extends Entity {
         if (this.objData.timeGated) {
             const tg = this.objData.timeGated;
             const hour = Math.floor((this.game.gameTime % 86400) / 3600);
-            const inWindow = hour >= tg.startHour && hour < tg.endHour;
+            // Overnight windows wrap past midnight (e.g. start 20, end 5)
+            const inWindow = tg.startHour <= tg.endHour
+                ? (hour >= tg.startHour && hour < tg.endHour)
+                : (hour >= tg.startHour || hour < tg.endHour);
             this.game.ui.showDialog(inWindow ? tg.successText : tg.failText, (this.objData.name || this.type).toUpperCase());
             this.game.setGameState(GAME_STATE.DIALOG);
             if (inWindow && tg.record) player.addQuest(tg.record);
@@ -1366,7 +1559,7 @@ export class InteractiveObject extends Entity {
             this.game.ui.showDialog(this.objData.text, (this.objData.name || this.type).toUpperCase());
             this.game.setGameState(GAME_STATE.DIALOG);
         }
-        if (this.type === 'water_source' || this.type === 'well') {
+        if (this.type === 'water_source' || this.type === 'well' || this.type === 'tinaja') {
             if (player.hydration < player.maxHydration) {
                 player.hydrate(player.maxHydration);
                 this.game.ui.showDialog("You refill your canteen and take a long drink. You feel refreshed.", "Water Source");

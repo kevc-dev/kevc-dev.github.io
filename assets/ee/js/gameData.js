@@ -50,6 +50,15 @@ export function getObjectTypes() {
         mine_cart: { name: "Mine Cart", width: 40, height: 28, solid: true, interactive: true, color: '#4A4A52', text: "A rusted ore cart, still half-full of copper ore." },
         crystal: { name: "Copper Ore Vein", width: 24, height: 32, solid: true, interactive: true, color: '#66DDEE', text: "Chrysocolla and azurite: copper ore, blue-green in the lamplight. This is the 'blue glow' the miners sang about. Beautiful, and worth exactly enough to die for." },
         stalagmite: { name: "Stalagmite", width: 24, height: 32, solid: true, interactive: false, color: '#5F534B' },
+        // White Tank Mountains
+        tinaja: { name: "Tinaja", width: 44, height: 32, solid: false, interactive: true, color: '#B9CBD6', text: "A tinaja: a natural granite tank holding rainwater. The White Tanks are named for these. Cold, clear, and older than any story about them." },
+        granite_boulder: { name: "Granite Boulder", width: 44, height: 40, solid: true, interactive: false, color: '#C8BEA8' },
+        petroglyph_cliff: { name: "Petroglyph Cliff", width: 100, height: 64, solid: true, interactive: true, color: '#3A3546', text: "A whole cliff face crowded with petroglyphs: spirals, sheep, dancers, stars. Thousands of them across these hills. Not one is signed, and every one was meant to last." },
+        // Casa Grande
+        great_house: { name: "The Great House", width: 96, height: 130, solid: true, interactive: true, color: '#C9A876' },
+        canopy_post: { name: "Canopy Post", width: 10, height: 120, solid: true, interactive: true, color: '#8A8A8A', text: "A steel post from the 1932 canopy, built to shield the ruins from the rain. Even the shelter is a relic now." },
+        compound_wall: { name: "Compound Wall", width: 84, height: 22, solid: true, interactive: false, color: '#B89A6E' },
+        ballcourt: { name: "Ballcourt", width: 120, height: 52, solid: false, interactive: true, color: '#B08D57', text: "A sunken oval ballcourt. The Hohokam played a rubber-ball game here, half sport, half ceremony. The cheering has been gone seven hundred years." },
         // ASU campus flavor
         sparky_statue: { name: "Sparky Statue", width: 40, height: 56, solid: true, interactive: true, color: '#8C1D40', text: "A bronze Sparky, pitchfork raised mid-jab. Some donor class of '58 paid for it. The plaque says FEAR THE FORK." },
         asu_banner: { name: "Sun Devils Banner", width: 84, height: 36, solid: true, interactive: true, color: '#8C1D40', text: "Maroon and gold: ARIZONA STATE SUN DEVILS. Someone has pinned a hand-drawn rose next to it. Big hopes for the fall season." },
@@ -365,26 +374,61 @@ export function getMaps() {
         casa_grande: {
             name: "Casa Grande Ruins", background: "#C19A6B",
             objects: [
-                { type: "sky_hole_wall", x: 200, y: 100, width: 32, height: 120 },
-                { type: "sky_hole_wall", x: 400, y: 100, width: 32, height: 120 },
-                { type: "sign", x: 300, y: 300, text: "The Great House. Four stories of caliche, seven centuries old, and its upper ports still catch the solstice sun." },
+                // The Great House, sheltered under the 1932 steel canopy
+                { type: "great_house", x: 272, y: 70, timeGated: {
+                    startHour: 17, endHour: 20,
+                    successText: "You climb to the observation port as the sun drops. Light spears clean through the round aperture and lands on the far inner wall, dead on a painted mark. Venus will follow it within the hour. Seven hundred years on, the Great House still keeps perfect time.",
+                    failText: "The Great House. Four stories of caliche, its upper ports drilled to catch the sun, the moon, and Venus. Alvarez says the round port lights up at dusk. Come back near sundown.",
+                    record: { id: 'casa_venus', description: 'Watched the Great House solstice port catch the dusk sun.', completed: true }
+                }},
+                { type: "canopy_post", x: 250, y: 60 },
+                { type: "canopy_post", x: 380, y: 60 },
+                { type: "canopy_post", x: 250, y: 210 },
+                { type: "canopy_post", x: 380, y: 210 },
+                // Compound walls shaping the plaza (with gaps to walk through)
+                { type: "compound_wall", x: 60, y: 300 },
+                { type: "compound_wall", x: 150, y: 300 },
+                { type: "compound_wall", x: 430, y: 300 },
+                { type: "compound_wall", x: 520, y: 300 },
+                // Hohokam ballcourt
+                { type: "ballcourt", x: 90, y: 360 },
+                { type: "sky_hole_wall", x: 180, y: 120, width: 32, height: 96 },
+                { type: "sky_hole_wall", x: 428, y: 120, width: 32, height: 96 },
+                // Excavation and desert detail
+                { type: "interactive_point", x: 300, y: 250, text: "A roped-off excavation square. Pot sherds and a caliche floor, brushed clean. The Park Service has been careful here, unlike some." },
+                { type: "animal_bones", x: 500, y: 250 },
+                { type: "cactus", x: 40, y: 200 },
+                { type: "fruit_cactus", x: 110, y: 170 },
+                { type: "desert_flower", x: 340, y: 260 },
+                { type: "tumbleweed", x: 130, y: 250 },
+                { type: "campfire_remains", x: 300, y: 410 },
+                { type: "sign", x: 470, y: 400, text: "Casa Grande Ruins National Monument. Established 1918. Please stay on the marked paths." },
                 { type: "doorway", x: 0, y: 232, toMap: 'hohokam_site', toX: CANVAS_WIDTH - 70, toY: 150, text: "To the Mound" },
                 { type: "doorway", x: CANVAS_WIDTH - 48, y: 180, toMap: 'sky_people_shrine', toX: 50, toY: 240, text: "To South Mtn." }
             ],
             npcs: [
-                { name: 'Ranger Alvarez', x: 300, y: 200, dialog: [
+                { name: 'Ranger Alvarez', x: 200, y: 250, dialog: [
                     "Welcome to the Great House. Four stories of caliche, and we still argue about what it was for.",
-                    "See the round port in the upper wall? It lines up with the setting sun at the solstice. There are others for the moon. This was an observatory. That's where my money is, anyway.",
+                    "See the round port up on the wall? It lines up with the setting sun at the solstice, and there are others for the moon and for Venus. This was an observatory. That's where my money is, anyway.",
+                    "That steel canopy went up in '32 to keep the rain off. We built a ruin to shelter a ruin. Say that three times fast.",
                     "Folks ask me where the builders 'went.' Ask the O'odham down the road. They'll tell you nobody went anywhere."
+                ]},
+                { name: 'Amateur Astronomer', x: 420, y: 240, dialog: [
+                    "I drove down from Mesa with my telescope. If the ancients could track Venus with a hole in a wall, the least I can do is show up.",
+                    "Come back at dusk and stand by the Great House. That port will light up like a struck match. I've got it timed to the minute.",
+                    "People chase saucers out here. Me? I chase the real sky. It's stranger than anything they imagine, and it actually shows up."
                 ]}
             ],
             enemies: [
-                { type: 'spider', x: 100, y: 350 },
-                { type: 'spider', x: 500, y: 100 },
-                { type: 'attacking_ghost', x: 320, y: 150 }
+                { type: 'spider', x: 120, y: 200 },
+                { type: 'attacking_ghost', x: 500, y: 130 },
+                { type: 'scorpion', x: 380, y: 420 }
             ],
             critters: [
-                { type: 'lizard', x: 150, y: 420 }
+                { type: 'lizard', x: 150, y: 440 },
+                { type: 'quail', x: 340, y: 340 },
+                { type: 'quail', x: 360, y: 350 },
+                { type: 'jackrabbit', x: 540, y: 430 }
             ]
         },
         sky_people_shrine: {
@@ -426,40 +470,66 @@ export function getMaps() {
             ]
         },
         white_tanks_petroglyphs: {
-            name: "White Tank Mountains Petroglyphs", background: "#D2691E",
+            name: "White Tank Mountains Petroglyphs", background: "#C96A28",
             objects: [
-                { type: "petroglyph_panel", x: 100, y: 100, width: 64, height: 64, text: "Spirals and tally lines. You count one sequence twice: it comes out the same both times. Deliberate. Precise." },
+                // Cliff face crowded with glyphs, along the top
+                { type: "petroglyph_cliff", x: 250, y: 16 },
+                // The tally panel and the all-important star-scorpion panel
+                { type: "petroglyph_panel", x: 70, y: 120, width: 64, height: 64, text: "Spirals and tally lines. You count one sequence twice: it comes out the same both times. Deliberate. Precise." },
                 { type: "petroglyph_panel", x: 400, y: 250, width: 64, height: 64, text: "The star-scorpion panel. A circle with rays beside Scorpius. AD 1006, the anchor of the whole calendar.", questTrigger: {
                     id: 'supernova_read',
                     description: 'The star panel: the great star of AD 1006 anchors the calendar.',
                     grantsItem: 'artifact3',
                     startText: "There it is. A scorpion of stars, and beside it, a circle with rays, far too bright to be the moon. Your 1956 sketch, line for line. If this records the great star of AD 1006, then every count on the calendar stick is a DATE. You take out charcoal and paper and make a careful rubbing. (Star Chart Rubbing added.)"
                 }},
-                { type: "rock", x: 250, y: 150 },
-                { type: 'campfire_remains', x: 160, y: 400 },
-                { type: 'fruit_cactus', x: 480, y: 400 },
+                { type: "petroglyph_panel", x: 470, y: 120, width: 48, height: 48, text: "Broad-shouldered figures with rayed heads. The crank in the Republic reads them as visitors from the sky. They are just as likely dancers, or shamans, or nobody in particular. The rock does not say." },
+                // Night sky-watching spot (the whole point of this place)
+                { type: "interactive_point", x: 300, y: 200, width: 32, height: 32, solid: false, interactive: true, color: '#5A4A3A', timeGated: {
+                    startHour: 20, endHour: 5,
+                    successText: "You lie back on the warm granite. Scorpius wheels up over the eastern ridge, red Antares at its heart, exactly where the panel puts the guest star. For a moment you are standing beside whoever chiseled it, nine hundred years ago, watching the same sky refuse to hold still.",
+                    failText: "A smooth granite shelf, worn by generations of people lying back to watch the sky. Alvarez would say wait for full dark. Come back at night.",
+                    record: { id: 'scorpius_rising', description: 'Watched Scorpius rise over the White Tanks, as the ancients did.', completed: true }
+                }},
+                // The White Tanks themselves: granite water pools
+                { type: "tinaja", x: 90, y: 330 },
+                { type: "granite_boulder", x: 180, y: 150 },
+                { type: "granite_boulder", x: 300, y: 380 },
+                { type: "granite_boulder", x: 520, y: 360 },
+                { type: "rock", x: 150, y: 420, color: '#8A7967' },
+                { type: 'cactus', x: 60, y: 120 },
+                { type: 'fruit_cactus', x: 480, y: 410 },
+                { type: 'desert_flower', x: 250, y: 300 },
+                { type: 'sand_dune', x: 380, y: 440 },
+                { type: 'campfire_remains', x: 200, y: 400 },
+                // UFO debunk beat
+                { type: "interactive_point", x: 540, y: 250, text: "Scorch marks on the caliche and a scrap of burned magnesium casing. Military flare, not a saucer. The strange lights have a boring answer. The rock carvings do not." },
                 { type: "doorway", x: 0, y: 232, toMap: 'sky_people_shrine', toX: CANVAS_WIDTH - 70, toY: 200, text: "To South Mtn." },
-                { type: "doorway", x: CANVAS_WIDTH - 48, y: 120, toMap: 'asu_lab', toX: 50, toY: 240, text: "To ASU" },
-                { type: 'rock', x: 50, y: 200, width: 40, height: 40, solid: true, color: '#8A7967' },
-                { type: 'cactus', x: 300, y: 50 },
-                { type: 'interactive_point', x: 200, y: 350, text: "The air is unusually still here. Nine hundred years ago, someone stood on this spot and watched a new star outshine everything in the sky for weeks." },
+                { type: "doorway", x: CANVAS_WIDTH - 48, y: 120, toMap: 'asu_lab', toX: 50, toY: 240, text: "To ASU" }
             ],
             npcs: [
-                { name: "Petroglyph Researcher", x: 500, y: 100, dialog: [
+                { name: "Petroglyph Researcher", x: 150, y: 250, dialog: [
                     "These panels are centuries old. The star-and-scorpion one? There's a claim it records the supernova of 1006: Scorpius rising, the guest star beside it. It's disputed. It should be disputed. That's how this works.",
                     "But disputed isn't debunked. If it's right, somebody here did naked-eye astronomy precise enough to date a stellar explosion. No telescope. Just patience and a chisel.",
                     "People keep asking me if it's aliens. It's better than aliens. It's people.",
                     "If you need a panel with you, do what we do: charcoal and butcher paper. A good rubbing is as true as the rock."
+                ]},
+                { name: "Star Party Host", x: 340, y: 260, dialog: [
+                    "The county runs star parties out here. Darkest sky within an hour of Phoenix, and the ancients knew it first.",
+                    "Lie back on that granite shelf after dark. Scorpius climbs the east ridge and you'll see exactly what the star panel is pointing at.",
+                    "Every few weeks somebody swears they saw a UFO over these mountains. Nine times out of ten it's the base flying flares. The tenth time it's Venus, and they won't believe you."
                 ]}
             ],
             enemies: [
                 { type: 'coyote', x: 150, y: 350 },
-                { type: 'gila_monster', x: 400, y: 420 },
-                { type: 'vulture', x: 520, y: 320 }
+                { type: 'gila_monster', x: 430, y: 430 },
+                { type: 'vulture', x: 520, y: 200 },
+                { type: 'snake', x: 300, y: 440 }
             ],
             critters: [
-                { type: 'jackrabbit', x: 350, y: 150 },
-                { type: 'lizard', x: 180, y: 280 }
+                { type: 'jackrabbit', x: 360, y: 160 },
+                { type: 'lizard', x: 220, y: 340 },
+                { type: 'quail', x: 120, y: 300 },
+                { type: 'roadrunner', x: 440, y: 380 }
             ]
         },
         ghost_town: {
