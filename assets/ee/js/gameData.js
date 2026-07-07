@@ -85,6 +85,12 @@ export function getObjectTypes() {
         canyon_wall: { name: 'Canyon Wall', width: 160, height: 100, solid: true, interactive: false, color: '#A0522D' },
         balanced_rock: { name: 'Balanced Rock', width: 56, height: 72, solid: true, interactive: true, color: '#B0603A', text: "A boulder the size of a truck balanced on a neck of stone the size of a fencepost. It has been about to fall for ten thousand years. The desert is not in a hurry." },
         dry_wash: { name: 'Dry Wash', width: 490, height: 30, solid: false, interactive: false, groundLayer: true, color: '#D8B98C' },
+        // Desert outskirts
+        pickup_truck: { name: "Walker's Truck", width: 76, height: 44, solid: true, interactive: true, color: '#4E8A8A', text: "Your truck. A '61 Ford, older than half your students and better company. The seat still holds the shape of the drive out. It will wait. It's good at that." },
+        palo_verde: { name: 'Palo Verde', width: 64, height: 72, solid: true, interactive: true, color: '#7A9A4A', text: "A palo verde, green-barked and patient, with a young saguaro growing in its shade. Nurse trees: every old giant in this desert spent its first fifty years protected by something older." },
+        // Indoors (ASU)
+        interior_wall: { name: 'Wall', width: 20, height: 220, solid: true, interactive: false, color: '#8A8578' },
+        bookshelf: { name: 'Archive Stacks', width: 70, height: 100, solid: true, interactive: true, color: '#6B4A2E', text: "Hayden Library overflow: bound theses, survey ledgers, boxed field notes. Every drawer a career. Most of them unopened since their author died." },
         // Camelback Mountain
         mountain_slope: { name: 'Mountain Slope', width: 200, height: 60, solid: true, interactive: false, color: '#8A8A72' },
         praying_monk: { name: 'The Praying Monk', width: 60, height: 92, solid: true, interactive: true, color: '#C1583A', text: "A red sandstone figure kneeling at the camel's head, hands together, facing east. Climbers rope up its spine; the monk doesn't mind. It has faced the sunrise for twenty million years, which is one way to pray." },
@@ -158,6 +164,7 @@ export function getItemTypes() {
         journal: { name: 'Journal', description: 'Contains research notes and quests.', useFunc: (game) => game.ui.toggleQuestLog() },
         prickly_pear: {
             name: 'Prickly Pear', description: 'A sweet cactus fruit. Restores 35 HP and clears rattlesnake venom.',
+            stackable: true, maxStack: 5,
             useFunc: (game) => {
                 const p = game.player;
                 const venomous = p.venomTicks > 0;
@@ -199,22 +206,28 @@ export function getMaps() {
         desert: {
             name: 'Sonoran Desert Outskirts', background: '#E2C9A1',
             objects: [
+                // The road ends here: Walker's truck, and a track east into the hills
+                { type: 'pickup_truck', x: 24, y: 168 },
+                { type: 'trail_path', x: 104, y: 236, width: 488, height: 26 },
+                { type: 'trail_path', x: 284, y: 262, width: 40, height: 202 },
                 { type: 'cactus', x: 100, y: 80 },
                 { type: 'cactus', x: 430, y: 120 },
                 { type: 'cactus', x: 480, y: 380 },
                 { type: 'cactus', x: 60, y: 400 },
-                { type: 'rock', x: 250, y: 190 },
+                { type: 'palo_verde', x: 430, y: 290 },
+                { type: 'rock', x: 250, y: 176 },
                 { type: 'rock', x: 350, y: 50, width: 40, height: 32 },
                 { type: 'rock', x: 550, y: 300, width: 48, height: 36 },
                 { type: 'sand_dune', x: 150, y: 360 },
-                { type: 'dead_tree', x: 310, y: 280 },
+                { type: 'dead_tree', x: 180, y: 292 },
                 { type: 'campfire_remains', x: 170, y: 150 },
                 { type: 'fruit_cactus', x: 230, y: 350 },
-                { type: 'desert_flower', x: 350, y: 220 },
+                { type: 'desert_flower', x: 360, y: 180 },
                 { type: 'tumbleweed', x: 280, y: 110 },
                 { type: 'trail_marker', x: 550, y: 190, text: "The canyon entrance lies ahead." },
-                { type: 'sign', x: 150, y: 240, text: "Caution: desert conditions. Between 11 and 4 the sun is not negotiable. Travel at dawn and dusk." },
-                { type: 'interactive_point', x: 380, y: 350, text: "Lizard tracks crisscross the sand. Something heavier passed through too: tire tracks, out-of-state tread." },
+                { type: 'sign', x: 140, y: 200, text: "Caution: desert conditions. Between 11 and 4 the sun is not negotiable. Travel at dawn and dusk." },
+                { type: 'interactive_point', x: 380, y: 384, text: "Lizard tracks crisscross the sand. Something heavier passed through too: tire tracks, out-of-state tread." },
+                { type: 'interactive_point', x: 560, y: 430, text: "A lawn chair, a thermos, and a spiral notebook: sightings, times, azimuths, weather. Say what you like about the man; he takes DATA." },
                 { type: 'water_source', x: 50, y: 300 },
                 { type: 'doorway', x: CANVAS_WIDTH - 48, y: 232, toMap: 'canyon', toX: 50, toY: 240, text: "To Canyon" },
                 { type: 'doorway', x: 296, y: CANVAS_HEIGHT - 16, toMap: 'ghost_town', toX: 296, toY: 40, text: "To Old Town" }
@@ -809,18 +822,28 @@ export function getMaps() {
         asu_lab: {
             name: 'ASU Hayden Archives and Lab', background: '#4A4A52', indoor: true,
             objects: [
-                { type: 'asu_banner', x: 150, y: 36 },
-                { type: 'computer_terminal', x: 100, y: 100, text: "ASU mainframe: solar ephemeris loaded. JUNE 21 1986: SUNRISE 05:18, AZIMUTH 60.9 DEG. Simulation copied to your pocket computer. The alignments will read at dawn and dusk." },
-                { type: 'lab_bench', x: 200, y: 150 },
-                { type: 'server_rack', x: 500, y: 80 },
-                { type: 'phoenix_statue', x: 300, y: 50 },
-                { type: 'sparky_statue', x: 56, y: 150 },
-                { type: 'bulletin_board', x: 250, y: 250 },
-                { type: 'trophy_case', x: 560, y: 280 },
-                { type: 'potted_palm', x: 40, y: 380 },
-                { type: 'potted_palm', x: 590, y: 410 },
-                { type: 'interactive_point', x: 420, y: 160, text: "Through the window: Palm Walk shimmers in the heat, and past it the gold 'A' on the butte above Tempe. People were pecking symbols into that hill a thousand years before anyone painted a letter on it." },
-                { type: 'interactive_point', x: 180, y: 300, text: "Microfiche: 1912 canal survey maps overlaid on last year's aerial photos. One alignment segment sits just outside the grading permit. Untouched. For now." },
+                // West wing: the lab. East wing: the Hayden archives. A dividing
+                // wall with a walkway gap at the south end joins them.
+                { type: 'interior_wall', x: 336, y: 20, width: 20, height: 220 },
+                { type: 'asu_banner', x: 130, y: 36 },
+                { type: 'computer_terminal', x: 90, y: 100, text: "ASU mainframe: solar ephemeris loaded. JUNE 21 1986: SUNRISE 05:18, AZIMUTH 60.9 DEG. Simulation copied to your pocket computer. The alignments will read at dawn and dusk." },
+                { type: 'lab_bench', x: 130, y: 160 },
+                { type: 'server_rack', x: 262, y: 70 },
+                { type: 'sparky_statue', x: 40, y: 150 },
+                { type: 'bulletin_board', x: 60, y: 300 },
+                // The archives
+                { type: 'bookshelf', x: 380, y: 60 },
+                { type: 'bookshelf', x: 466, y: 60 },
+                { type: 'bookshelf', x: 552, y: 60 },
+                { type: 'bookshelf', x: 420, y: 210 },
+                { type: 'bookshelf', x: 520, y: 210 },
+                { type: 'interactive_point', x: 462, y: 340, text: "Microfiche: 1912 canal survey maps overlaid on last year's aerial photos. One alignment segment sits just outside the grading permit. Untouched. For now." },
+                { type: 'interactive_point', x: 606, y: 176, text: "Through the window: Palm Walk shimmers in the heat, and past it the gold 'A' on the butte above Tempe. People were pecking symbols into that hill a thousand years before anyone painted a letter on it." },
+                { type: 'trophy_case', x: 580, y: 380 },
+                { type: 'potted_palm', x: 40, y: 400 },
+                { type: 'potted_palm', x: 380, y: 410 },
+                // 'The ancients' door hides behind the Phoenix. Push what cannot fly.'
+                { type: 'phoenix_statue', x: 296, y: 348 },
                 { type: 'secret_panel', x: 300, y: 400, portalOnInteract: true, toMap: 'artifact_chamber', toX: CANVAS_WIDTH / 2 - 16, toY: CANVAS_HEIGHT - 80,
                     requiredItems: ['artifact1', 'artifact2', 'artifact3'],
                     lockedText: "A panel, locked from behind. Three shallow slots are cut into the frame: one shaped like a notched stick, one like a curved shard, one a flat sheet.",

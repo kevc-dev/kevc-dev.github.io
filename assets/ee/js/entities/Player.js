@@ -294,22 +294,28 @@ export class Player extends Entity {
     }
 
     addItem(itemKey) {
-        if (!this.inventory.includes(itemKey)) {
-            this.inventory.push(itemKey);
-            this.game.ui.updateInventoryDisplay(this.inventory, this.game.itemTypes);
-            if (itemKey === 'artifact1' || itemKey === 'artifact2' || itemKey === 'artifact3' || itemKey === 'final_artifact') {
-                this.game.sound.playSound('getCoin');
-            } else {
-                this.game.sound.playSound('getItem');
-            }
-            if (this.game.particles) this.game.particles.burst(this.centerX, this.y, '#FFD700', 12, 1.8);
-            this.game.saveGame(); // silent checkpoint: items are rare and load-bearing
-            return true;
+        const itemType = this.game.itemTypes[itemKey];
+        if (itemType && itemType.stackable) {
+            // Stackables accumulate up to their cap
+            if (this.itemCount(itemKey) >= (itemType.maxStack || 5)) return false;
+        } else if (this.inventory.includes(itemKey)) {
+            return false;
         }
-        return false;
+        this.inventory.push(itemKey);
+        this.game.ui.updateInventoryDisplay(this.inventory, this.game.itemTypes);
+        if (itemKey === 'artifact1' || itemKey === 'artifact2' || itemKey === 'artifact3' || itemKey === 'final_artifact') {
+            this.game.sound.playSound('getCoin');
+        } else {
+            this.game.sound.playSound('getItem');
+        }
+        if (this.game.particles) this.game.particles.burst(this.centerX, this.y, '#FFD700', 12, 1.8);
+        this.game.saveGame(); // silent checkpoint: items are rare and load-bearing
+        return true;
     }
 
     hasItem(itemKey) { return this.inventory.includes(itemKey); }
+
+    itemCount(itemKey) { return this.inventory.filter(k => k === itemKey).length; }
 
     removeItem(itemKey) {
         const idx = this.inventory.indexOf(itemKey);

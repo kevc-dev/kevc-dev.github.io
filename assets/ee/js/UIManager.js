@@ -156,14 +156,24 @@ export class UIManager {
     updateInventoryDisplay(inventory, itemTypes) {
         this.inventoryDiv.innerHTML = '';
         this.inventoryList.innerHTML = '';
-        inventory.forEach(itemKey => {
+        // Stackables collapse into one slot with a count
+        const counts = new Map();
+        inventory.forEach(itemKey => counts.set(itemKey, (counts.get(itemKey) || 0) + 1));
+        counts.forEach((count, itemKey) => {
             const item = itemTypes[itemKey];
             if (!item) return;
+            const countLabel = count > 1 ? ` x${count}` : '';
             // Icon box (top-left)
             const itemDiv = document.createElement('div');
             itemDiv.className = 'invItem';
             itemDiv.textContent = item.name.charAt(0).toUpperCase();
-            itemDiv.title = `${item.name}: ${item.description}`;
+            if (count > 1) {
+                const badge = document.createElement('span');
+                badge.className = 'invCount';
+                badge.textContent = count;
+                itemDiv.appendChild(badge);
+            }
+            itemDiv.title = `${item.name}${countLabel}: ${item.description}`;
             itemDiv.addEventListener('click', () => this.game.useItem(itemKey));
             this.inventoryDiv.appendChild(itemDiv);
             // Readable name row (reference panel)
@@ -172,7 +182,7 @@ export class UIManager {
             key.className = 'invKey';
             key.textContent = item.name.charAt(0).toUpperCase();
             li.appendChild(key);
-            li.appendChild(document.createTextNode(item.name));
+            li.appendChild(document.createTextNode(item.name + countLabel));
             this.inventoryList.appendChild(li);
         });
         this.showInventory();

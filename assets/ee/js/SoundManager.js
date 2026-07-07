@@ -50,21 +50,22 @@ export class SoundManager {
         document.addEventListener('keydown', resumeOnInteraction, { once: false });
         document.addEventListener('touchstart', resumeOnInteraction, { once: false });
 
-        this.music.menuTheme = new Audio('music/menu.mp3');
-        this.music.firstScenarioTheme = new Audio('sounds/first_scenario.mp3');
-        this.music.secondScenarioTheme = new Audio('sounds/second_scenario.mp3');
-        this.music.thirdScenarioTheme = new Audio('sounds/third_scenario.mp3');
-        this.music.hohokamTheme = new Audio('sounds/hohokam_theme.mp3');
-        this.music.casaGrandeTheme = new Audio('sounds/casa_grande_theme.mp3');
-        this.music.skyPeopleTheme = new Audio('sounds/sky_people_theme.mp3');
-        this.music.whiteTanksTheme = new Audio('sounds/white_tanks_theme.mp3');
-        this.music.asuLabTheme = new Audio('sounds/asu_scenario_theme.mp3');
-        this.music.chamberTheme = new Audio('sounds/chamber_theme.mp3');
-        this.music.ghostTownTheme = new Audio('sounds/western.mp3');
-        this.music.mineTheme = new Audio('sounds/mine_scenario_theme.mp3');
-        this.music.papagoTheme = new Audio('sounds/papago_scenario_theme.mp3');
-        this.music.canalTheme = new Audio('sounds/another_scenario.mp3');
-        this.music.superstitionsTheme = new Audio('sounds/fourth_scenario.mp3');
+        // Music is 96k AAC (.m4a): ~60% smaller than the original mp3s
+        this.music.menuTheme = new Audio('music/menu.m4a');
+        this.music.firstScenarioTheme = new Audio('sounds/first_scenario.m4a');
+        this.music.secondScenarioTheme = new Audio('sounds/second_scenario.m4a');
+        this.music.thirdScenarioTheme = new Audio('sounds/third_scenario.m4a');
+        this.music.hohokamTheme = new Audio('sounds/hohokam_theme.m4a');
+        this.music.casaGrandeTheme = new Audio('sounds/casa_grande_theme.m4a');
+        this.music.skyPeopleTheme = new Audio('sounds/sky_people_theme.m4a');
+        this.music.whiteTanksTheme = new Audio('sounds/white_tanks_theme.m4a');
+        this.music.asuLabTheme = new Audio('sounds/asu_scenario_theme.m4a');
+        this.music.chamberTheme = new Audio('sounds/chamber_theme.m4a');
+        this.music.ghostTownTheme = new Audio('sounds/western.m4a');
+        this.music.mineTheme = new Audio('sounds/mine_scenario_theme.m4a');
+        this.music.papagoTheme = new Audio('sounds/papago_scenario_theme.m4a');
+        this.music.canalTheme = new Audio('sounds/another_scenario.m4a');
+        this.music.superstitionsTheme = new Audio('sounds/fourth_scenario.m4a');
 
         this.sounds.selectOption = new Audio('sounds/select_options.mp3');
         this.sounds.gameStart = new Audio('sounds/game_start.mp3');

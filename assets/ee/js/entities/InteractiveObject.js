@@ -106,6 +106,10 @@ export class InteractiveObject extends Entity {
             case 'mountain_slope': this.drawMountainSlope(ctx); break;
             case 'praying_monk': this.drawPrayingMonk(ctx); break;
             case 'trail_path': this.drawTrailPath(ctx); break;
+            case 'pickup_truck': this.drawPickupTruck(ctx); break;
+            case 'palo_verde': this.drawPaloVerde(ctx); break;
+            case 'interior_wall': this.drawInteriorWall(ctx); break;
+            case 'bookshelf': this.drawBookshelf(ctx); break;
             default: ctx.fillRect(this.x, this.y, this.width, this.height); break;
         }
     }
@@ -1518,6 +1522,118 @@ export class InteractiveObject extends Entity {
             seed = (seed * 1103515245 + 12345) >>> 0;
             return (seed >>> 8) / 16777216;
         };
+    }
+
+    // Walker's '61 Ford, nose east, dust up to the door handles
+    drawPickupTruck(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const body = '#4E8A8A', shade = '#3A6A6A', rust = '#8A5A3A', glass = '#1E2E38', tire = '#1A1A1A', hub = '#8A8A82';
+        // Bed (west) and body line
+        ctx.fillStyle = body;
+        ctx.fillRect(x, y + h * 0.34, w, h * 0.4);
+        ctx.fillStyle = shade;
+        ctx.fillRect(x, y + h * 0.6, w, h * 0.14);
+        ctx.fillRect(x, y + h * 0.34, w * 0.04, h * 0.4); // tailgate edge
+        // Cab (east) with windows
+        ctx.fillStyle = body;
+        ctx.fillRect(x + w * 0.52, y + h * 0.08, w * 0.3, h * 0.3);
+        ctx.fillStyle = glass;
+        ctx.fillRect(x + w * 0.56, y + h * 0.13, w * 0.1, h * 0.2);
+        ctx.fillRect(x + w * 0.7, y + h * 0.13, w * 0.09, h * 0.2);
+        // Hood/nose
+        ctx.fillStyle = body;
+        ctx.fillRect(x + w * 0.8, y + h * 0.24, w * 0.2, h * 0.16);
+        ctx.fillStyle = '#E8DCA0'; // headlight
+        ctx.fillRect(x + w - 4, y + h * 0.3, 3, 4);
+        // Rust patches and dust skirt
+        ctx.fillStyle = rust;
+        ctx.fillRect(x + w * 0.12, y + h * 0.52, 8, 5);
+        ctx.fillRect(x + w * 0.62, y + h * 0.4, 6, 4);
+        ctx.fillStyle = 'rgba(210, 180, 140, 0.5)';
+        ctx.fillRect(x, y + h * 0.66, w, h * 0.08);
+        // Wheels: stepped discs
+        [x + w * 0.18, x + w * 0.72].forEach(wx => {
+            ctx.fillStyle = tire;
+            ctx.fillRect(Math.round(wx) - 7, y + h * 0.68, 14, h * 0.28);
+            ctx.fillRect(Math.round(wx) - 9, y + h * 0.74, 18, h * 0.16);
+            ctx.fillStyle = hub;
+            ctx.fillRect(Math.round(wx) - 3, y + h * 0.78, 6, h * 0.08);
+        });
+    }
+
+    // Green-barked nurse tree with a young saguaro in its shade
+    drawPaloVerde(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const rand = this.seededRand();
+        const bark = '#7A9A4A', barkDark = '#5E7C38', leaf = '#A8C86A', leafDim = '#8FAE54', bloom = '#E8D84A';
+        // Trunk, forking
+        ctx.fillStyle = bark;
+        ctx.fillRect(x + w * 0.44, y + h * 0.5, 7, h * 0.5);
+        ctx.fillStyle = barkDark;
+        ctx.fillRect(x + w * 0.48, y + h * 0.5, 3, h * 0.5);
+        // Branches: stepped diagonals out and up
+        ctx.fillStyle = bark;
+        for (let i = 0; i < 4; i++) {
+            ctx.fillRect(Math.round(x + w * 0.46 - i * 7), Math.round(y + h * 0.46 - i * 6), 6, 4);
+            ctx.fillRect(Math.round(x + w * 0.5 + i * 7), Math.round(y + h * 0.44 - i * 5), 6, 4);
+        }
+        // Airy canopy: scattered leaf clusters, never a solid mass
+        for (let i = 0; i < 26; i++) {
+            const px = x + 2 + rand() * (w - 8);
+            const py = y + rand() * (h * 0.5);
+            ctx.fillStyle = rand() < 0.5 ? leaf : leafDim;
+            ctx.fillRect(Math.round(px), Math.round(py), 4, 3);
+            if (rand() < 0.18) {
+                ctx.fillStyle = bloom;
+                ctx.fillRect(Math.round(px) + 1, Math.round(py) - 2, 2, 2);
+            }
+        }
+        // The young saguaro it shelters
+        ctx.fillStyle = '#2D7D40';
+        ctx.fillRect(x + w * 0.74, y + h * 0.68, 8, h * 0.32);
+        ctx.fillStyle = '#1E532D';
+        ctx.fillRect(x + w * 0.78, y + h * 0.68, 2, h * 0.32);
+    }
+
+    // Institutional plaster with a baseboard: the least romantic wall in the game
+    drawInteriorWall(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        ctx.fillStyle = '#8A8578';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#9A9588';
+        ctx.fillRect(x, y, w, 4);
+        ctx.fillStyle = '#5A554A';
+        ctx.fillRect(x, y + h - 6, w, 6);
+        ctx.fillStyle = '#7A7568';
+        ctx.fillRect(x + w - 3, y, 3, h);
+    }
+
+    drawBookshelf(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const rand = this.seededRand();
+        // Case
+        ctx.fillStyle = '#6B4A2E';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#503620';
+        ctx.fillRect(x, y, w, 4);
+        // Three shelves of spines
+        const spineColors = ['#8A3A2E', '#3A5A7A', '#6E7C3A', '#8A6E3A', '#5A4A6E', '#7A7A72'];
+        for (let s = 0; s < 3; s++) {
+            const sy = y + 8 + s * ((h - 14) / 3);
+            const sh = (h - 14) / 3 - 6;
+            ctx.fillStyle = '#3A2A1A';
+            ctx.fillRect(x + 4, sy, w - 8, sh + 4);
+            let bx = x + 5;
+            while (bx < x + w - 9) {
+                const bw = 4 + Math.floor(rand() * 4);
+                const lean = rand() < 0.12 ? 2 : 0;
+                ctx.fillStyle = spineColors[Math.floor(rand() * spineColors.length)];
+                ctx.fillRect(bx, sy + 2 + lean, bw, sh - lean);
+                bx += bw + 1;
+            }
+            ctx.fillStyle = '#503620';
+            ctx.fillRect(x + 2, sy + sh + 2, w - 4, 3);
+        }
     }
 
     // Camelback granite: sage-grey ledges with brush growing out of the cracks

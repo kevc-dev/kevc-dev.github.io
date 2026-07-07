@@ -2,6 +2,20 @@
 
 *A critical pass on the narrative, level structure, mythology handling, and desert mechanics. Written against the current build in `assets/ee/`.*
 
+> **Implementation status (July 2026).** Most of this document is now built:
+> the newspaper/notebook inciting incident and intro (§7), the solstice clock with
+> the June 21 vigil and June 23 pour (§1, §3), the three-layer mystery ending in
+> the calendar stick and the three-way choice with THE RETURN (§1), Frances
+> Antone with selective authority and the Kachina/aliens corrections (§4), the
+> leave-a-gift threshold as the vault's offering ledge (§4), Cutler across
+> Camelback / the Superstitions / the vault (§2), the wait/camp verb, alignment
+> sightline records with the field map, the audio-first rattlesnake, guide
+> coyote, Harris's hawks, roadrunner safe ground, the blacklight, the haboob
+> set piece on the canal, and the midday lethality band (§3, §5). Still open:
+> the Scottsdale house tutorial level (§2 #1), the monsoon flash flood (§5),
+> and the process step of contacting the cultural preservation offices before
+> any public release (§4) — that last one is not optional if this ships.
+
 ---
 
 ## 1. The honest critique first

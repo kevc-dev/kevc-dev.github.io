@@ -1,5 +1,5 @@
 import { Entity } from './Entity.js';
-import { GAME_STATE } from '../constants.js';
+import { GAME_STATE, CANVAS_WIDTH, CANVAS_HEIGHT } from '../constants.js';
 import { NPC_SPRITES } from './npcSprites.js';
 
 export class NPC extends Entity {
@@ -12,6 +12,47 @@ export class NPC extends Entity {
         if (Array.isArray(this.dialog)) this.dialogIndex = 0;
         this.phaseOffset = Math.floor(Math.random() * 100);
         this.npcAnimationFrame = this.phaseOffset;
+        // Gentle idle wander around a home spot
+        this.homeX = x;
+        this.homeY = y;
+        this.dirX = 0;
+        this.dirY = 0;
+        this.wanderTimer = Math.floor(Math.random() * 240);
+        this.walkFacing = 1;
+    }
+
+    update() {
+        const p = this.game.player;
+        // Someone's here: stop shuffling and pay attention
+        if (p && Math.hypot(p.centerX - this.centerX, p.centerY - this.centerY) < 90) {
+            this.dirX = 0;
+            this.dirY = 0;
+            return;
+        }
+        if (--this.wanderTimer <= 0) {
+            this.wanderTimer = 200 + Math.floor(Math.random() * 280);
+            if (Math.random() < 0.55) {
+                this.dirX = 0;
+                this.dirY = 0;
+            } else {
+                const a = Math.random() * Math.PI * 2;
+                this.dirX = Math.cos(a);
+                this.dirY = Math.sin(a);
+            }
+        }
+        if (this.dirX !== 0 || this.dirY !== 0) {
+            const sp = 0.35;
+            const map = this.game.currentMap;
+            const nx = this.x + this.dirX * sp;
+            const ny = this.y + this.dirY * sp;
+            if (Math.abs(nx - this.homeX) < 42 && nx > 0 && nx < CANVAS_WIDTH - this.width &&
+                !map.checkCollision(nx + 4, this.y + 16, 16, 16)) this.x = nx;
+            else this.dirX *= -1;
+            if (Math.abs(ny - this.homeY) < 30 && ny > 0 && ny < CANVAS_HEIGHT - this.height &&
+                !map.checkCollision(this.x + 4, ny + 16, 16, 16)) this.y = ny;
+            else this.dirY *= -1;
+            if (Math.abs(this.dirX) > 0.1) this.walkFacing = this.dirX > 0 ? 1 : -1;
+        }
     }
 
     draw(ctx) {
@@ -32,8 +73,8 @@ export class NPC extends Entity {
             const rows = spriteSpec.frames[frame];
             const scale = w / rows[0].length;
             const p = this.game.player;
-            const faceLeft = p && Math.abs(p.centerY - this.centerY) < 90 &&
-                p.centerX < this.centerX - 6 && Math.abs(p.centerX - this.centerX) < 120;
+            const nearPlayer = p && Math.abs(p.centerY - this.centerY) < 90 && Math.abs(p.centerX - this.centerX) < 120;
+            const faceLeft = nearPlayer ? p.centerX < this.centerX - 6 : this.walkFacing === -1;
             ctx.save();
             if (faceLeft) {
                 ctx.translate(this.centerX, 0);
