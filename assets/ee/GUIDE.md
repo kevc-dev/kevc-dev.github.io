@@ -32,6 +32,10 @@ The concrete pours June 23. Fill your canteen.
   see where you end up.
 - **Press M** for Walker's field map. It tracks the three records you carry and
   draws each alignment in gold as you witness it.
+- **Check the Model 100** in your satchel — Walker's pocket computer shows the
+  date and time, the dawn/dusk reading windows, the solstice countdown, your
+  progress, and warns you if there's venom in your blood (a green **VENOM**
+  badge also sits by the HP bar until you eat a prickly pear).
 - **You can't really lose.** The game checkpoints on every map change, camp,
   and pickup. Death returns you to the last checkpoint.
 

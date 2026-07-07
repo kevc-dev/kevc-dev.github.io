@@ -111,7 +111,6 @@ export function getEnemyTypes() {
         vulture: { name: 'Vulture', width: 36, height: 24, damage: 6, speed: 1.7, health: 25, color: '#3B2F2F', isFlying: true, circles: true, aggroRange: 200, solid: false, interactive: false },
         javelina: { name: 'Javelina', width: 42, height: 30, damage: 14, speed: 1.9, health: 70, color: '#4A4038', charges: true, aggroRange: 170, solid: true, interactive: true },
         bat: { name: 'Cave Bat', width: 20, height: 14, damage: 4, speed: 1.9, health: 15, color: '#1A1A22', isFlying: true, erratic: true, aggroRange: 160, solid: false, interactive: false },
-        mummy: { name: 'Ancient Guardian', width: 26, height: 36, damage: 15, speed: 0.7, health: 120, color: '#C8BCA0', aggroRange: 220, solid: true, interactive: false },
     };
 }
 
@@ -146,6 +145,28 @@ export function getItemTypes() {
         compass: {
             name: 'Field Map', description: "Walker's map of the Salt River Valley. The alignments draw themselves in as you read them. (M)",
             useFunc: (game) => game.openMap()
+        },
+        pocket_computer: {
+            name: 'Model 100', description: "Your pocket computer: a Tandy Model 100 in a leather satchel. Logs the sky and keeps the count. The UV lamp clips to it.",
+            useFunc: (game) => {
+                const p = game.player;
+                const date = game.gameDate;
+                const hour = game.gameHour;
+                const min = Math.floor((game.gameTime % 3600) / 60);
+                const dateLabel = date <= 30 ? `JUN ${date}` : `JUL ${date - 30}`;
+                const records = ['artifact1', 'artifact2', 'artifact3'].filter(k => p.hasItem(k)).length;
+                const readings = ['alignment_light', 'alignment_doorway', 'alignment_horizon'].filter(id => p.quests.some(q => q.id === id)).length;
+                const toSolstice = 21 - date;
+                const solsticeLine = toSolstice > 0 ? `SOLSTICE IN ${toSolstice} DAY${toSolstice === 1 ? '' : 'S'}`
+                    : (toSolstice === 0 ? 'SOLSTICE: TODAY' : 'SOLSTICE PASSED');
+                game.ui.showDialog(
+                    `TRS-80 MODEL 100 · ${dateLabel} 1986, ${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')} · ` +
+                    `DAWN READS 05:00-08:00 · DUSK READS 17:00-20:00 · ${solsticeLine} · ` +
+                    `RECORDS ${records}/3 · READINGS ${readings}/3` +
+                    (p.venomTicks > 0 ? ' · !! VENOM IN BLOOD: EAT PRICKLY PEAR' : ''),
+                    "Model 100");
+                game.setGameState(GAME_STATE.DIALOG);
+            }
         },
         newspaper: {
             name: 'Arizona Republic', description: 'June 5, 1986. Two stories on one page.',
@@ -479,6 +500,12 @@ export function getMaps() {
                     "City stocks the ponds with trout. The herons figured that out before I did.",
                     "That butte with the hole clean through it? At dawn the sun crawls right across the floor inside. My grandfather called it a church.",
                     "Best hour out here is the first one. Everything after is just heat."
+                ]},
+                { name: 'Lost Tourist', x: 470, y: 330, dialog: [
+                    "Oh thank goodness, a person. Is this the way to the zoo? The map at the trailhead was mostly a drawing of a lizard.",
+                    "I have passed that same red rock three times now. Unless it's three different red rocks. Do rocks migrate?",
+                    "The fishing fella said 'follow the water uphill.' That's a RIDDLE, sir, not directions.",
+                    "You look like a man with a map. One of those press-M types. I'll just... stay near the pond. The pond makes sense."
                 ]}
             ],
             enemies: [

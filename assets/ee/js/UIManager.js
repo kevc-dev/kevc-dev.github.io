@@ -107,7 +107,28 @@ export class UIManager {
     showLoading() { this.loadingText.style.display = 'block'; }
     hideLoading() { this.loadingText.style.display = 'none'; }
     updateHealth(current, max) { this.hpFill.style.width = `${(current / max) * 100}%`; }
-    updateHydration(current, max) { this.hydrationFill.style.width = `${(current / max) * 100}%`; }
+
+    updateHydration(current, max) {
+        this.hydrationFill.style.width = `${(current / max) * 100}%`;
+        // Critically dry: the bar pulses
+        const bar = document.getElementById('hydrationBar');
+        if (bar) {
+            const low = current / max < 0.2;
+            if (low !== this.hydrationLow) {
+                this.hydrationLow = low;
+                if (low) bar.classList.add('low');
+                else bar.classList.remove('low');
+            }
+        }
+    }
+
+    // Persistent poison indicator next to the HP bar
+    setVenomBadge(active) {
+        if (active === this.venomBadgeShown) return;
+        this.venomBadgeShown = active;
+        const badge = document.getElementById('venomBadge');
+        if (badge) badge.style.display = active ? 'block' : 'none';
+    }
     updateMapName(name) { this.mapNameDisplay.textContent = name; }
 
     updateClock(gameTimeInSeconds) {
@@ -148,6 +169,17 @@ export class UIManager {
     showWinScreen(message, title) {
         const titleEl = document.getElementById('winTitle');
         if (titleEl && title) titleEl.textContent = title;
+        // Each ending gets its own emblem: an olla going home, a briefcase of
+        // cash, a museum plaque — the trophy stays for anything else.
+        const art = document.getElementById('pixelTrophy');
+        if (art) {
+            const EMBLEMS = {
+                'THE RETURN': "<rect x='9' y='0' width='1' height='4' fill='#C8A868'/><rect x='10' y='1' width='1' height='1' fill='#8A6B3F'/><rect x='10' y='3' width='1' height='1' fill='#8A6B3F'/><rect x='6' y='4' width='4' height='1' fill='#9A4630'/><rect x='5' y='5' width='6' height='1' fill='#C97B5A'/><rect x='4' y='6' width='8' height='4' fill='#C97B5A'/><rect x='4' y='8' width='8' height='1' fill='#4A3B2A'/><rect x='5' y='10' width='6' height='2' fill='#9A4630'/><rect x='6' y='12' width='4' height='1' fill='#7A3E24'/><rect x='2' y='13' width='12' height='1' fill='#B08D57'/>",
+                'THE SPLIT': "<rect x='3' y='5' width='10' height='7' fill='#4A3A28'/><rect x='4' y='6' width='8' height='5' fill='#6B5B45'/><rect x='7' y='4' width='2' height='2' fill='#4A3A28'/><rect x='5' y='7' width='6' height='3' fill='#3E7C59'/><rect x='6' y='8' width='4' height='1' fill='#8FBC8F'/><rect x='12' y='11' width='3' height='3' fill='#FFD700'/><rect x='13' y='12' width='1' height='1' fill='#B8860B'/>",
+                'THE PLAQUE': "<rect x='2' y='3' width='12' height='10' fill='#DAA520'/><rect x='3' y='4' width='10' height='8' fill='#B8860B'/><rect x='4' y='6' width='8' height='1' fill='#6B4A0F'/><rect x='4' y='8' width='6' height='1' fill='#6B4A0F'/><rect x='4' y='10' width='7' height='1' fill='#6B4A0F'/><rect x='3' y='4' width='1' height='1' fill='#F0D060'/><rect x='12' y='11' width='1' height='1' fill='#F0D060'/>",
+            };
+            if (title && EMBLEMS[title]) art.innerHTML = EMBLEMS[title];
+        }
         this.winMessage.textContent = message;
         this.winScreen.style.display = 'block';
     }

@@ -228,6 +228,8 @@ check('Delgado hands over the shard after the pour', game.player.hasItem('artifa
 game.player.addItem('final_artifact');
 game.resolveEnding(0);
 check('THE SPLIT ending exists', game.endingTitle === 'THE SPLIT');
+check('ending carries the field-notes recap', game.endingMessage.includes('field notes'));
+check('SPLIT gets its own emblem', document.getElementById('pixelTrophy').innerHTML.includes('#3E7C59'));
 game.resolveEnding(1);
 check('THE PLAQUE ending exists', game.endingTitle === 'THE PLAQUE');
 
@@ -258,7 +260,7 @@ for (const [name, spec] of Object.entries(PORTRAIT_DATA)) {
         for (const ch of row) if (ch !== '.' && !(ch in spec.palette)) { portraitOk = false; console.log(`  portrait ${name} row${r}: unknown '${ch}'`); }
     });
 }
-check('portraits: 21 entries, all 16x16, palette-complete', portraitOk && Object.keys(PORTRAIT_DATA).length === 21, `count ${Object.keys(PORTRAIT_DATA).length}`);
+check('portraits: 22 entries, all 16x16, palette-complete', portraitOk && Object.keys(PORTRAIT_DATA).length === 22, `count ${Object.keys(PORTRAIT_DATA).length}`);
 check('portrait lookup headless-safe', getPortraitURL('Vance Cutler') === null || typeof getPortraitURL('Vance Cutler') === 'string');
 // Every NPC in every map must resolve to a portrait
 let coverageOk = true;
@@ -312,15 +314,23 @@ const hpBefore = game.player.health;
 for (let i = 0; i < 16 && rattler.rattlerState === 'strike'; i++) rattler.update();
 check('strike bites and envenomates', game.player.health < hpBefore && game.player.venomTicks > 0,
     `hp ${hpBefore}->${game.player.health} venom ${game.player.venomTicks}`);
-// Venom ticks over time
+// Venom ticks over time, and the HUD badge shows while poisoned
 game.player.health = 100;
 game.player.animationFrame = 299;
 game.player.update();
 check('venom drains over time', game.player.health < 100 && game.player.venomTicks === 7, `hp ${game.player.health} ticks ${game.player.venomTicks}`);
+check('venom badge visible while poisoned', document.getElementById('venomBadge').style.display === 'block');
 // Prickly pear cures
 game.player.addItem('prickly_pear');
 game.useItem('prickly_pear');
 check('prickly pear clears venom', game.player.venomTicks === 0);
+game.handleKeyUp('e');
+game.player.update();
+check('venom badge clears after the cure', document.getElementById('venomBadge').style.display === 'none');
+// Model 100 almanac
+check('Model 100 in the starting kit', game.player.hasItem('pocket_computer'));
+game.useItem('pocket_computer');
+check('Model 100 shows the almanac', game.gameState === GAME_STATE.DIALOG && document.getElementById('dialogBox').innerHTML.includes('MODEL 100'));
 game.handleKeyUp('e');
 // Roadrunner presence keeps rattlers calm (safe ground)
 rattler.rattlerState = 'calm';

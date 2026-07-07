@@ -232,7 +232,6 @@ export class Enemy extends Entity {
             case 'Vulture': this.drawVulture(ctx); break;
             case 'Javelina': this.drawJavelina(ctx); break;
             case 'Cave Bat': this.drawBat(ctx); break;
-            case 'Ancient Guardian': this.drawMummy(ctx); break;
             default:
                 ctx.fillStyle = this.enemyType.color || '#FF0000';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -507,43 +506,6 @@ export class Enemy extends Entity {
         this.drawSprite(ctx, F, P, this.flapFrame, 2.5);
     }
 
-    drawMummy(ctx) {
-        const P = { w: '#C8BCA0', s: '#A89C80', G: '#66FF88' };
-        const F = [[
-            ".wwwwwwwwww..",
-            ".wsswwwwssw..",
-            ".wGGwwwwGGw..",
-            ".wwwwsswwww..",
-            "..wwwwwwww...",
-            "wwwwwwwwwwwww",
-            "w..wsswssw..w",
-            "...wwwwwww...",
-            "...wsswssw...",
-            "...wwwwwww...",
-            "...wsswssw...",
-            "...wwwwwww...",
-            "...ww...ww...",
-            "...ww...ww...",
-            "...ss...ss...",
-        ], [
-            ".wwwwwwwwww..",
-            ".wsswwwwssw..",
-            ".wGGwwwwGGw..",
-            ".wwwwsswwww..",
-            "..wwwwwwww...",
-            "wwwwwwwwwwwww",
-            "w..wsswssw..w",
-            "...wwwwwww...",
-            "...wsswssw...",
-            "...wwwwwww...",
-            "...wsswssw...",
-            "...wwwwwww...",
-            "..ww....ww...",
-            "..ww....ww...",
-            "..ss....ss...",
-        ]];
-        this.drawSprite(ctx, F, P, this.walkFrame);
-    }
 
     takeDamage(amount) {
         this.health -= amount;

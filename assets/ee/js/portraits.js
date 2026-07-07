@@ -464,6 +464,30 @@ Object.assign(PORTRAITS, {
             "pppppppppppppppp",
         ],
     },
+    'Lost Tourist': {
+        palette: {
+            H: '#F5DEB3', h: '#D8C090', s: '#E8A088', e: '#241408',
+            W: '#F8F8F0', m: '#8A4A38', o: '#FF4500', K: '#333333',
+        },
+        rows: [
+            "....HHHHHHHH....",
+            "...HHHHHHHHHH...",
+            "HHHHHHHHHHHHHHHH",
+            "hhhhhhhhhhhhhhhh",
+            "..ssssssssssss..",
+            "..sseessseess...",
+            "..ssssssssssss..",
+            "..sssssWWsssss..",
+            "..ssssssssssss..",
+            "..sssmmmmmmsss..",
+            "...ssssssssss...",
+            "....ssssssss....",
+            "..oo.ssssss.oo..",
+            ".ooKooooooooooo.",
+            "ooooKooooooooooo",
+            "oooooKoooooooooo",
+        ],
+    },
     "Saloon Keeper's Ghost": {
         palette: {
             h: '#B0E0E6', g: '#ADD8E6', W: '#FFFFFF',

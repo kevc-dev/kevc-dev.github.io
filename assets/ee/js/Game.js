@@ -211,10 +211,12 @@ export class Game {
             this.player.hydration = data.hydration;
             this.player.inventory = data.inventory;
             this.player.quests = data.quests;
-            // Migrate older saves: journal records that predate their completed flag
+            // Migrate older saves: journal records that predate their completed flag,
+            // and gear added after the save was made
             this.player.quests.forEach(q => {
                 if ((q.id === 'supernova_read' || q.id === 'dutchman_bust') && !q.completed) q.completed = true;
             });
+            if (!this.player.inventory.includes('pocket_computer')) this.player.inventory.splice(2, 0, 'pocket_computer');
             this.gameTime = data.gameTime;
             this.mapState = data.mapState || {};
             this.sessionKills = {};
@@ -446,6 +448,14 @@ export class Game {
         this.setGameState(GAME_STATE.PUZZLE);
     }
 
+    // The optional journal records, tallied for the epilogue
+    fieldNotesRecap() {
+        const OPTIONAL = ['prospector_pickaxe', 'hermit_blessing', 'canyon_beam', 'camelback_sightline',
+            'hiker_helped', 'casa_venus', 'scorpius_rising', 'dutchman_bust', 'uv_pigment', 'uv_chalk', 'uv_spiral'];
+        const done = this.player ? OPTIONAL.filter(id => this.player.quests.some(q => q.id === id && q.completed)).length : 0;
+        return ` — From Walker's field notes: ${done} of ${OPTIONAL.length} desert moments recorded.`;
+    }
+
     resolveEnding(answerIndex) {
         const poured = this.gameDate >= 23;
         if (answerIndex === 0) {
@@ -460,6 +470,7 @@ export class Game {
                 + (poured ? " The canal by the airport is concrete now, but what it carried is on the stick, and the stick is home." : "")
                 + " At the new year, when the saguaro fruit comes ripe, there is a place set for you at the harvest. Some things aren't found, Professor. They're returned.";
         }
+        this.endingMessage += this.fieldNotesRecap();
         this.setGameState(GAME_STATE.WIN);
     }
 

@@ -83,7 +83,7 @@ export class Player extends Entity {
         this.maxHealth = 100;
         this.hydration = 100;
         this.maxHydration = 100;
-        this.inventory = ['canteen', 'compass', 'newspaper', 'field_notebook'];
+        this.inventory = ['canteen', 'compass', 'pocket_computer', 'newspaper', 'field_notebook'];
         this.quests = [{ id: "main_artifact", description: "Read the valley's alignments (M to track). Solstice: June 21.", completed: false }];
         this.isMoving = false;
         this.isAttacking = false;
@@ -179,6 +179,7 @@ export class Player extends Entity {
             this.venomTicks--;
             this.takeDamage(2, "Venom");
         }
+        this.game.ui.setVenomBadge(this.venomTicks > 0);
         this.game.ui.updateHydration(this.hydration, this.maxHydration);
     }
 
@@ -337,8 +338,10 @@ export class Player extends Entity {
         if (this.health < 0) this.health = 0;
         this.game.ui.updateHealth(this.health, this.maxHealth);
         if (this.game.particles) {
-            this.game.particles.floatText(this.centerX, this.y - 6, `-${amount}`, '#FF6666');
-            this.game.particles.burst(this.centerX, this.centerY, '#CC3333', 5, 1.6);
+            // Venom ticks read green so the drip is traceable to the bite
+            const color = source === 'Venom' ? '#7CFC00' : '#FF6666';
+            this.game.particles.floatText(this.centerX, this.y - 6, `-${amount}`, color);
+            this.game.particles.burst(this.centerX, this.centerY, source === 'Venom' ? '#5AC838' : '#CC3333', 5, 1.6);
         }
         if (this.health <= 0) this.game.gameOver(`Defeated by ${source}.`);
         return true;

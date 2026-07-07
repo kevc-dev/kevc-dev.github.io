@@ -342,6 +342,25 @@
             z-index: 60;
             display: none;
         }
+        #venomBadge {
+            position: absolute;
+            top: 34px;
+            right: 130px;
+            color: #7CFC00;
+            font-size: 8px;
+            background-color: rgba(0, 0, 0, 0.75);
+            padding: 3px 5px;
+            border: 1px solid #3E7C2A;
+            z-index: 55;
+            display: none;
+        }
+        #hydrationBar.low {
+            border-color: #FF5544;
+            animation: lowPulse 0.9s steps(2) infinite;
+        }
+        @keyframes lowPulse {
+            50% { opacity: 0.5; }
+        }
         .invItem { position: relative; }
         .invCount {
             position: absolute;
@@ -563,6 +582,7 @@
             <div id="inventory"></div>
             <div id="hpBar" class="statusBar">HP <div id="hpFill"></div></div>
             <div id="hydrationBar" class="statusBar">H2O <div id="hydrationFill"></div></div>
+            <div id="venomBadge">&#9763; VENOM</div>
             <div id="mapNameDisplay">Sonoran Desert</div>
             <div id="muteButton" title="Toggle sound">&#128266;</div>
             <div id="clockDisplay">Day 1 - 08:00 AM</div>
