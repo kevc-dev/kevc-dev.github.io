@@ -6,6 +6,7 @@ valley-sized astronomical instrument the Hohokam left behind — and to decide
 what to do with what it protects. Vanilla JavaScript + Canvas, no dependencies.
 
 Design rationale and narrative bible: [STORY_DESIGN.md](STORY_DESIGN.md).
+Level-by-level walkthrough (spoilers): [GUIDE.md](GUIDE.md).
 
 ## Controls
 
