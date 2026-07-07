@@ -2,7 +2,7 @@ import { Entity } from './Entity.js';
 import {
     CANVAS_WIDTH, CANVAS_HEIGHT, PLAYER_SPEED, HYDRATION_RATE,
     ANIMATION_CYCLE_FRAMES, WALK_FRAMES, DEHYDRATION_DAMAGE_INTERVAL,
-    DEHYDRATION_DAMAGE, SCREEN_FLASH_DURATION, GAME_STATE,
+    DEHYDRATION_DAMAGE, GAME_STATE,
     PLAYER_ATTACK_DAMAGE, PLAYER_ATTACK_RANGE, PLAYER_ATTACK_COOLDOWN,
     PLAYER_ATTACK_DURATION, PLAYER_ATTACK_KNOCKBACK
 } from '../constants.js';
@@ -14,113 +14,63 @@ const PLAYER_PALETTE = {
     r: '#9E2B2B', d: '#7A1E1E', p: '#4A3B31', o: '#241608', g: '#C8A868',
 };
 
+// Bodies (rows 0-11) are shared per direction; leg sets make a 4-phase gait:
+// stand -> stride A -> stand -> stride B.
+const DOWN_BODY = [
+    "....HHHH....",
+    "..HHHHHHHH..",
+    ".hhHHHHHHhh.",
+    "..ssssssss..",
+    "..ssessess..",
+    "..sBBBBBBs..",
+    "...BBBBBB...",
+    "..srrddrrs..",
+    "..srrrrrrs..",
+    "...rrrrrr...",
+    "...pppppp...",
+    "...pppppp...",
+];
+const UP_BODY = [
+    "....HHHH....",
+    "..HHHHHHHH..",
+    ".hhHHHHHHhh.",
+    "..BBBBBBBB..",
+    "..BBBBBBBB..",
+    "..sBBBBBBs..",
+    "...gggggg...",
+    "..srrggrrs..",
+    "..srrrrrrs..",
+    "...rrrrrr...",
+    "...pppppp...",
+    "...pppppp...",
+];
+// Drawn facing right; flipped horizontally for 'left'
+const SIDE_BODY = [
+    "..HHHH......",
+    ".HHHHHH.....",
+    ".hHHHHHhhh..",
+    "..sssss.....",
+    "..ssses.....",
+    "..sBBBB.....",
+    "..sBBB......",
+    "..rrrrs.....",
+    "..rrrrrs....",
+    "..rrrr......",
+    "..pppp......",
+    "..pppp......",
+];
+const LEGS_STAND = ["...pp..pp...", "...pp..pp...", "...oo..oo...", "..ooo..ooo.."];
+const LEGS_A = ["...pp..pp...", "..pp...pp...", "..oo...oo...", ".ooo...ooo.."];
+const LEGS_B = ["...pp..pp...", "...pp...pp..", "...oo...oo..", "..ooo...ooo."];
+const SIDE_LEGS_STAND = ["..pp.pp.....", ".pp..pp.....", ".oo..oo.....", "ooo..oo....."];
+const SIDE_LEGS_A = ["..pp.pp.....", "..pp...pp...", "..oo...oo...", ".ooo...ooo.."];
+const SIDE_LEGS_B = ["..pp.pp.....", ".ppp.pp.....", ".ooo.oo.....", "oooo.oo....."];
+const mkFrame = (body, legs) => [...body, ...legs];
+
 const PLAYER_SPRITES = {
-    down: [[
-        "....HHHH....",
-        "..HHHHHHHH..",
-        ".hhHHHHHHhh.",
-        "..ssssssss..",
-        "..ssessess..",
-        "..sBBBBBBs..",
-        "...BBBBBB...",
-        "..srrddrrs..",
-        "..srrrrrrs..",
-        "...rrrrrr...",
-        "...pppppp...",
-        "...pppppp...",
-        "...pp..pp...",
-        "...pp..pp...",
-        "...oo..oo...",
-        "..ooo..ooo..",
-    ], [
-        "....HHHH....",
-        "..HHHHHHHH..",
-        ".hhHHHHHHhh.",
-        "..ssssssss..",
-        "..ssessess..",
-        "..sBBBBBBs..",
-        "...BBBBBB...",
-        "..srrddrrs..",
-        "..srrrrrrs..",
-        "...rrrrrr...",
-        "...pppppp...",
-        "...pppppp...",
-        "...pp..pp...",
-        "..pp....pp..",
-        "..oo....oo..",
-        ".ooo....ooo.",
-    ]],
-    up: [[
-        "....HHHH....",
-        "..HHHHHHHH..",
-        ".hhHHHHHHhh.",
-        "..BBBBBBBB..",
-        "..BBBBBBBB..",
-        "..sBBBBBBs..",
-        "...gggggg...",
-        "..srrggrrs..",
-        "..srrrrrrs..",
-        "...rrrrrr...",
-        "...pppppp...",
-        "...pppppp...",
-        "...pp..pp...",
-        "...pp..pp...",
-        "...oo..oo...",
-        "..ooo..ooo..",
-    ], [
-        "....HHHH....",
-        "..HHHHHHHH..",
-        ".hhHHHHHHhh.",
-        "..BBBBBBBB..",
-        "..BBBBBBBB..",
-        "..sBBBBBBs..",
-        "...gggggg...",
-        "..srrggrrs..",
-        "..srrrrrrs..",
-        "...rrrrrr...",
-        "...pppppp...",
-        "...pppppp...",
-        "...pp..pp...",
-        "..pp....pp..",
-        "..oo....oo..",
-        ".ooo....ooo.",
-    ]],
-    // Drawn facing right; flipped horizontally for 'left'
-    side: [[
-        "..HHHH......",
-        ".HHHHHH.....",
-        ".hHHHHHhhh..",
-        "..sssss.....",
-        "..ssses.....",
-        "..sBBBB.....",
-        "..sBBB......",
-        "..rrrrs.....",
-        "..rrrrrs....",
-        "..rrrr......",
-        "..pppp......",
-        "..pppp......",
-        "..pp.pp.....",
-        ".pp..pp.....",
-        ".oo..oo.....",
-        "ooo..oo.....",
-    ], [
-        "..HHHH......",
-        ".HHHHHH.....",
-        ".hHHHHHhhh..",
-        "..sssss.....",
-        "..ssses.....",
-        "..sBBBB.....",
-        "..sBBB......",
-        "..rrrrs.....",
-        "..rrrrrs....",
-        "..rrrr......",
-        "..pppp......",
-        "..pppp......",
-        "..pp.pp.....",
-        "..pp...pp...",
-        "..oo...oo...",
-        ".ooo...ooo..",
-    ]],
+    down: [mkFrame(DOWN_BODY, LEGS_STAND), mkFrame(DOWN_BODY, LEGS_A), mkFrame(DOWN_BODY, LEGS_STAND), mkFrame(DOWN_BODY, LEGS_B)],
+    up: [mkFrame(UP_BODY, LEGS_STAND), mkFrame(UP_BODY, LEGS_A), mkFrame(UP_BODY, LEGS_STAND), mkFrame(UP_BODY, LEGS_B)],
+    side: [mkFrame(SIDE_BODY, SIDE_LEGS_STAND), mkFrame(SIDE_BODY, SIDE_LEGS_A), mkFrame(SIDE_BODY, SIDE_LEGS_STAND), mkFrame(SIDE_BODY, SIDE_LEGS_B)],
 };
 
 export class Player extends Entity {
@@ -134,11 +84,20 @@ export class Player extends Entity {
         this.hydration = 100;
         this.maxHydration = 100;
         this.inventory = ['canteen', 'compass', 'newspaper', 'field_notebook'];
-        this.quests = [{ id: "main_artifact", description: "Follow the alignments. Solstice: June 21.", completed: false }];
+        this.quests = [{ id: "main_artifact", description: "Read the valley's alignments (M to track). Solstice: June 21.", completed: false }];
         this.isMoving = false;
         this.isAttacking = false;
         this.attackTimer = 0;
         this.attackCooldownTimer = 0;
+        // Rattlesnake venom: a slow drain that makes you pay attention, not a death
+        this.venomTicks = 0;
+        // Brief invulnerability after a hit so overlapping enemies can't stunlock
+        this.invulnTimer = 0;
+    }
+
+    applyVenom() {
+        this.venomTicks = 8;
+        if (this.game.particles) this.game.particles.floatText(this.centerX, this.y - 16, 'VENOM!', '#7CFC00');
     }
 
     update() {
@@ -192,6 +151,7 @@ export class Player extends Entity {
         }
 
         // Combat timers & attack input (F or J)
+        if (this.invulnTimer > 0) this.invulnTimer--;
         if (this.attackCooldownTimer > 0) this.attackCooldownTimer--;
         if (this.isAttacking) {
             this.attackTimer--;
@@ -202,7 +162,7 @@ export class Player extends Entity {
         }
 
         // Midday lethality band: 11am-4pm outdoors drains hydration much faster.
-        const hour = Math.floor((this.game.gameTime % 86400) / 3600);
+        const hour = this.game.gameHour;
         const indoors = this.game.currentMap && this.game.currentMap.indoor;
         const heatMult = (!indoors && hour >= 11 && hour < 16) ? 2.5 : 1;
         this.hydration -= (HYDRATION_RATE * heatMult) / 60;
@@ -214,18 +174,39 @@ export class Player extends Entity {
         if (this.hydration === 0 && this.animationFrame % DEHYDRATION_DAMAGE_INTERVAL === 0) {
             this.takeDamage(DEHYDRATION_DAMAGE, "Dehydration");
         }
+        // Venom works slowly; prickly pear fruit clears it
+        if (this.venomTicks > 0 && this.animationFrame % 300 === 0) {
+            this.venomTicks--;
+            this.takeDamage(2, "Venom");
+        }
         this.game.ui.updateHydration(this.hydration, this.maxHydration);
     }
 
     draw(ctx) {
-        const frame = this.isMoving ? (this.spriteIndex % 2) : 0;
+        // Post-hit invulnerability reads as a classic sprite flicker
+        if (this.invulnTimer > 0 && this.game.animationFrame % 6 < 3) return;
+        const frame = this.isMoving ? (this.spriteIndex % WALK_FRAMES) : 0;
         const key = this.direction === 'up' ? 'up'
                   : (this.direction === 'left' || this.direction === 'right') ? 'side'
                   : 'down';
         const rows = PLAYER_SPRITES[key][frame];
         const scale = this.width / 12;
 
+        // Step bob on stride frames; a small lunge toward the swing while attacking
+        const bob = this.isMoving && frame % 2 === 1 ? -1 : 0;
+        let lungeX = 0, lungeY = 0;
+        if (this.isAttacking) {
+            const push = this.attackTimer > PLAYER_ATTACK_DURATION * 0.4 ? 2 : 1;
+            switch (this.direction) {
+                case 'up': lungeY = -push; break;
+                case 'down': lungeY = push; break;
+                case 'left': lungeX = -push; break;
+                case 'right': lungeX = push; break;
+            }
+        }
+
         ctx.save();
+        ctx.translate(lungeX, lungeY + bob);
         if (this.direction === 'left') {
             ctx.translate(this.centerX, 0);
             ctx.scale(-1, 1);
@@ -295,7 +276,6 @@ export class Player extends Entity {
                 enemy.takeDamage(PLAYER_ATTACK_DAMAGE);
             }
         });
-        //if (!hitSomething) this.game.sound.playSound('toinkArrow');
         if (!hitSomething) this.game.sound.playSound('knock');
     }
 
@@ -323,6 +303,7 @@ export class Player extends Entity {
                 this.game.sound.playSound('getItem');
             }
             if (this.game.particles) this.game.particles.burst(this.centerX, this.y, '#FFD700', 12, 1.8);
+            this.game.saveGame(); // silent checkpoint: items are rare and load-bearing
             return true;
         }
         return false;
@@ -338,7 +319,14 @@ export class Player extends Entity {
         }
     }
 
+    // Returns true if the hit landed (false while invulnerability frames are up)
     takeDamage(amount, source = "Unknown") {
+        const internal = source === "Dehydration" || source === "Venom";
+        if (!internal) {
+            if (this.invulnTimer > 0) return false;
+            this.invulnTimer = 45; // ~0.75s of mercy; the sprite flickers meanwhile
+            this.game.sound.playSound('playerHurt');
+        }
         this.health -= amount;
         if (this.health < 0) this.health = 0;
         this.game.ui.updateHealth(this.health, this.maxHealth);
@@ -346,12 +334,8 @@ export class Player extends Entity {
             this.game.particles.floatText(this.centerX, this.y - 6, `-${amount}`, '#FF6666');
             this.game.particles.burst(this.centerX, this.centerY, '#CC3333', 5, 1.6);
         }
-        if (source !== "Dehydration") {
-            this.game.sound.playSound('playerHurt');
-        }
-        this.game.canvas.style.backgroundColor = '#FF0000';
-        setTimeout(() => { this.game.canvas.style.backgroundColor = ''; }, SCREEN_FLASH_DURATION);
         if (this.health <= 0) this.game.gameOver(`Defeated by ${source}.`);
+        return true;
     }
 
     heal(amount) {
@@ -368,6 +352,7 @@ export class Player extends Entity {
         if (!this.quests.find(q => q.id === quest.id)) {
             this.quests.push(quest);
             this.game.ui.updateQuestLog(this.quests);
+            this.game.saveGame(); // silent checkpoint: alignment records live here
         }
     }
 

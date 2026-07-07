@@ -1,4 +1,5 @@
 import { SAVE_NOTIFICATION_DURATION } from './constants.js';
+import { getPortraitURL } from './portraits.js';
 
 export class UIManager {
     constructor(game) {
@@ -39,6 +40,15 @@ export class UIManager {
             this.game.sound.playSound('selectOption');
             this.game.startGame();
         });
+        const continueButton = document.getElementById('continueButton');
+        if (continueButton) {
+            continueButton.addEventListener('click', () => {
+                this.game.sound.initializeAudio();
+                this.game.sound.stopMusic('menuTheme');
+                this.game.sound.playSound('selectOption');
+                this.game.continueGame();
+            });
+        }
         document.getElementById('resumeButton').addEventListener('click', () => {
             this.game.sound.initializeAudio();
             this.game.togglePause();
@@ -50,7 +60,9 @@ export class UIManager {
         document.getElementById('restartButton').addEventListener('click', () => {
             this.game.sound.initializeAudio();
             this.game.sound.playSound('selectOption');
-            this.game.startGame(true);
+            // Death resumes from the last checkpoint when one exists
+            if (this.game.hasSave()) this.game.continueGame();
+            else this.game.startGame(true);
         });
         document.getElementById('gameOverMainMenuButton').addEventListener('click', () => {
             this.game.sound.initializeAudio();
@@ -65,14 +77,30 @@ export class UIManager {
         this.puzzleOptionA.addEventListener('click', () => this.game.handlePuzzleAnswer(0));
         this.puzzleOptionB.addEventListener('click', () => this.game.handlePuzzleAnswer(1));
         this.puzzleOptionC.addEventListener('click', () => this.game.handlePuzzleAnswer(2));
+
+        const muteButton = document.getElementById('muteButton');
+        if (muteButton) {
+            // Volume cycles full / half / silent
+            const renderVolumeIcon = (level) => {
+                muteButton.innerHTML = level === 0 ? '&#128263;' : (level === 0.5 ? '&#128265;' : '&#128266;');
+            };
+            renderVolumeIcon(this.game.sound.volumeLevel);
+            muteButton.addEventListener('click', () => renderVolumeIcon(this.game.sound.toggleMute()));
+        }
     }
 
-    showStartScreen() { this.startScreen.style.display = 'flex'; }
+    showStartScreen() {
+        this.startScreen.style.display = 'flex';
+        const continueButton = document.getElementById('continueButton');
+        if (continueButton) continueButton.style.display = this.game.hasSave() ? 'inline-block' : 'none';
+    }
     hideStartScreen() { this.startScreen.style.display = 'none'; }
     showPauseScreen() { this.pauseScreen.style.display = 'flex'; }
     hidePauseScreen() { this.pauseScreen.style.display = 'none'; }
     showGameOverScreen(message) {
         document.getElementById('gameOverMessage').textContent = message;
+        const restartButton = document.getElementById('restartButton');
+        if (restartButton) restartButton.textContent = this.game.hasSave() ? 'LAST CHECKPOINT' : 'RESTART';
         this.gameOverScreen.style.display = 'flex';
     }
     hideGameOverScreen() { this.gameOverScreen.style.display = 'none'; }
@@ -96,11 +124,14 @@ export class UIManager {
         let suffix = '';
         if (toSolstice > 0) suffix = ` · Solstice in ${toSolstice}d`;
         else if (toSolstice === 0) suffix = ' · SOLSTICE';
+        else if (date < 23) suffix = ' · Pour: Jun 23';
         this.clockDisplay.textContent = `${dateLabel}, 1986 - ${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}${suffix}`;
     }
 
     showDialog(text, speaker) {
-        this.dialogBox.innerHTML = speaker ? `<strong>${speaker}:</strong> ${text}` : text;
+        const portrait = speaker ? getPortraitURL(speaker) : null;
+        const face = portrait ? `<img class="portrait" src="${portrait}" alt="">` : '';
+        this.dialogBox.innerHTML = face + (speaker ? `<strong>${speaker}:</strong> ${text}` : text);
         this.dialogBox.style.display = 'block';
     }
     hideDialog() { this.dialogBox.style.display = 'none'; }
@@ -114,7 +145,9 @@ export class UIManager {
     }
     hidePuzzle() { this.puzzleScreen.style.display = 'none'; }
 
-    showWinScreen(message) {
+    showWinScreen(message, title) {
+        const titleEl = document.getElementById('winTitle');
+        if (titleEl && title) titleEl.textContent = title;
         this.winMessage.textContent = message;
         this.winScreen.style.display = 'block';
     }
@@ -177,10 +210,15 @@ export class UIManager {
             return;
         }
         this.questList.innerHTML = '';
-        quests.forEach(quest => {
+        // Open tasks first, settled records below them
+        const ordered = [...quests.filter(q => !q.completed), ...quests.filter(q => q.completed)];
+        ordered.forEach(quest => {
             const li = document.createElement('li');
-            li.textContent = quest.description + (quest.completed ? " (Completed)" : "");
-            if (quest.completed) li.style.textDecoration = "line-through";
+            li.textContent = quest.description + (quest.completed ? " (Done)" : "");
+            if (quest.completed) {
+                li.style.textDecoration = "line-through";
+                li.style.opacity = "0.6";
+            }
             this.questList.appendChild(li);
         });
         // Pop up briefly on quest changes, then hide (unless pinned open with Q)

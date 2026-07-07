@@ -1,5 +1,6 @@
 import { Entity } from './Entity.js';
 import { GAME_STATE } from '../constants.js';
+import { NPC_SPRITES } from './npcSprites.js';
 
 export class NPC extends Entity {
     constructor(game, x, y, name, spriteKey, dialog) {
@@ -9,18 +10,39 @@ export class NPC extends Entity {
         this.dialog = dialog;
         this.isInteractable = true;
         if (Array.isArray(this.dialog)) this.dialogIndex = 0;
-        this.npcAnimationFrame = Math.floor(Math.random() * 100);
+        this.phaseOffset = Math.floor(Math.random() * 100);
+        this.npcAnimationFrame = this.phaseOffset;
     }
 
     draw(ctx) {
-        this.npcAnimationFrame++;
+        // Tied to the fixed-step game clock (not draw calls) so idle animation
+        // speed doesn't depend on the display's refresh rate
+        this.npcAnimationFrame = this.game.animationFrame + this.phaseOffset;
         const x = this.x, y = this.y, w = this.width, h = this.height;
         const skinColor = '#E0C0A0', eyeColor = '#000000';
         const headHeight = 8, bodyTopY = y + headHeight, bodyHeight = h - headHeight;
         let npcHeadColor = skinColor, npcShirtColor = '#607D8B', npcTrouserColor = '#4E342E';
         const isSpirit = this.name.toLowerCase().includes('spirit') || this.name.toLowerCase().includes('ghost');
+        const spriteSpec = NPC_SPRITES[this.name];
 
-        if (isSpirit) {
+        if (spriteSpec) {
+            // Dedicated pixel sprite with a slow idle blink; turns to face the
+            // player when they're nearby (props swap sides, reading as a turn)
+            const frame = Math.floor(this.npcAnimationFrame / 45) % 2;
+            const rows = spriteSpec.frames[frame];
+            const scale = w / rows[0].length;
+            const p = this.game.player;
+            const faceLeft = p && Math.abs(p.centerY - this.centerY) < 90 &&
+                p.centerX < this.centerX - 6 && Math.abs(p.centerX - this.centerX) < 120;
+            ctx.save();
+            if (faceLeft) {
+                ctx.translate(this.centerX, 0);
+                ctx.scale(-1, 1);
+                ctx.translate(-this.centerX, 0);
+            }
+            this.drawPixels(ctx, rows, spriteSpec.palette, x, y + h - rows.length * scale, scale);
+            ctx.restore();
+        } else if (isSpirit) {
             this.drawSpirit(ctx, x, y, w, h, bodyTopY, bodyHeight, headHeight);
         } else {
             // Subtle idle breathing bob
@@ -32,10 +54,10 @@ export class NPC extends Entity {
         }
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = '8px "Press Start 2P"';
+        // Long names shrink instead of truncating ("Lock Keeper Vega", not "Lock")
+        ctx.font = this.name.length > 12 ? '6px "Press Start 2P"' : '8px "Press Start 2P"';
         ctx.textAlign = 'center';
-        const label = this.name.length > 12 ? this.name.split(' ')[0] : this.name;
-        ctx.fillText(label, this.x + this.width / 2, this.y - 8);
+        ctx.fillText(this.name, this.x + this.width / 2, this.y - 8);
         ctx.textAlign = 'left';
     }
 
@@ -79,42 +101,17 @@ export class NPC extends Entity {
             ctx.fillStyle = '#6B4226';
             ctx.fillRect(x, y, w, headHeight * 0.6);
             ctx.fillRect(x - 4, y + headHeight * 0.4, w + 8, headHeight * 0.4);
-        } else if (this.name === 'Frances Antone') {
-            npcShirtColor = '#2E8B8B'; npcTrouserColor = '#3B3B3B';
-            // Dark hair
-            ctx.fillStyle = '#1A1414';
+        } else if (this.name === 'Lock Keeper Vega') {
+            npcShirtColor = '#4E6A8A'; npcTrouserColor = '#3B3B3B';
+            // SRP ball cap
+            ctx.fillStyle = '#2A5A8A';
             ctx.fillRect(x + w * 0.2, y - 2, w * 0.6, headHeight * 0.45);
-            ctx.fillRect(x + w * 0.18, y + headHeight * 0.2, w * 0.12, headHeight * 0.9);
-            ctx.fillRect(x + w * 0.7, y + headHeight * 0.2, w * 0.12, headHeight * 0.9);
-            // District clipboard under one arm
-            ctx.fillStyle = '#C8B888';
-            ctx.fillRect(x + w * 0.78, bodyTopY + 4, 7, 10);
-            ctx.fillStyle = '#8A7A55';
-            ctx.fillRect(x + w * 0.78, bodyTopY + 4, 7, 2);
-        } else if (this.name === 'Vance Cutler') {
-            npcShirtColor = '#C8A868'; npcTrouserColor = '#5A4A3A';
-            // Cream panama hat with dark band
-            ctx.fillStyle = '#E8DCC0';
-            ctx.fillRect(x - 3, y + headHeight * 0.3, w + 6, headHeight * 0.35);
-            ctx.fillRect(x + w * 0.15, y - 3, w * 0.7, headHeight * 0.5);
-            ctx.fillStyle = '#4A3A28';
-            ctx.fillRect(x + w * 0.15, y + headHeight * 0.15, w * 0.7, 2);
-            // Bolo tie
-            ctx.fillStyle = '#2A2A2A';
-            ctx.fillRect(x + w * 0.48, bodyTopY, 2, bodyHeight * 0.35);
-            ctx.fillStyle = '#40C4B0';
-            ctx.fillRect(x + w * 0.44, bodyTopY + 2, 5, 5);
-        } else if (this.name === 'Dr. Delgado') {
-            npcShirtColor = '#B8A070'; npcTrouserColor = '#6B5B45';
-            // Yellow hard hat
-            ctx.fillStyle = '#F2C230';
-            ctx.fillRect(x + w * 0.15, y - 3, w * 0.7, headHeight * 0.45);
-            ctx.fillRect(x + w * 0.05, y + headHeight * 0.25, w * 0.9, headHeight * 0.2);
-            // Trowel in hand: stepped pixel blade
+            ctx.fillStyle = '#1E4266';
+            ctx.fillRect(x + w * 0.1, y + headHeight * 0.3, w * 0.55, headHeight * 0.18);
+            // Long-handled lock wrench over the shoulder
             ctx.fillStyle = '#8A8078';
-            ctx.fillRect(x + w * 0.92, bodyTopY + bodyHeight * 0.38, 5, 5);
-            ctx.fillRect(x + w * 1.02, bodyTopY + bodyHeight * 0.44, 4, 4);
-            ctx.fillRect(x + w * 1.1, bodyTopY + bodyHeight * 0.5, 3, 3);
+            ctx.fillRect(x + w * 0.85, bodyTopY - 4, 3, bodyHeight * 0.6);
+            ctx.fillRect(x + w * 0.78, bodyTopY - 6, 10, 3);
         } else if (this.name === 'Morning Fisherman') {
             npcShirtColor = '#7A8B9A'; npcTrouserColor = '#4E5A42';
             // Bucket hat
@@ -165,36 +162,6 @@ export class NPC extends Entity {
             // Camera strap
             ctx.fillStyle = '#333';
             ctx.fillRect(x + w * 0.7, bodyTopY + 2, 3, bodyHeight * 0.4);
-        } else if (this.name === 'Old Prospector') {
-            npcShirtColor = '#8B6914'; npcTrouserColor = '#654321';
-            // Wide-brim hat
-            ctx.fillStyle = '#5C4033';
-            ctx.fillRect(x - 4, y, w + 8, headHeight * 0.4);
-            ctx.fillRect(x + w * 0.1, y - 3, w * 0.8, headHeight * 0.5);
-            // Bushy beard
-            ctx.fillStyle = '#C0C0C0';
-            ctx.fillRect(x + w * 0.15, y + headHeight * 0.5, w * 0.7, headHeight * 0.6);
-            // Pickaxe on back: stepped pixel handle + head
-            ctx.fillStyle = '#8B8682';
-            ctx.fillRect(x + w * 0.78, bodyTopY + 2, 3, 6);
-            ctx.fillRect(x + w * 0.84, bodyTopY + 7, 3, 6);
-            ctx.fillRect(x + w * 0.9, bodyTopY + 12, 3, 5);
-            ctx.fillStyle = '#A9A9A9';
-            ctx.fillRect(x + w * 0.72, bodyTopY - 2, 12, 4);
-        } else if (this.name === 'UFO Watcher') {
-            npcShirtColor = '#2F4F4F'; npcTrouserColor = '#3A3A3A';
-            // Foil hat: stepped pixel cone
-            ctx.fillStyle = '#C0C8D0';
-            ctx.fillRect(x + w * 0.2, y + headHeight * 0.2, w * 0.6, 3);
-            ctx.fillRect(x + w * 0.32, y - 1, w * 0.36, headHeight * 0.35);
-            ctx.fillRect(x + w * 0.42, y - 5, w * 0.16, 5);
-            // Telescope: stepped diagonal tube aimed at the sky
-            ctx.fillStyle = '#555555';
-            ctx.fillRect(x + w * 0.82, bodyTopY + 8, 4, 4);
-            ctx.fillRect(x + w * 0.94, bodyTopY + 4, 4, 4);
-            ctx.fillRect(x + w * 1.06, bodyTopY, 4, 4);
-            ctx.fillStyle = '#777777';
-            ctx.fillRect(x + w * 1.14, bodyTopY - 4, 5, 5);
         } else if (this.name === 'Photographer') {
             npcShirtColor = '#8FBC8F'; npcTrouserColor = '#5F5F5F';
             // Backwards cap
@@ -257,11 +224,16 @@ export class NPC extends Entity {
         ctx.fillStyle = npcHeadColor;
         ctx.fillRect(x + w * 0.25, y, w * 0.5, headHeight);
 
-        // Eyes (with blink)
+        // Eyes (with blink); pupils glance toward the player when they're close
+        const p = this.game.player;
+        let look = 0;
+        if (p && Math.abs(p.centerX - this.centerX) < 100 && Math.abs(p.centerY - this.centerY) < 70) {
+            look = Math.sign(p.centerX - this.centerX);
+        }
         ctx.fillStyle = eyeColor;
         if (this.npcAnimationFrame % 100 > 5) {
-            ctx.fillRect(x + w * 0.35, y + headHeight * 0.3, 2, 2);
-            ctx.fillRect(x + w * 0.55, y + headHeight * 0.3, 2, 2);
+            ctx.fillRect(x + w * 0.35 + look, y + headHeight * 0.3, 2, 2);
+            ctx.fillRect(x + w * 0.55 + look, y + headHeight * 0.3, 2, 2);
         } else {
             ctx.fillRect(x + w * 0.35, y + headHeight * 0.3 + 1, 2, 1);
             ctx.fillRect(x + w * 0.55, y + headHeight * 0.3 + 1, 2, 1);

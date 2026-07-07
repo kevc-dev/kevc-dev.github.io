@@ -26,7 +26,42 @@ export class GameMap {
             });
         }
         this.decor = this.generateDecor();
+        // Dust storms roll through maps flagged for them (the canal traversal)
+        this.haboob = mapData.haboob ? { phase: 'calm', timer: 1000 + Math.floor(Math.random() * 700) } : null;
         this.loadEntities(mapData);
+    }
+
+    endHaboob() {
+        if (!this.haboob) return;
+        this.haboob.phase = 'calm';
+        this.haboob.timer = 1600 + Math.floor(Math.random() * 900);
+        this.game.sound.setWind(false);
+    }
+
+    updateHaboob() {
+        const hb = this.haboob;
+        hb.timer--;
+        if (hb.timer <= 0) {
+            switch (hb.phase) {
+                case 'calm':
+                    hb.phase = 'approaching';
+                    hb.timer = 260;
+                    break;
+                case 'approaching':
+                    hb.phase = 'engulfed';
+                    hb.timer = 720;
+                    break;
+                case 'engulfed':
+                    hb.phase = 'clearing';
+                    hb.timer = 200;
+                    break;
+                case 'clearing':
+                    this.endHaboob();
+                    return;
+            }
+        }
+        // Re-assert wind each tick so it self-heals after pause/menu silencing
+        this.game.sound.setWind(hb.phase !== 'calm');
     }
 
     // Deterministic ground texture: sand speckles, pebbles, dry grass tufts
@@ -84,20 +119,22 @@ export class GameMap {
         this.critters = [];
         this.projectiles = [];
 
-        (mapData.objects || []).forEach(objData => {
+        (mapData.objects || []).forEach((objData, index) => {
             const baseObjectType = this.game.objectTypes[objData.type] || {};
             const instanceData = JSON.parse(JSON.stringify({ ...baseObjectType, ...objData }));
-            this.objects.push(new InteractiveObject(this.game, instanceData.x, instanceData.y, instanceData));
+            this.objects.push(new InteractiveObject(this.game, instanceData.x, instanceData.y, instanceData, index));
         });
 
         (mapData.npcs || []).forEach(npcData => {
             this.npcs.push(new NPC(this.game, npcData.x, npcData.y, npcData.name, npcData.sprite, npcData.dialog));
         });
 
-        (mapData.enemies || []).forEach(enemyData => {
+        const killedHere = this.game.sessionKills && this.game.sessionKills[this.game.currentMapName];
+        (mapData.enemies || []).forEach((enemyData, index) => {
+            if (killedHere && killedHere.has(index)) return; // stays dead this session
             const enemyDefinition = this.game.enemyTypes[enemyData.type];
             if (enemyDefinition) {
-                this.enemies.push(new Enemy(this.game, enemyData.x, enemyData.y, enemyDefinition));
+                this.enemies.push(new Enemy(this.game, enemyData.x, enemyData.y, enemyDefinition, index));
             } else {
                 console.warn(`Enemy type "${enemyData.type}" not found in definitions.`);
             }
@@ -106,7 +143,8 @@ export class GameMap {
         (mapData.critters || []).forEach(critterData => {
             const critterDefinition = this.game.critterTypes[critterData.type];
             if (critterDefinition) {
-                this.critters.push(new Critter(this.game, critterData.x, critterData.y, critterDefinition));
+                // Merge instance data over the definition (guide paths, etc.)
+                this.critters.push(new Critter(this.game, critterData.x, critterData.y, { ...critterDefinition, ...critterData }));
             } else {
                 console.warn(`Critter type "${critterData.type}" not found in definitions.`);
             }
@@ -119,8 +157,10 @@ export class GameMap {
 
     update() {
         if (this.game.gameState !== GAME_STATE.PLAYING) return;
+        if (this.haboob) this.updateHaboob();
         this.npcs.forEach(npc => npc.update());
         this.critters.forEach(critter => critter.update());
+        if (this.critters.some(c => c.gone)) this.critters = this.critters.filter(c => !c.gone);
         [...this.enemies].forEach(enemy => enemy.update());
         this.objects.forEach(obj => {
             if (obj.type === 'skull_turret' && typeof obj.updateTurret === 'function') obj.updateTurret();
@@ -136,10 +176,13 @@ export class GameMap {
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         this.drawGroundDetail(ctx);
 
+        // Flat ground features (washes) render under everything else
+        this.objects.forEach(obj => { if (obj.objData.groundLayer) obj.draw(ctx); });
+
         // Daytime ground effects (outdoor maps only)
         if (!this.indoor && this.game.dayTime) this.drawCloudShadows(ctx);
 
-        const allDrawableEntities = [...this.objects, ...this.npcs, ...this.critters, ...this.enemies, ...this.projectiles];
+        const allDrawableEntities = [...this.objects.filter(o => !o.objData.groundLayer), ...this.npcs, ...this.critters, ...this.enemies, ...this.projectiles];
         if (this.game.player) allDrawableEntities.push(this.game.player);
         allDrawableEntities.sort((a, b) => (a.y + a.height) - (b.y + b.height));
 
@@ -181,7 +224,67 @@ export class GameMap {
                 ctx.fillStyle = 'rgba(255, 180, 80, 0.14)';
                 ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             }
-            if (this.game.dayTime) this.drawBirds(ctx);
+            if (this.game.dayTime) {
+                this.drawBirds(ctx);
+                this.drawHawks(ctx);
+            }
+        }
+
+        // The dust wall covers everything, day or night
+        if (this.haboob && this.haboob.phase !== 'calm') this.drawHaboob(ctx);
+    }
+
+    drawHaboob(ctx) {
+        const hb = this.haboob;
+        const t = this.game.animationFrame;
+
+        const drawDust = (alpha) => {
+            // Full-screen dust with a clear pocket around the player
+            ctx.fillStyle = `rgba(186, 142, 88, ${alpha})`;
+            ctx.beginPath();
+            ctx.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            if (this.game.player) {
+                const p = this.game.player;
+                ctx.arc(p.centerX, p.centerY, 76, 0, Math.PI * 2, true);
+            }
+            ctx.fill();
+            // Streaking grit blowing through
+            ctx.fillStyle = `rgba(226, 196, 148, ${alpha * 0.8})`;
+            for (let i = 0; i < 26; i++) {
+                const gx = ((i * 97 + t * (6 + (i % 5))) % (CANVAS_WIDTH + 60)) - 30;
+                const gy = (i * 53 + (i % 7) * 9) % CANVAS_HEIGHT;
+                ctx.fillRect(gx, gy, 6 + (i % 3) * 3, 2);
+            }
+            // The chime is the beacon: a pulse of sound made visible
+            const chime = this.objects.find(o => o.type === 'wind_chime');
+            if (chime && alpha > 0.3) {
+                const pulse = ((t % 50) / 50);
+                const r = 4 + pulse * 22;
+                ctx.fillStyle = `rgba(255, 240, 180, ${(1 - pulse) * 0.8})`;
+                ctx.fillRect(Math.round(chime.centerX - r), Math.round(chime.centerY - 1), Math.round(r * 2), 2);
+                ctx.fillRect(Math.round(chime.centerX - 1), Math.round(chime.centerY - r), 2, Math.round(r * 2));
+            }
+        };
+
+        if (hb.phase === 'approaching') {
+            // The brown wall rolls in from the east
+            const progress = 1 - hb.timer / 260;
+            const wallX = CANVAS_WIDTH - progress * (CANVAS_WIDTH + 60);
+            ctx.fillStyle = 'rgba(186, 142, 88, 0.85)';
+            ctx.fillRect(Math.round(wallX), 0, CANVAS_WIDTH - Math.round(wallX) + 60, CANVAS_HEIGHT);
+            // Churning face of the wall: stacked lobes
+            for (let i = 0; i < 8; i++) {
+                const ly = i * (CANVAS_HEIGHT / 8);
+                const bulge = Math.round(Math.sin(t * 0.08 + i * 1.7) * 10) - 18;
+                ctx.fillStyle = `rgba(150, 108, 62, ${0.5 + (i % 2) * 0.2})`;
+                ctx.fillRect(Math.round(wallX) + bulge, Math.round(ly), 26, Math.ceil(CANVAS_HEIGHT / 8) + 1);
+                ctx.fillStyle = 'rgba(226, 196, 148, 0.5)';
+                ctx.fillRect(Math.round(wallX) + bulge - 6, Math.round(ly + 4), 5, 5);
+            }
+        } else if (hb.phase === 'engulfed') {
+            drawDust(0.82);
+        } else if (hb.phase === 'clearing') {
+            drawDust(0.82 * (hb.timer / 200));
         }
     }
 
@@ -220,6 +323,35 @@ export class GameMap {
                 ctx.fillRect(bx - 5, by + 2, 4, 2);
                 ctx.fillRect(bx + 2, by + 2, 4, 2);
             }
+        }
+    }
+
+    // Harris's hawks hunt in family groups — the only raptor that does — and a
+    // tight wheel of them marks something on the ground below. Here: the
+    // nearest unopened cache. The sky is the minimap, if you know to read it.
+    drawHawks(ctx) {
+        const marked = this.objects.find(o => o.type === 'chest' && o.objData.contains && !o.objData.opened);
+        if (!marked) return;
+        const t = this.game.animationFrame;
+        const cx = marked.centerX;
+        const cy = Math.max(40, marked.y - 58);
+        for (let i = 0; i < 3; i++) {
+            const a = t * 0.012 + i * (Math.PI * 2 / 3);
+            const hx = Math.round(cx + Math.cos(a) * 34);
+            const hy = Math.round(cy + Math.sin(a) * 13);
+            const up = (Math.floor(t / 9) + i) % 2 === 0;
+            ctx.fillStyle = 'rgba(58, 38, 24, 0.9)';
+            ctx.fillRect(hx - 1, hy, 4, 2);            // body
+            if (up) {
+                ctx.fillRect(hx - 6, hy - 3, 5, 2);
+                ctx.fillRect(hx + 3, hy - 3, 5, 2);
+            } else {
+                ctx.fillRect(hx - 6, hy + 2, 5, 2);
+                ctx.fillRect(hx + 3, hy + 2, 5, 2);
+            }
+            // Rust shoulder patch, the Harris's tell
+            ctx.fillStyle = 'rgba(140, 70, 40, 0.9)';
+            ctx.fillRect(hx - 2, hy, 1, 1);
         }
     }
 
@@ -298,6 +430,7 @@ export class GameMap {
         let minDistance = Infinity;
         const checkInteraction = (entity) => {
             if (!entity.isInteractable) return;
+            if (entity.objData && entity.objData.uv && !this.game.uvActive) return;
             const dist = Math.sqrt(Math.pow(entity.centerX - checkX, 2) + Math.pow(entity.centerY - checkY, 2));
             if (dist < (entity.width + entity.height) / 2 + 10 && dist < minDistance) {
                 minDistance = dist;

@@ -6,9 +6,10 @@ import {
 } from '../constants.js';
 
 export class Enemy extends Entity {
-    constructor(game, x, y, enemyTypeData) {
+    constructor(game, x, y, enemyTypeData, mapIndex = -1) {
         super(game, x, y, enemyTypeData.width, enemyTypeData.height, 'enemy');
         this.enemyType = enemyTypeData;
+        this.mapIndex = mapIndex;
         this.health = enemyTypeData.health;
         this.speed = enemyTypeData.speed;
         this.damage = enemyTypeData.damage;
@@ -30,6 +31,12 @@ export class Enemy extends Entity {
         this.circleAngle = Math.random() * Math.PI * 2;
         this.facing = 1; // 1 = right, -1 = left
         this.isMoving = false;
+        // Rattler state machine: calm -> warn (rattle, hold ground) -> strike -> recover
+        this.rattlerState = 'calm';
+        this.isRattling = false;
+        this.strikeVX = 0;
+        this.strikeVY = 0;
+        this.stateTimer = 0;
     }
 
     update() {
@@ -42,7 +49,9 @@ export class Enemy extends Entity {
         const distY = player.centerY - this.centerY;
         const distanceToPlayer = Math.sqrt(distX * distX + distY * distY) || 1;
 
-        if (distanceToPlayer < this.aggroRange) {
+        if (this.enemyType.rattler) {
+            this.updateRattler(player, distX, distY, distanceToPlayer);
+        } else if (distanceToPlayer < this.aggroRange) {
             if (distanceToPlayer > this.attackRange) {
                 let vx = (distX / distanceToPlayer) * this.speed;
                 let vy = (distY / distanceToPlayer) * this.speed;
@@ -58,9 +67,11 @@ export class Enemy extends Entity {
                 if (this.isFlying || !this.game.currentMap.checkCollision(nx, this.y, this.width, this.height)) this.x = nx;
                 if (this.isFlying || !this.game.currentMap.checkCollision(this.x, ny, this.width, this.height)) this.y = ny;
             } else if (this.currentAttackCooldown === 0) {
-                player.takeDamage(this.damage, this.enemyType.name);
+                // Attack sound only when the hit actually lands (not during i-frames)
+                if (player.takeDamage(this.damage, this.enemyType.name)) {
+                    this.game.sound.playSound('enemyAttack');
+                }
                 this.currentAttackCooldown = this.attackCooldown;
-                this.game.sound.playSound('enemyAttack');
                 this.x -= (distX / distanceToPlayer) * ENEMY_KNOCKBACK;
                 this.y -= (distY / distanceToPlayer) * ENEMY_KNOCKBACK;
             }
@@ -110,6 +121,71 @@ export class Enemy extends Entity {
         this.isMoving = Math.abs(this.x - prevX) + Math.abs(this.y - prevY) > 0.05;
     }
 
+    // The desert's first lesson: stop, look, listen. The rattle plays before the
+    // strike, holding still or backing away always de-escalates, and only pressing
+    // in past the warning gets you bitten.
+    updateRattler(player, distX, distY, dist) {
+        const warnRange = this.enemyType.warnRange || 120;
+        const strikeRange = this.enemyType.strikeRange || 64;
+        switch (this.rattlerState) {
+            case 'calm':
+                // Ground a roadrunner is working is safe ground: they eat snakes
+                if (dist < warnRange && !this.roadrunnerNearby()) this.setRattlerState('warn');
+                break;
+            case 'warn':
+                if (Math.abs(distX) > 2) this.facing = distX > 0 ? 1 : -1;
+                if (dist > warnRange + 40) {
+                    this.setRattlerState('calm');
+                } else if (dist < strikeRange && this.currentAttackCooldown === 0) {
+                    this.strikeVX = (distX / dist) * this.speed * 2.4;
+                    this.strikeVY = (distY / dist) * this.speed * 2.4;
+                    this.stateTimer = 16;
+                    this.setRattlerState('strike');
+                }
+                break;
+            case 'strike':
+                this.x += this.strikeVX;
+                this.y += this.strikeVY;
+                if (this.currentAttackCooldown === 0 &&
+                    this.x < player.x + player.width && this.x + this.width > player.x &&
+                    this.y < player.y + player.height && this.y + this.height > player.y) {
+                    // Venom only takes if the bite actually landed (not during i-frames)
+                    if (player.takeDamage(this.damage, this.enemyType.name)) {
+                        if (this.enemyType.venom && typeof player.applyVenom === 'function') player.applyVenom();
+                        this.game.sound.playSound('enemyAttack');
+                    }
+                    this.currentAttackCooldown = this.attackCooldown;
+                }
+                if (--this.stateTimer <= 0) {
+                    this.stateTimer = 45;
+                    this.setRattlerState('recover');
+                }
+                break;
+            case 'recover':
+                if (--this.stateTimer <= 0) this.setRattlerState(dist < warnRange ? 'warn' : 'calm');
+                break;
+        }
+    }
+
+    roadrunnerNearby() {
+        return this.game.currentMap.critters.some(c =>
+            c.critterType && c.critterType.name === 'Roadrunner' &&
+            Math.hypot(c.centerX - this.centerX, c.centerY - this.centerY) < 130);
+    }
+
+    setRattlerState(state) {
+        if (state === this.rattlerState) return;
+        this.rattlerState = state;
+        const shouldRattle = state === 'warn' || state === 'strike';
+        if (shouldRattle && !this.isRattling) {
+            this.isRattling = true;
+            this.game.sound.startRattle();
+        } else if (!shouldRattle && this.isRattling) {
+            this.isRattling = false;
+            this.game.sound.stopRattle();
+        }
+    }
+
     // Walk frame flips every 8 ticks while moving; frame 0 when standing.
     get walkFrame() {
         return this.isMoving ? Math.floor(this.enemyAnimationFrame / 8) % 2 : 0;
@@ -148,7 +224,7 @@ export class Enemy extends Entity {
 
         switch (this.enemyType.name) {
             case 'Scorpion': this.drawScorpion(ctx); break;
-            case 'Snake': this.drawSnake(ctx); break;
+            case 'Rattlesnake': this.drawSnake(ctx); break;
             case 'Coyote': this.drawCoyote(ctx); break;
             case 'Giant Spider': this.drawGiantSpider(ctx); break;
             case 'Restless Spirit': this.drawRestlessSpirit(ctx); break;
@@ -176,6 +252,12 @@ export class Enemy extends Entity {
     }
 
     drawScorpion(ctx) {
+        // Scorpions fluoresce under UV: with the blacklight, they glow in the dark
+        if (this.game.uvActive) {
+            const pulse = 0.3 + Math.sin(this.enemyAnimationFrame * 0.15) * 0.1;
+            ctx.fillStyle = `rgba(120, 255, 150, ${pulse})`;
+            ctx.fillRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
+        }
         const P = { s: '#2A1A0A', d: '#4A3B2A', b: '#6A4F3A', c: '#7A5F4A' };
         const F = [[
             "..ss............",
@@ -214,15 +296,31 @@ export class Enemy extends Entity {
             ".baab...baab...bebb.",
             "..bb.....bb.....bbb.",
         ]];
-        // Snakes ripple even at rest, just slower
-        const frame = Math.floor(this.enemyAnimationFrame / (this.isMoving ? 8 : 30)) % 2;
+        const warning = this.rattlerState === 'warn' || this.rattlerState === 'strike';
+        // Coiled buzz: 1px body jitter while warning
+        const jitter = warning ? ((Math.floor(this.enemyAnimationFrame / 2) % 2) * 2 - 1) : 0;
+        ctx.save();
+        ctx.translate(jitter, 0);
+        // Snakes ripple even at rest, just slower; a warning snake vibrates
+        const frame = Math.floor(this.enemyAnimationFrame / (warning ? 4 : (this.isMoving ? 8 : 30))) % 2;
         this.drawSprite(ctx, F, P, frame);
-        // Tongue flick
-        if (this.enemyAnimationFrame % 60 < 12) {
+        // Tongue flick (constant while warning)
+        if (warning || this.enemyAnimationFrame % 60 < 12) {
             const s = this.width / 20;
             ctx.fillStyle = P.t;
             ctx.fillRect(Math.round(this.x + 19 * s), Math.round(this.y + this.height * 0.35), Math.ceil(s * 1.5), Math.ceil(s));
         }
+        // Raised, shaking rattle at the tail end
+        if (warning) {
+            const shake = (Math.floor(this.enemyAnimationFrame / 2) % 2) * 2 - 1;
+            const tx = Math.round(this.x + 2), ty = Math.round(this.y);
+            ctx.fillStyle = '#C8B888';
+            ctx.fillRect(tx + shake, ty - 7, 3, 3);
+            ctx.fillRect(tx + 1 - shake, ty - 11, 3, 3);
+            ctx.fillStyle = '#A89868';
+            ctx.fillRect(tx + shake, ty - 14, 2, 2);
+        }
+        ctx.restore();
     }
 
     drawCoyote(ctx) {
@@ -455,6 +553,15 @@ export class Enemy extends Entity {
             this.game.particles.burst(this.centerX, this.centerY, '#FFD27D', 6, 1.8);
         }
         if (this.health <= 0) {
+            if (this.isRattling) {
+                this.isRattling = false;
+                this.game.sound.stopRattle();
+            }
+            // Stays dead for the rest of the session (fresh sessions repopulate)
+            if (this.mapIndex >= 0 && this.game.currentMapName) {
+                const kills = this.game.sessionKills;
+                (kills[this.game.currentMapName] = kills[this.game.currentMapName] || new Set()).add(this.mapIndex);
+            }
             this.game.currentMap.removeEnemy(this);
             this.game.sound.playSound('enemyDie');
             if (this.game.particles) {

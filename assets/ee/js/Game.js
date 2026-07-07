@@ -1,7 +1,8 @@
 import {
     CANVAS_WIDTH, CANVAS_HEIGHT, GAME_STATE, GAME_TIME_MULTIPLIER,
     DAY_START_HOUR, DAY_END_HOUR, INITIAL_GAME_HOUR,
-    INTERACTION_RANGE, SHAKE_DURATION, SHAKE_INTERVAL, SHAKE_INTENSITY
+    INTERACTION_RANGE, SHAKE_DURATION, SHAKE_INTERVAL, SHAKE_INTENSITY,
+    SAVE_KEY
 } from './constants.js';
 import { SoundManager } from './SoundManager.js';
 import { UIManager } from './UIManager.js';
@@ -29,15 +30,37 @@ export class Game {
         this.gameTime = INITIAL_GAME_HOUR * 3600;
         this.dayTime = true;
         this.lastFrameTime = 0;
+        this.accumulator = 0;
+        this.mapFade = 0;
         this.loopRunning = false;
         this.introPanel = 0;
+        // Per-map persistent state (opened chests, spent triggers) — part of the checkpoint save
+        this.mapState = {};
+        // Enemies killed this session stay dead on revisit (not saved: a fresh
+        // session lets the desert repopulate)
+        this.sessionKills = {};
+        this.currentMapName = null;
+        this.pendingEndingChoice = false;
+        this.endingMessage = null;
+        this.endingTitle = null;
         this.defineGameData();
         this.ui.showStartScreen();
         this.sound.playMusic('menuTheme');
-        // Click/tap advances the intro comic
+        // Click/tap advances the intro comic and closes the field map
         this.canvas.addEventListener('click', () => {
             if (this.gameState === GAME_STATE.INTRO) this.advanceIntro();
+            else if (this.gameState === GAME_STATE.MAP_VIEW) this.closeMap();
         });
+    }
+
+    // In-game calendar: June date (game starts June 5) and hour of day
+    get gameDate() { return Math.floor(this.gameTime / 86400) + 5; }
+    get gameHour() { return Math.floor((this.gameTime % 86400) / 3600); }
+
+    // The UV lamp reveals things in the dark: night outdoors, or anywhere indoors
+    get uvActive() {
+        return !!(this.player && this.player.hasItem('blacklight') &&
+            (!this.dayTime || (this.currentMap && this.currentMap.indoor)));
     }
 
     defineGameData() {
@@ -60,6 +83,7 @@ export class Game {
         switch (newState) {
             case GAME_STATE.START_SCREEN:
                 this.ui.showStartScreen();
+                this.sound.stopAmbience();
                 this.sound.playMusic('menuTheme');
                 break;
             case GAME_STATE.PLAYING:
@@ -69,6 +93,7 @@ export class Game {
                 this.sound.playSound('pause');
                 this.ui.showPauseScreen();
                 this.sound.pauseCurrentMusic();
+                this.sound.stopAmbience();
                 break;
             case GAME_STATE.PUZZLE:
                 this.sound.pauseCurrentMusic();
@@ -76,11 +101,18 @@ export class Game {
                 break;
             case GAME_STATE.WIN:
                 this.sound.stopMusic();
+                this.sound.stopAmbience();
                 this.sound.playSound('winGame');
-                this.ui.showWinScreen("The stick comes out of the olla whole. Four centuries of sky and water: the great star of 1006, the floods, the drought years, and one final, deliberate mark. Cutler makes his offer. You make a phone call instead: Salt River, cultural office, Frances Antone's desk. Some things aren't found, Professor. They're returned.");
+                // A finished expedition doesn't leave a checkpoint behind
+                try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
+                this.ui.showWinScreen(
+                    this.endingMessage || "The stick comes out of the olla whole. Four centuries of sky and water: the great star of 1006, the floods, the drought years, and one final, deliberate mark.",
+                    this.endingTitle || "EXPEDITION'S END"
+                );
                 break;
             case GAME_STATE.GAME_OVER:
                 this.sound.stopMusic();
+                this.sound.stopAmbience();
                 this.sound.playSound('gameOver');
                 break;
         }
@@ -117,6 +149,11 @@ export class Game {
         setTimeout(() => {
             this.player = new Player(this, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
             this.gameTime = INITIAL_GAME_HOUR * 3600;
+            this.mapState = {};
+            this.sessionKills = {};
+            this.pendingEndingChoice = false;
+            this.endingMessage = null;
+            this.endingTitle = null;
             this.defineGameData();
             this.currentMap = null;
             this.changeMap('desert', this.player.x, this.player.y);
@@ -130,6 +167,73 @@ export class Game {
         }, 500);
     }
 
+    // ---------- Checkpoint save/load ----------
+
+    saveGame(notify = false) {
+        if (!this.player || !this.currentMapName || this.gameState === GAME_STATE.GAME_OVER) return;
+        const p = this.player;
+        const data = {
+            version: 1,
+            mapName: this.currentMapName,
+            x: Math.round(p.x), y: Math.round(p.y),
+            health: p.health, hydration: p.hydration,
+            inventory: [...p.inventory],
+            quests: p.quests.map(q => ({ ...q })),
+            gameTime: this.gameTime,
+            mapState: this.mapState,
+        };
+        try {
+            localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+            if (notify) this.ui.showSaveNotification();
+        } catch (e) { /* storage blocked or full: play on without checkpoints */ }
+    }
+
+    loadSaveData() {
+        try {
+            const raw = localStorage.getItem(SAVE_KEY);
+            const data = raw ? JSON.parse(raw) : null;
+            return (data && data.mapName && Array.isArray(data.inventory)) ? data : null;
+        } catch (e) { return null; }
+    }
+
+    hasSave() { return !!this.loadSaveData(); }
+
+    continueGame() {
+        const data = this.loadSaveData();
+        if (!data || !this.maps[data.mapName]) { this.startGame(); return; }
+        this.ui.hideStartScreen();
+        this.ui.showLoading();
+        this.gameState = GAME_STATE.LOADING;
+        setTimeout(() => {
+            this.defineGameData();
+            this.player = new Player(this, data.x, data.y);
+            this.player.health = data.health;
+            this.player.hydration = data.hydration;
+            this.player.inventory = data.inventory;
+            this.player.quests = data.quests;
+            // Migrate older saves: journal records that predate their completed flag
+            this.player.quests.forEach(q => {
+                if ((q.id === 'supernova_read' || q.id === 'dutchman_bust') && !q.completed) q.completed = true;
+            });
+            this.gameTime = data.gameTime;
+            this.mapState = data.mapState || {};
+            this.sessionKills = {};
+            this.pendingEndingChoice = false;
+            this.endingMessage = null;
+            this.endingTitle = null;
+            this.currentMap = null;
+            this.changeMap(data.mapName, data.x, data.y);
+            this.ui.updateHealth(this.player.health, this.player.maxHealth);
+            this.ui.updateHydration(this.player.hydration, this.player.maxHydration);
+            this.ui.updateInventoryDisplay(this.player.inventory, this.itemTypes);
+            this.ui.updateQuestLog(this.player.quests);
+            this.ui.updateClock(this.gameTime);
+            this.setGameState(GAME_STATE.PLAYING);
+            this.ui.hideLoading();
+            this.ensureLoop();
+        }, 300);
+    }
+
     goToMainMenu() {
         this.sound.stopMusic();
         this.setGameState(GAME_STATE.START_SCREEN);
@@ -138,6 +242,8 @@ export class Game {
     changeMap(mapName, playerX, playerY) {
         const isInitialLoad = !this.currentMap;
         this.sound.stopMusic();
+        this.sound.resetRattles();
+        this.sound.setWind(false);
         if (!isInitialLoad) this.sound.playSound('nextScenario');
 
         if (!this.maps[mapName]) {
@@ -154,6 +260,19 @@ export class Game {
             critters: JSON.parse(JSON.stringify(mapData.critters || [])),
             npcs: mapData.npcs || [],
         };
+        this.currentMapName = mapName;
+        // Re-apply persistent object state (opened chests, spent triggers) by original index,
+        // BEFORE world events filter the list
+        const savedMap = this.mapState[mapName];
+        if (savedMap && savedMap.objects) {
+            Object.entries(savedMap.objects).forEach(([idx, st]) => {
+                const o = freshMapData.objects[idx];
+                if (!o) return;
+                if (st.opened) o.opened = true;
+                if (st.questTriggerSpent) delete o.questTrigger;
+            });
+        }
+        this.applyWorldEvents(mapName, freshMapData);
         this.particles.clear();
         this.mapFade = 1; // fade in from black on map change
         this.currentMap = new GameMap(this, freshMapData);
@@ -162,6 +281,7 @@ export class Game {
             this.player.y = playerY;
         }
         this.ui.updateMapName(this.currentMap.name);
+        if (!isInitialLoad) this.saveGame(true); // checkpoint on every map transition
 
         const musicDelay = isInitialLoad ? 0 : (this.sound.sounds.nextScenario.duration && isFinite(this.sound.sounds.nextScenario.duration) ? this.sound.sounds.nextScenario.duration * 1000 : 200);
 
@@ -181,6 +301,63 @@ export class Game {
                 if (musicKey) this.sound.playMusic(musicKey, true);
             }
         }, musicDelay);
+    }
+
+    // World changes driven by the calendar. June 23: the concrete pour at the salvage site.
+    applyWorldEvents(mapName, mapData) {
+        if (mapName === 'hohokam_site' && this.gameDate >= 23) {
+            mapData.objects = mapData.objects.filter(o =>
+                o.type !== 'survey_flag' && !(o.type === 'chest' && o.contains === 'artifact2'));
+            const canal = mapData.objects.find(o => o.type === 'hohokam_canal');
+            if (canal) {
+                canal.waterColor = '#9A9A94';
+                canal.name = 'Poured Canal Segment';
+                canal.text = "Fresh concrete, poured Monday at dawn, already hot to the touch. Nine hundred years of engineering under four inches of grey. Two weeks was never enough.";
+            }
+            const grid = mapData.objects.find(o => o.type === 'interactive_point');
+            if (grid) grid.text = "The salvage grid is gone. Tire tracks, formwork stakes, an empty cement sack. The bulldozers don't come back; they never need to.";
+        }
+    }
+
+    // ---------- Time advancement (camp, vault vigil) ----------
+
+    advanceToHour(hour) {
+        const daySec = 86400;
+        const cur = this.gameTime % daySec;
+        let adv = hour * 3600 - cur;
+        if (adv <= 0) adv += daySec;
+        this.gameTime += adv;
+        this.ui.updateClock(this.gameTime);
+    }
+
+    // Jump to June 21, 5:00 AM (or the next dawn if the solstice already passed)
+    advanceToSolsticeDawn() {
+        const target = 16 * 86400 + 5 * 3600; // day 17 = June 21
+        if (this.gameTime < target) {
+            this.gameTime = target;
+            this.ui.updateClock(this.gameTime);
+        } else {
+            this.advanceToHour(5);
+        }
+    }
+
+    resolveCamp(answerIndex) {
+        if (answerIndex === 2 || !this.player) { this.setGameState(GAME_STATE.PLAYING); return; }
+        const p = this.player;
+        if (answerIndex === 0) {
+            this.advanceToHour(6);
+            p.heal(20);
+            p.hydration = Math.max(10, p.hydration - 15);
+            this.ui.showDialog("You bank the coals and sleep under more stars than the city ever shows you. Dawn comes up gold and quiet. (You rest until first light. +20 HP, -15 H2O)", "CAMP");
+        } else {
+            this.advanceToHour(17);
+            p.heal(10);
+            p.hydration = Math.max(10, p.hydration - 10);
+            this.ui.showDialog("You doze in the shade through the worst of the heat. The light goes long and red across the rocks: the crimson evening. (You wait until dusk. +10 HP, -10 H2O)", "CAMP");
+        }
+        this.ui.updateHydration(p.hydration, p.maxHydration);
+        this.setGameState(GAME_STATE.DIALOG);
+        this.saveGame(true);
     }
 
     startPuzzle(puzzleDetails) {
@@ -206,24 +383,101 @@ export class Game {
 
     handlePuzzleAnswer(answerIndex) {
         if (!this.currentPuzzle) return;
+        const puzzle = this.currentPuzzle;
+        this.currentPuzzle = null;
         this.ui.hidePuzzle();
-        if (answerIndex === this.currentPuzzle.correctAnswerIndex) {
+        if (puzzle.isCampChoice) { this.resolveCamp(answerIndex); return; }
+        if (puzzle.isOfferingChoice) { this.resolveOffering(puzzle, answerIndex); return; }
+        if (puzzle.isEndingChoice) { this.resolveEnding(answerIndex); return; }
+        if (answerIndex === puzzle.correctAnswerIndex) {
             this.sound.playSound('puzzleCorrect');
             this.player.addItem('final_artifact');
             this.player.completeQuest('main_artifact');
-            setTimeout(() => { this.setGameState(GAME_STATE.WIN); }, 500);
+            this.pendingEndingChoice = true;
+            this.ui.showDialog("The seal parts, and the stick comes out whole: four centuries of sky and water, and one final, deliberate mark. Cutler steps out of the dark, hands open. 'Provenance like that... name your price, Jim. Museum drawer, my buyer's vault, or a plaque with your name on it. Unless you know a fourth one.'", "Vance Cutler");
+            this.setGameState(GAME_STATE.DIALOG);
         } else {
+            // Wrong reading: Cutler needles you, the seal stays shut. Re-read your notes and try again.
             this.sound.playSound('puzzleIncorrect');
-            this.gameOver("The counts don't align. Cutler smiles, and the moment, centuries in the making, passes to him.");
+            const pedestal = this.currentMap.objects.find(obj => obj.objData.triggersPuzzle);
+            if (pedestal) pedestal.objData.opened = false;
+            this.ui.showDialog("Cutler's smile doesn't move. 'Careful, Jim. Read it wrong and it's kindling with delusions.' The counts swim in the lamplight. Check the star rubbing and your 1956 notebook, then try the seal again.", "Vance Cutler");
+            this.setGameState(GAME_STATE.DIALOG);
         }
-        this.currentPuzzle = null;
     }
 
+    // The visitor's custom, translated into game grammar: you don't take from
+    // these places without giving. The gift is permanent.
+    resolveOffering(puzzle, answerIndex) {
+        const act = puzzle.offeringActions[answerIndex];
+        const p = this.player;
+        if (!act || act.type === 'cancel' || !p) { this.setGameState(GAME_STATE.PLAYING); return; }
+        if (act.type === 'water') {
+            if (p.hydration < 35) {
+                this.ui.showDialog("Your canteen is nearly dry. The desert doesn't ask for what you can't spare. Come back with more water, or with something else.", "OFFERING LEDGE");
+                this.setGameState(GAME_STATE.DIALOG);
+                return;
+            }
+            p.hydration -= 30;
+            this.ui.updateHydration(p.hydration, p.maxHydration);
+        } else {
+            p.removeItem(act.key);
+        }
+        const gifted = act.type === 'water' ? 'a long pour of your water' : `your ${this.itemTypes[act.key].name.toLowerCase()}`;
+        const ledge = this.currentMap.objects.find(o => o.type === 'offering_ledge');
+        if (ledge) ledge.objData.gifted = true;
+        p.addQuest({ id: 'gift_left', description: 'Left an offering at the vault threshold. Not everything is for taking.', completed: true });
+        this.sound.playChime();
+        this.ui.showDialog(`You set ${gifted} on the ledge, among shell beads gone chalky and a pot sherd someone left when the canal still ran. The vault doesn't thank you. It doesn't need to. Thirty years of taking things out of the ground, and your hands feel steadier for once going the other way.`, "OFFERING LEDGE");
+        this.setGameState(GAME_STATE.DIALOG);
+        this.saveGame(true);
+    }
+
+    startEndingChoice() {
+        this.currentPuzzle = {
+            isEndingChoice: true,
+            question: "Four centuries in your hands. What does Walker do?",
+            options: [
+                "Take Cutler's split. It beats a pension.",
+                "The museum. Catalogued, published, your name on the paper.",
+                "A fourth option. Call Salt River: Frances Antone's desk.",
+            ],
+        };
+        this.setGameState(GAME_STATE.PUZZLE);
+    }
+
+    resolveEnding(answerIndex) {
+        const poured = this.gameDate >= 23;
+        if (answerIndex === 0) {
+            this.endingTitle = "THE SPLIT";
+            this.endingMessage = "You name a number; Cutler doesn't even blink. The stick rides to Scottsdale in a foam-lined case, and the check clears before the solstice light is off the mountains. The buyer is careful. No one will ever see it again. The astronomy goes unpublished; the valley pours and paves and forgets. It is a comfortable retirement. It is smaller than the desert.";
+        } else if (answerIndex === 1) {
+            this.endingTitle = "THE PLAQUE";
+            this.endingMessage = "The museum takes it, grateful. Accession 86-114: THE WALKER COLLECTION. You publish the astronomy and the paper does well; there is talk of a plaque. Frances Antone reads about it in the Republic. She does not call back. In an acid-free drawer in a dark room, four centuries of sky and water keep perfect time for nobody.";
+        } else {
+            this.endingTitle = "THE RETURN";
+            this.endingMessage = "You put the stick back in the olla, the olla in your pack, and make one phone call: Salt River, cultural office, Frances Antone's desk. The paper you could have written goes unwritten; you publish only the astronomy, the part that was yours."
+                + (poured ? " The canal by the airport is concrete now, but what it carried is on the stick, and the stick is home." : "")
+                + " At the new year, when the saguaro fruit comes ripe, there is a place set for you at the harvest. Some things aren't found, Professor. They're returned.";
+        }
+        this.setGameState(GAME_STATE.WIN);
+    }
+
+    // Fixed-timestep loop: simulation always steps at 60 Hz regardless of display refresh
+    // rate, so movement, cooldowns, hydration, and the clock stay in sync on 120+ Hz screens.
     gameLoop(timestamp) {
-        this.animationFrame++;
-        const deltaTime = (timestamp - this.lastFrameTime) / 1000;
+        let delta = (timestamp - this.lastFrameTime) / 1000;
         this.lastFrameTime = timestamp;
-        if (this.gameState === GAME_STATE.PLAYING) this.update(deltaTime);
+        if (!(delta > 0)) delta = 0;           // first frame guard
+        else if (delta > 0.25) delta = 0.25;   // tab-switch guard
+        this.accumulator += delta;
+        const STEP = 1 / 60;
+        while (this.accumulator >= STEP) {
+            this.accumulator -= STEP;
+            this.animationFrame++;
+            if (this.mapFade > 0) this.mapFade = Math.max(0, this.mapFade - 0.05);
+            if (this.gameState === GAME_STATE.PLAYING) this.update(STEP);
+        }
         this.draw();
         requestAnimationFrame((ts) => this.gameLoop(ts));
     }
@@ -235,8 +489,9 @@ export class Game {
         this.particles.update();
         this.interactionTarget = null;
         this.gameTime += deltaTime * GAME_TIME_MULTIPLIER;
-        const currentHour = Math.floor((this.gameTime % (24 * 3600)) / 3600);
+        const currentHour = this.gameHour;
         this.dayTime = currentHour >= DAY_START_HOUR && currentHour < DAY_END_HOUR;
+        this.sound.setNightAmbience(!this.dayTime && !this.currentMap.indoor);
         this.ui.updateClock(this.gameTime);
 
         let checkX = this.player.x + this.player.width / 2;
@@ -248,13 +503,20 @@ export class Game {
             case 'right': checkX += this.player.width / 2 + INTERACTION_RANGE / 2; break;
         }
 
+        // Mirror tryInteraction's nearest-target logic exactly, so the floating
+        // arrow always points at the thing E will actually activate
         const potentialTargets = [...this.currentMap.objects, ...this.currentMap.npcs];
+        let best = null, bestDist = Infinity;
         for (const entity of potentialTargets) {
-            if (entity.isInteractable && Math.abs(entity.centerX - checkX) < (entity.width / 2 + 10) && Math.abs(entity.centerY - checkY) < (entity.height / 2 + 10)) {
-                this.interactionTarget = entity;
-                break;
+            if (!entity.isInteractable) continue;
+            if (entity.objData && entity.objData.uv && !this.uvActive) continue; // invisible without the lamp
+            const dist = Math.hypot(entity.centerX - checkX, entity.centerY - checkY);
+            if (dist < (entity.width + entity.height) / 2 + 10 && dist < bestDist) {
+                best = entity;
+                bestDist = dist;
             }
         }
+        this.interactionTarget = best;
     }
 
     draw() {
@@ -263,17 +525,20 @@ export class Game {
             this.drawIntro(this.ctx);
             return;
         }
+        if (this.gameState === GAME_STATE.MAP_VIEW) {
+            this.drawMapView(this.ctx);
+            return;
+        }
         if (this.gameState === GAME_STATE.PLAYING || this.gameState === GAME_STATE.DIALOG || this.gameState === GAME_STATE.PAUSED) {
             if (this.currentMap && this.player) this.currentMap.draw(this.ctx);
             this.particles.draw(this.ctx);
             if (this.interactionTarget && this.gameState === GAME_STATE.PLAYING) {
                 this.ui.drawInteractionIndicator(this.interactionTarget.centerX, this.interactionTarget.y);
             }
-            // Fade in after a map transition
+            // Fade in after a map transition (decremented in the fixed-step loop)
             if (this.mapFade > 0) {
                 this.ctx.fillStyle = `rgba(0, 0, 0, ${this.mapFade})`;
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-                this.mapFade = Math.max(0, this.mapFade - 0.05);
             }
         }
     }
@@ -281,6 +546,7 @@ export class Game {
     handleKeyUp(key) {
         if (this.gameState === GAME_STATE.INTRO) {
             if (key === 'e' || key === ' ' || key === 'enter') this.advanceIntro();
+            else if (key === 'escape') this.beginExpedition(); // skip for repeat players
             return;
         }
         if (this.gameState === GAME_STATE.PLAYING) {
@@ -288,19 +554,173 @@ export class Game {
             else if (key === 'p') this.togglePause();
             else if (key === 'i') this.ui.toggleInventory();
             else if (key === 'q') this.ui.toggleQuestLog();
+            else if (key === 'm') this.openMap();
+        } else if (this.gameState === GAME_STATE.MAP_VIEW) {
+            if (key === 'e' || key === ' ' || key === 'enter' || key === 'm' || key === 'escape') this.closeMap();
         } else if (this.gameState === GAME_STATE.DIALOG) {
             if (key === 'e' || key === ' ' || key === 'enter') {
                 this.ui.hideDialog();
-                if (this.pendingPortal) {
+                if (this.pendingEndingChoice) {
+                    this.pendingEndingChoice = false;
+                    this.startEndingChoice();
+                } else if (this.pendingPortal) {
                     this.changeMap(this.pendingPortal.mapName, this.pendingPortal.toX, this.pendingPortal.toY);
                     this.pendingPortal = null;
                 } else {
                     this.setGameState(GAME_STATE.PLAYING);
                 }
             }
+        } else if (this.gameState === GAME_STATE.PUZZLE) {
+            // Keyboard answers for choices (camp, seal, ending)
+            if (key === '1') this.handlePuzzleAnswer(0);
+            else if (key === '2') this.handlePuzzleAnswer(1);
+            else if (key === '3') this.handlePuzzleAnswer(2);
         } else if (this.gameState === GAME_STATE.PAUSED) {
             if (key === 'p') this.togglePause();
         }
+    }
+
+    // ---------- Walker's field map (compass item / M key) ----------
+
+    openMap() {
+        if (!this.player || !this.currentMap) return;
+        this.sound.playSound('selectOption');
+        this.setGameState(GAME_STATE.MAP_VIEW);
+    }
+
+    closeMap() {
+        this.setGameState(GAME_STATE.PLAYING);
+    }
+
+    drawMapView(ctx) {
+        const W = CANVAS_WIDTH, H = CANVAS_HEIGHT;
+        const has = (id) => this.player && this.player.quests.some(q => q.id === id);
+        const SITES = [
+            { key: 'white_tanks_petroglyphs', label: 'WHITE TANKS', x: 90, y: 190, mountain: true },
+            { key: 'desert', label: 'OUTSKIRTS', x: 180, y: 265 },
+            { key: 'ghost_town', label: 'DUSTY GULCH', x: 155, y: 350 },
+            { key: 'abandoned_mine', label: 'MINE', x: 235, y: 385 },
+            { key: 'canyon', label: 'RED ROCK', x: 258, y: 212 },
+            { key: 'camelback', label: 'CAMELBACK', x: 345, y: 148, mountain: true },
+            { key: 'papago_park', label: 'PAPAGO', x: 400, y: 205 },
+            { key: 'canal_path', label: 'LOCK 9', x: 300, y: 264 },
+            { key: 'hohokam_site', label: 'PUEBLO GRANDE', x: 360, y: 268 },
+            { key: 'asu_lab', label: 'ASU TEMPE', x: 448, y: 300 },
+            { key: 'sky_people_shrine', label: 'SOUTH MTN', x: 330, y: 350, mountain: true },
+            { key: 'casa_grande', label: 'CASA GRANDE', x: 512, y: 412 },
+            { key: 'superstition_mountains', label: 'SUPERSTITIONS', x: 570, y: 352, mountain: true },
+        ];
+        const VAULT = { x: 388, y: 288 };
+
+        // Parchment
+        ctx.fillStyle = '#E8DCB8';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#D8C8A0';
+        for (let i = 0; i < 40; i++) ctx.fillRect((i * 137 + 31) % W, (i * 89 + 47) % H, 3, 3);
+        ctx.strokeStyle = '#6B4A2A';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(8, 8, W - 16, H - 16);
+        ctx.lineWidth = 1;
+
+        ctx.fillStyle = '#4A3A28';
+        ctx.font = '10px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText("WALKER'S FIELD MAP", W / 2, 34);
+        ctx.font = '7px "Press Start 2P"';
+        ctx.fillText('SALT RIVER VALLEY - JUNE 1986', W / 2, 50);
+
+        // The canal: old water, east-west through the valley
+        const canalPts = [[230, 262], [300, 264], [360, 268], [430, 278], [520, 292]];
+        ctx.fillStyle = '#658EA9';
+        for (let i = 0; i < canalPts.length - 1; i++) {
+            this.drawMapLine(ctx, canalPts[i][0], canalPts[i][1], canalPts[i + 1][0], canalPts[i + 1][1], 3, '#658EA9', false);
+        }
+        ctx.font = '6px "Press Start 2P"';
+        ctx.fillStyle = '#4A6A85';
+        ctx.fillText('THE CANALS', 262, 250);
+
+        // Alignment sightlines, drawn as the player earns each reading
+        const gold = '#B8860B';
+        const papago = SITES.find(s => s.key === 'papago_park');
+        const mound = SITES.find(s => s.key === 'hohokam_site');
+        const southMtn = SITES.find(s => s.key === 'sky_people_shrine');
+        const whiteTanks = SITES.find(s => s.key === 'white_tanks_petroglyphs');
+        const pulse = 0.55 + Math.sin(this.animationFrame * 0.08) * 0.3;
+        if (has('alignment_light')) this.drawMapRing(ctx, papago.x, papago.y, pulse);
+        if (has('alignment_doorway')) this.drawMapLine(ctx, mound.x, mound.y, papago.x, papago.y, 2, gold, true);
+        if (has('alignment_horizon')) this.drawMapLine(ctx, southMtn.x, southMtn.y, whiteTanks.x, whiteTanks.y, 2, gold, true);
+        if (has('casa_venus')) this.drawMapRing(ctx, SITES.find(s => s.key === 'casa_grande').x, SITES.find(s => s.key === 'casa_grande').y, pulse);
+        if (has('scorpius_rising')) this.drawMapRing(ctx, whiteTanks.x, whiteTanks.y, pulse);
+
+        const readings = ['alignment_light', 'alignment_doorway', 'alignment_horizon'].filter(has).length;
+        if (readings === 3) {
+            // All three readings converge: the unpoured segment
+            ctx.fillStyle = gold;
+            ctx.fillRect(VAULT.x - 5, VAULT.y - 1, 10, 3);
+            ctx.fillRect(VAULT.x - 1, VAULT.y - 5, 3, 10);
+            ctx.font = '6px "Press Start 2P"';
+            ctx.fillText('THE SEGMENT', VAULT.x, VAULT.y + 16);
+        }
+
+        // Sites
+        SITES.forEach(s => {
+            ctx.fillStyle = '#4A3A28';
+            if (s.mountain) {
+                ctx.fillRect(s.x - 7, s.y + 2, 14, 3);
+                ctx.fillRect(s.x - 4, s.y - 2, 8, 4);
+                ctx.fillRect(s.x - 1, s.y - 5, 3, 3);
+            } else {
+                ctx.fillRect(s.x - 3, s.y - 3, 6, 6);
+            }
+            ctx.font = '6px "Press Start 2P"';
+            ctx.fillText(s.label, s.x, s.y + 15);
+        });
+
+        // You are here
+        const here = SITES.find(s => s.key === this.currentMapName) || (this.currentMapName === 'artifact_chamber' ? VAULT : null);
+        if (here && this.animationFrame % 50 < 32) {
+            ctx.fillStyle = '#C42A2A';
+            ctx.fillRect(here.x - 2, here.y - 12, 4, 4);
+            ctx.fillRect(here.x - 1, here.y - 8, 2, 3);
+        }
+
+        // Legend: the three records, then the three readings
+        ctx.font = '6px "Press Start 2P"';
+        const recordLabels = [['artifact1', 'STICK'], ['artifact2', 'SHARD'], ['artifact3', 'RUBBING']];
+        recordLabels.forEach(([key, label], i) => {
+            const owned = this.player && this.player.hasItem(key);
+            ctx.fillStyle = owned ? '#4A3A28' : 'rgba(74, 58, 40, 0.35)';
+            ctx.fillText((owned ? '[x] ' : '[ ] ') + label, W / 2 + (i - 1) * 130, H - 46);
+        });
+        ctx.fillStyle = '#4A3A28';
+        ctx.font = '7px "Press Start 2P"';
+        ctx.fillText(`ALIGNMENTS READ: ${readings} OF 3` + (readings === 3 ? ' - ONE INSTRUMENT, VALLEY-SIZED' : ''), W / 2, H - 34);
+        if (this.animationFrame % 60 < 40) {
+            ctx.font = '6px "Press Start 2P"';
+            ctx.fillText('M / E / TAP - CLOSE', W / 2, H - 18);
+        }
+        ctx.textAlign = 'left';
+    }
+
+    drawMapLine(ctx, x1, y1, x2, y2, size, color, dashed) {
+        const dist = Math.hypot(x2 - x1, y2 - y1);
+        const steps = Math.max(1, Math.floor(dist / size));
+        ctx.fillStyle = color;
+        for (let i = 0; i <= steps; i++) {
+            if (dashed && (i % 4 === 3)) continue;
+            const t = i / steps;
+            ctx.fillRect(Math.round(x1 + (x2 - x1) * t - size / 2), Math.round(y1 + (y2 - y1) * t - size / 2), size, size);
+        }
+    }
+
+    drawMapRing(ctx, x, y, alpha) {
+        ctx.fillStyle = `rgba(184, 134, 11, ${alpha})`;
+        ctx.fillRect(x - 7, y - 7, 5, 3);
+        ctx.fillRect(x + 3, y - 7, 5, 3);
+        ctx.fillRect(x - 7, y + 5, 5, 3);
+        ctx.fillRect(x + 3, y + 5, 5, 3);
+        ctx.fillRect(x - 9, y - 2, 3, 5);
+        ctx.fillRect(x + 7, y - 2, 3, 5);
     }
 
     // ---------- Intro comic ----------
@@ -374,6 +794,9 @@ export class Game {
             ctx.font = '8px "Press Start 2P"';
             ctx.fillText("E / SPACE / TAP >", W - 120, H - 18);
         }
+        ctx.fillStyle = '#777';
+        ctx.font = '8px "Press Start 2P"';
+        ctx.fillText('ESC - SKIP', 80, H - 18);
         ctx.textAlign = 'left';
     }
 

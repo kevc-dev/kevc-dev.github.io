@@ -71,13 +71,33 @@ export function getObjectTypes() {
         horizon_marker: { name: "Horizon Notch", width: 72, height: 40, solid: true, interactive: true, color: '#4A3B2A' },
         survey_flag: { name: "Survey Flag", width: 14, height: 26, solid: false, interactive: true, color: '#FF6A00', text: "Orange surveyor's tape, tied fresh. Someone is mapping this ground, and it isn't the city." },
         looter_pit: { name: "Looter's Pit", width: 48, height: 28, solid: false, interactive: true, color: '#3A2B1A' },
+        // The Arizona Canal traversal
+        srp_canal: { name: 'Arizona Canal', width: 280, height: 56, solid: true, interactive: true, color: '#2A5A8A', text: "Cold, fast, and older than it looks. The flow runs east. Even blind, you could follow it." },
+        footbridge: { name: 'Footbridge', width: 64, height: 64, solid: false, interactive: false, color: '#8A6B45' },
+        wind_chime: { name: 'Wind Chime', width: 16, height: 30, solid: false, interactive: true, color: '#C8C8A8', text: "Copper tubes on braided wire, hung by the lock keeper's door. In a dust wall you'd hear it fifty yards off. That's not decoration. That's navigation." },
+        // The Superstitions
+        stone_needle: { name: "Weaver's Needle", width: 56, height: 110, solid: true, interactive: true, color: '#6B5B4A', text: "The Needle. Every version of the Dutchman legend triangulates from it, and every summer it watches somebody die of certainty. It is a rock. It keeps no gold and no opinions." },
+        // Blacklight finds: invisible without the UV lamp in the dark
+        uv_trace: { name: 'UV Trace', width: 36, height: 26, solid: false, interactive: true, uv: true, color: '#224422' },
+        // The vault threshold: leave something, permanently, before you take
+        offering_ledge: { name: 'Offering Ledge', width: 48, height: 26, solid: true, interactive: true, color: '#6A5A6A' },
+        // Red Rock Canyon
+        canyon_wall: { name: 'Canyon Wall', width: 160, height: 100, solid: true, interactive: false, color: '#A0522D' },
+        balanced_rock: { name: 'Balanced Rock', width: 56, height: 72, solid: true, interactive: true, color: '#B0603A', text: "A boulder the size of a truck balanced on a neck of stone the size of a fencepost. It has been about to fall for ten thousand years. The desert is not in a hurry." },
+        dry_wash: { name: 'Dry Wash', width: 490, height: 30, solid: false, interactive: false, groundLayer: true, color: '#D8B98C' },
+        // Camelback Mountain
+        mountain_slope: { name: 'Mountain Slope', width: 200, height: 60, solid: true, interactive: false, color: '#8A8A72' },
+        praying_monk: { name: 'The Praying Monk', width: 60, height: 92, solid: true, interactive: true, color: '#C1583A', text: "A red sandstone figure kneeling at the camel's head, hands together, facing east. Climbers rope up its spine; the monk doesn't mind. It has faced the sunrise for twenty million years, which is one way to pray." },
+        trail_path: { name: 'Trail', width: 80, height: 24, solid: false, interactive: false, groundLayer: true, color: '#C9B189' },
     };
 }
 
 export function getEnemyTypes() {
     return {
         scorpion: { name: 'Scorpion', width: 32, height: 28, damage: 5, speed: 0.8, health: 30, color: '#704214', solid: true, interactive: true },
-        snake: { name: 'Snake', width: 40, height: 12, damage: 8, speed: 1.2, health: 20, color: '#006400', solid: false, interactive: true },
+        // Audio-first hazard: rattles before you see it, holds its ground, only
+        // strikes if you keep pressing in. Backing off always de-escalates.
+        snake: { name: 'Rattlesnake', width: 40, height: 12, damage: 12, speed: 2.2, health: 20, color: '#006400', solid: false, interactive: true, rattler: true, warnRange: 120, strikeRange: 64, venom: true },
         coyote: { name: 'Coyote', width: 40, height: 28, damage: 10, speed: 1.5, health: 50, color: '#B8860B', solid: true, interactive: true },
         spider: { name: 'Giant Spider', width: 36, height: 32, damage: 7, speed: 1.1, health: 40, color: '#3A3A3A', solid: true, interactive: false },
         attacking_ghost: { name: 'Restless Spirit', width: 24, height: 32, damage: 6, speed: 1.3, health: 35, color: '#A0B0D0', isEthereal: true, aggroRange: 180, solid: false, interactive: true },
@@ -96,6 +116,9 @@ export function getCritterTypes() {
         lizard: { name: 'Lizard', width: 18, height: 10, speed: 0.9, fleeRange: 50 },
         quail: { name: 'Quail', width: 18, height: 16, speed: 1.0, fleeRange: 70 },
         tortoise: { name: 'Desert Tortoise', width: 26, height: 18, speed: 0.2, fleeRange: 0 },
+        // Waits at a distance, trots ahead when you follow, gone after the last
+        // waypoint. The game never says whether it's the same coyote.
+        guide_coyote: { name: 'Coyote', width: 40, height: 28, speed: 1.5, fleeRange: 0, guide: true },
     };
 }
 
@@ -114,7 +137,10 @@ export function getItemTypes() {
                 game.setGameState(GAME_STATE.DIALOG);
             }
         },
-        compass: { name: 'Compass', description: 'Helps you navigate.' },
+        compass: {
+            name: 'Field Map', description: "Walker's map of the Salt River Valley. The alignments draw themselves in as you read them. (M)",
+            useFunc: (game) => game.openMap()
+        },
         newspaper: {
             name: 'Arizona Republic', description: 'June 5, 1986. Two stories on one page.',
             useFunc: (game) => {
@@ -131,13 +157,18 @@ export function getItemTypes() {
         },
         journal: { name: 'Journal', description: 'Contains research notes and quests.', useFunc: (game) => game.ui.toggleQuestLog() },
         prickly_pear: {
-            name: 'Prickly Pear', description: 'A sweet cactus fruit. Restores 35 HP.',
+            name: 'Prickly Pear', description: 'A sweet cactus fruit. Restores 35 HP and clears rattlesnake venom.',
             useFunc: (game) => {
-                if (game.player.health < game.player.maxHealth) {
-                    game.player.heal(35);
-                    game.player.removeItem('prickly_pear');
+                const p = game.player;
+                const venomous = p.venomTicks > 0;
+                if (p.health < p.maxHealth || venomous) {
+                    p.heal(35);
+                    p.venomTicks = 0;
+                    p.removeItem('prickly_pear');
                     game.sound.playSound('drink');
-                    game.ui.showDialog("You eat the prickly pear. Sweet and restoring! (+35 HP)", "Prickly Pear");
+                    game.ui.showDialog(venomous
+                        ? "You eat the prickly pear, seeds and all. The fruit settles your blood and the venom's grip loosens. (+35 HP, venom cleared)"
+                        : "You eat the prickly pear. Sweet and restoring! (+35 HP)", "Prickly Pear");
                 } else {
                     game.ui.showDialog("You're at full health. Better save it for later.", "Prickly Pear");
                 }
@@ -145,6 +176,16 @@ export function getItemTypes() {
             }
         },
         old_pickaxe: { name: 'Old Pickaxe', description: "The Prospector's beloved pickaxe. Rusty but sturdy." },
+        rusted_canteen: { name: 'Rusted Canteen', description: "A 1930s army canteen, holed by rust, found beside an empty hole in the Superstitions. Worth nothing. Says everything." },
+        blacklight: {
+            name: 'UV Lamp', description: 'A computer-club blacklight that clips to the pocket computer. In the dark it shows what the sun hides.',
+            useFunc: (game) => {
+                game.ui.showDialog(game.uvActive
+                    ? "The lamp hums violet. Scorpions burn green in the dark, and here and there the rock itself remembers things: pigment, chalk, mineral. Look close at the old places."
+                    : "The lamp needs darkness to say anything. Wait for night, or take it underground.", "UV Lamp");
+                game.setGameState(GAME_STATE.DIALOG);
+            }
+        },
         lucky_charm: { name: 'Lucky Rabbit Foot', description: 'A worn charm from a braver era. It feels... lucky.' },
         artifact1: { name: 'Calendar Stick Fragment', description: 'Half of a notched wooden record. The counts are dates, day-counts toward something. One of three records.' },
         artifact2: { name: 'Etched Olla Shard', description: 'Pottery shard etched with canal lines and notch counts. One of three records.' },
@@ -180,10 +221,12 @@ export function getMaps() {
             ],
             npcs: [
                 { name: 'Ranger Rick', x: 200, y: 300, dialog: [
-                    "Howdy, Professor! Dehydration is no joke out here. Rest at a campsite if you're caught out past dusk.",
+                    "Howdy, Professor! Dehydration is no joke out here. Rest at a campsite if you're caught out past dusk — or wait out the midday heat there for the evening light.",
                     "Keep that canteen over half full and your body mends itself. Water is life out here. For worse wounds, look for prickly pear with ripe red fruit on top.",
+                    "Got a map? Press M and get your bearings. A man who knows where the mountains sit never counts as lost.",
                     "You read the Republic this morning? Grading crew hit canal features by the airport. Salvage crew's got two weeks. Breaks your heart.",
-                    "If you're heading east, watch for rattlers near the rocks. You'll hear them before you see them.",
+                    "If you're heading east, watch for rattlers near the rocks. You'll hear them before you see them. And if a roadrunner's working a patch of ground, cross THERE — they eat the things that bite.",
+                    "See hawks wheeling tight over one spot? Harris's hawks, they hunt as a family — only raptor that does. Whatever they're circling, something's down there worth a look.",
                     "Press F to swing your walking stick if the wildlife gets too bold. Most of it just wants to be left alone."
                 ]},
                 { name: 'Old Prospector', x: 100, y: 440, dialog: (player, game) => {
@@ -223,68 +266,176 @@ export function getMaps() {
             critters: [
                 { type: 'jackrabbit', x: 240, y: 300 },
                 { type: 'roadrunner', x: 420, y: 400 },
-                { type: 'tortoise', x: 500, y: 200 }
+                { type: 'tortoise', x: 500, y: 200 },
+                { type: 'guide_coyote', x: 560, y: 140, path: [[420, 200], [240, 240], [90, 290]] }
             ]
         },
         canyon: {
             name: 'Red Rock Canyon', background: '#BC6C25',
             objects: [
-                { type: 'rock', x: 100, y: 100 },
-                { type: 'chest', x: 400, y: 200, contains: 'artifact1', text: "Wrapped in oilcloth inside: half of a notched wooden stick. The oilcloth is modern. Someone cached this here recently. Someone is protecting it." },
+                // Slot canyon walls: a shaded north corridor, a central cache
+                // chamber, and the wash running out the south — the fast route,
+                // and the wrong place to linger.
+                { type: 'canyon_wall', x: 0, y: 40, width: 160, height: 100 },
+                { type: 'canyon_wall', x: 240, y: 0, width: 140, height: 150 },
+                { type: 'canyon_wall', x: 170, y: 220, width: 130, height: 120 },
+                { type: 'canyon_wall', x: 420, y: 120, width: 100, height: 150 },
+                { type: 'canyon_wall', x: 60, y: 380, width: 200, height: 90 },
+                { type: 'canyon_wall', x: 380, y: 380, width: 140, height: 100 },
+                { type: 'canyon_wall', x: 570, y: 210, width: 70, height: 110 },
+                { type: 'balanced_rock', x: 470, y: 24 },
+                // The wash
+                { type: 'dry_wash', x: 150, y: 342 },
+                { type: 'interactive_point', x: 240, y: 344, text: "Flood-tumbled gravel, swept clean. Brush and a bleached cooler hang in the debris line six feet up the wall. When it rains somewhere you can't see, this fills in seconds. Never camp in a wash." },
+                // The cache chamber
+                { type: 'chest', x: 340, y: 190, contains: 'artifact1', text: "Wrapped in oilcloth inside: half of a notched wooden stick. The oilcloth is modern. Someone cached this here recently. Someone is protecting it." },
+                { type: 'crater', x: 315, y: 275, width: 100, height: 50 },
+                { type: 'interactive_point', x: 375, y: 240, lightBeam: true, timeGated: {
+                    startHour: 11, endHour: 16,
+                    successText: "Noon. Sunlight drops straight down the slot and stands on the canyon floor like a blade: one burning column with dust swimming inside it. The deadliest hour of the desert day, spending itself on being beautiful for nobody. You keep to the shade and watch.",
+                    failText: "A gap in the rim, high overhead. The floor below it is polished pale in one spot, the way stone gets when light has stood in the same place a million noons. Come back at midday. If you can bear to be out in it.",
+                    record: { id: 'canyon_beam', description: 'Watched the noon light-blade stand in Red Rock Canyon.', completed: true }
+                }},
+                // West entry: the hermit's camp, pitched above the debris line
+                { type: 'water_source', x: 30, y: 150 },
+                { type: 'campfire_remains', x: 36, y: 300 },
+                { type: 'fruit_cactus', x: 108, y: 330 },
+                { type: 'ancient_symbol', x: 205, y: 182, text: "A single spiral pecked into the varnish, chest-high. Hohokam hands, a long walk from the river. Even out here, somebody was keeping count of something." },
+                { type: 'uv_trace', x: 240, y: 178, questTrigger: {
+                    id: 'uv_spiral', completed: true,
+                    description: 'UV: the canyon spiral trails a painted tail of dots.',
+                    startText: "Under the lamp the pecked spiral grows a tail: a sweep of pigment dots curving off toward the east rim. A pointer, or a count, or both. Either way, it isn't done saying things."
+                }},
+                // Past the wash: a cache for whoever bothers to look
+                { type: 'chest', x: 596, y: 420, contains: 'prickly_pear', text: "A tobacco tin wedged in the rocks, lid weighted with a stone. Inside, a prickly pear wrapped in a page of the 1971 Republic. The hermit's habit: leave a place better stocked than you found it." },
+                { type: 'cactus', x: 538, y: 424 },
+                { type: 'animal_bones', x: 530, y: 350 },
+                { type: 'tumbleweed', x: 322, y: 158 },
+                { type: 'desert_flower', x: 296, y: 156 },
                 { type: 'doorway', x: 0, y: 232, toMap: 'desert', toX: CANVAS_WIDTH - 70, toY: 240, text: "To Desert" },
-                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 100, toMap: 'camelback', toX: 50, toY: 100, text: "To Mt." },
-                { type: 'crater', x: 300, y: 350, width: 100, height: 50 },
-                { type: 'rock', x: 150, y: 350, width: 60, height: 40, solid: true, color: '#6B4226' },
-                { type: 'cactus', x: 500, y: 80 },
-                { type: 'animal_bones', x: 220, y: 420 },
-                { type: 'tumbleweed', x: 480, y: 300 },
+                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 100, toMap: 'camelback', toX: 50, toY: 100, text: "To Mt." }
             ],
-            npcs: [{ name: 'Old Hermit', x: 250, y: 150, dialog: "The earth groans under the weight of secrets. Some are best left buried... or returned to whoever buried them." }],
+            npcs: [
+                { name: 'Old Hermit', x: 100, y: 190, dialog: (() => {
+                    let i = 0;
+                    const before = [
+                        "You walk like a man following directions. Whose, I wonder.",
+                        "Eleven years I've kept this canyon. Kept, not owned. That's a difference your colleagues never learned.",
+                        "A man came through in March. City hat, dying slow and knowing it. He buried something up the slot and stood over it a long while, bare-headed in the sun. I let the place keep it.",
+                        "Camp on the high ground, professor. The wash is the fast way through, and the fast way is how the flood likes you.",
+                        "The earth groans under the weight of secrets. Some are best left buried... or returned to whoever buried them first."
+                    ];
+                    return (player) => {
+                        if (player.hasItem('artifact1')) {
+                            if (!player.quests.find(q => q.id === 'hermit_blessing')) {
+                                player.addQuest({ id: 'hermit_blessing', description: "The Hermit: the dying man said someone would come who'd know what the stick counted.", completed: true });
+                                return "So you found his cache. Easy, professor — I'm not the digging kind. The man who buried it said someone would come along who'd know what the counting meant. And he said: tell him the rest is where the water was. I supposed that meant something to somebody. Now it's yours to suppose.";
+                            }
+                            return "'The rest is where the water was,' he said. Canals, tanks, rivers... this whole valley is where the water was. A cruel way to leave a clue. Or a patient one.";
+                        }
+                        return before[i++ % before.length];
+                    };
+                })()}
+            ],
             enemies: [
-                { type: 'coyote', x: 350, y: 100 },
-                { type: 'gila_monster', x: 480, y: 400 },
-                { type: 'vulture', x: 450, y: 60 }
+                { type: 'snake', x: 200, y: 60 },
+                { type: 'gila_monster', x: 330, y: 352 },
+                { type: 'coyote', x: 390, y: 300 },
+                { type: 'vulture', x: 550, y: 370 }
             ],
             critters: [
-                { type: 'lizard', x: 200, y: 300 },
-                { type: 'jackrabbit', x: 500, y: 200 }
+                { type: 'lizard', x: 140, y: 250 },
+                { type: 'quail', x: 60, y: 330 },
+                { type: 'quail', x: 84, y: 342 },
+                { type: 'jackrabbit', x: 590, y: 445 }
             ]
         },
         camelback: {
             name: 'Camelback Mountain Trail', background: '#A0B084',
             objects: [
-                { type: 'sign', x: 50, y: 400, text: "Echo Canyon Trailhead. Carry water. The mountain doesn't." },
-                { type: 'rock', x: 150, y: 350 },
-                { type: 'interactive_point', x: 320, y: 50, text: "Scenic overlook. From up here the valley's peaks line up like beads on a string: Papago's red buttes, the mound by the airport, the dark ridge of South Mountain. Almost like it's arranged." },
-                { type: 'campfire_remains', x: 480, y: 380 },
+                // Three terraces climbing south-to-north, linked by switchback
+                // gaps: east gap up from the trailhead, west gap up to the summit.
+                { type: 'mountain_slope', x: 0, y: 330, width: 460, height: 60 },
+                { type: 'mountain_slope', x: 560, y: 330, width: 80, height: 60 },
+                { type: 'mountain_slope', x: 100, y: 120, width: 540, height: 60 },
+                { type: 'mountain_slope', x: 120, y: 0, width: 120, height: 64 },
+                // The trail itself, worn into the mountain
+                { type: 'trail_path', x: 60, y: 420, width: 420, height: 26 },
+                { type: 'trail_path', x: 486, y: 330, width: 48, height: 70 },
+                { type: 'trail_path', x: 140, y: 280, width: 380, height: 26 },
+                { type: 'trail_path', x: 30, y: 150, width: 48, height: 140 },
+                { type: 'trail_path', x: 250, y: 72, width: 180, height: 24 },
+                // Trailhead (bottom terrace)
+                { type: 'sign', x: 60, y: 440, text: "Echo Canyon Trailhead. Carry water. The mountain doesn't." },
+                { type: 'campfire_remains', x: 560, y: 430 },
+                { type: 'animal_bones', x: 350, y: 448 },
+                { type: 'cactus', x: 20, y: 396 },
+                { type: 'trail_marker', x: 470, y: 398 },
+                // Mid terrace: the climb
+                { type: 'interactive_point', x: 220, y: 236, text: "Halfway up. Below, the 1986 city quits at the mountain's feet: orange groves, then open desert. Enjoy the view. It's the last summer it will look like this." },
                 { type: 'fruit_cactus', x: 100, y: 250 },
+                { type: 'cactus', x: 300, y: 200 },
+                { type: 'desert_flower', x: 250, y: 312 },
+                { type: 'desert_flower', x: 420, y: 300 },
+                { type: 'tumbleweed', x: 450, y: 240 },
+                { type: 'trail_marker', x: 500, y: 296 },
+                { type: 'trail_marker', x: 90, y: 302 },
+                { type: 'rock', x: 560, y: 260, color: '#8A8A72' },
+                // Summit ridge: the monk, the echo, and the lesson
+                { type: 'praying_monk', x: 440, y: 0 },
+                { type: 'interactive_point', x: 176, y: 84, text: "ECHO CANYON. Shout here and the rock hands your voice back a half-second late, unimpressed. The mountain has heard it all." },
+                { type: 'interactive_point', x: 320, y: 36, timeGated: {
+                    startHour: 5, endHour: 8,
+                    successText: "First light comes up over the Superstitions and runs west along the valley like a fuse: Papago's red buttes catch, then the mound by the airport, then the dark ridge of South Mountain. One line. Nobody arranges mountains. But somebody noticed the arrangement, and built to agree with it.",
+                    failText: "Scenic overlook. From up here the valley's peaks line up like beads on a string: Papago's buttes, the mound by the airport, the ridge of South Mountain. Almost like it's arranged. You'd want first light to be sure.",
+                    record: { id: 'camelback_sightline', description: 'Dawn from Camelback: the valley peaks light up in one line.', completed: true }
+                }},
+                { type: 'chest', x: 600, y: 50, contains: 'prickly_pear', text: "A climber's cache tucked behind the monk: a prickly pear in a bandana, left for whoever needs it worse. Mountain manners." },
                 { type: 'doorway', x: 0, y: 100, toMap: 'canyon', toX: CANVAS_WIDTH - 70, toY: 100, text: "To Canyon" },
-                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 200, toMap: 'papago_park', toX: 50, toY: 240, text: "To Papago" },
-                { type: 'desert_flower', x: 250, y: 300 },
-                { type: 'desert_flower', x: 420, y: 380 },
+                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 200, toMap: 'papago_park', toX: 50, toY: 240, text: "To Papago" }
             ],
             npcs: [
-                { name: 'Tired Hiker', x: 450, y: 280, dialog: ["Almost... at the top... Need water!", "Watch out for loose rocks."] },
-                { name: 'Vance Cutler', x: 220, y: 200, dialog: [
+                // Sharing water is the mountain's real lesson: it costs you
+                { name: 'Tired Hiker', x: 350, y: 288, dialog: (player, game) => {
+                    if (player.quests.find(q => q.id === 'hiker_helped')) {
+                        return "I owe you one, professor. It's all downhill from here. For me, I mean. Literally.";
+                    }
+                    if (player.hydration > 50) {
+                        player.hydration -= 25;
+                        game.ui.updateHydration(player.hydration, player.maxHydration);
+                        const gavePear = player.addItem('prickly_pear');
+                        player.addQuest({ id: 'hiker_helped', description: 'Shared your water with a dry hiker on Camelback.', completed: true });
+                        return "Water... you're a saint. " + (gavePear
+                            ? "Here — prickly pear, picked it lower down, can't stomach the seeds. "
+                            : "I'd pay you back, but you're better provisioned than I am. So take a tip instead: ")
+                            + "Be on the summit at FIRST LIGHT some morning. The whole valley lines up. Worth the climb twice.";
+                    }
+                    return "Almost... at the top... came up with half a canteen like an idiot. Don't share if you can't spare it, professor. This mountain doesn't forgive twice.";
+                }},
+                { name: 'Vance Cutler', x: 170, y: 420, dialog: [
                     "Jim Walker! Twenty years, and you still haven't bought a better hat. Vance Cutler. Don't make that face. I'm legitimate now. Mostly.",
                     "I'm taking a crew into the Superstitions. Dutchman gold, Jim. The signs finally line up. Come along. The split beats a pension.",
                     "Still reading rocks for free? Everything old is worth something to somebody. That's not cynicism, that's appraisal.",
                     "Suit yourself, old friend. If you beat me to anything out there... I'll make you a fair offer. I always do."
                 ]},
-                { name: 'Photographer', x: 520, y: 120, dialog: [
+                { name: 'Photographer', x: 260, y: 84, dialog: [
                     "Hold still, the light is PERFECT right now.",
                     "I've shot sunrises on six continents, but nothing beats the crimson evening out here. That's what the O'odham call it, a fella told me.",
                     "Caught a javelina on film yesterday. Don't call them pigs, and don't get between a mother and her young. That's all the wisdom I have."
                 ]}
             ],
             enemies: [
-                { type: 'snake', x: 200, y: 150 },
-                { type: 'javelina', x: 400, y: 420 }
+                { type: 'snake', x: 490, y: 352 },
+                { type: 'javelina', x: 300, y: 430 },
+                { type: 'javelina', x: 344, y: 414 },
+                { type: 'gila_monster', x: 560, y: 236 },
+                { type: 'vulture', x: 350, y: 96 }
             ],
             critters: [
-                { type: 'quail', x: 300, y: 350 },
-                { type: 'quail', x: 330, y: 370 },
-                { type: 'lizard', x: 500, y: 150 }
+                { type: 'quail', x: 140, y: 300 },
+                { type: 'quail', x: 162, y: 312 },
+                { type: 'lizard', x: 600, y: 440 },
+                { type: 'roadrunner', x: 240, y: 430 }
             ]
         },
         papago_park: {
@@ -308,7 +459,7 @@ export function getMaps() {
                 { type: 'desert_flower', x: 300, y: 400 },
                 { type: 'tumbleweed', x: 200, y: 430 },
                 { type: 'doorway', x: 0, y: 232, toMap: 'camelback', toX: CANVAS_WIDTH - 70, toY: 200, text: "To Camelback" },
-                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 232, toMap: 'hohokam_site', toX: 50, toY: 240, text: "To the Mound" }
+                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 232, toMap: 'canal_path', toX: 50, toY: 380, text: "To the Canal" }
             ],
             npcs: [
                 { name: 'Morning Fisherman', x: 180, y: 380, dialog: [
@@ -348,17 +499,30 @@ export function getMaps() {
                 { type: "interactive_point", x: 100, y: 50, text: "Salvage stakes and string grids. Two weeks to record nine hundred years, and then the concrete comes." },
                 { type: "rock", x: 500, y: 400 },
                 { type: 'campfire_remains', x: 60, y: 420 },
-                { type: "doorway", x: 0, y: 232, toMap: 'papago_park', toX: CANVAS_WIDTH - 70, toY: 240, text: "To Papago" },
+                { type: "doorway", x: 0, y: 232, toMap: 'canal_path', toX: CANVAS_WIDTH - 118, toY: 380, text: "To the Canal" },
                 { type: "doorway", x: CANVAS_WIDTH - 48, y: 150, toMap: 'casa_grande', toX: 50, toY: 240, text: "To Great House" }
             ],
             npcs: [
-                { name: 'Dr. Delgado', x: 350, y: 200, dialog: [
-                    "Dr. Delgado, city archaeology. We've got two weeks to salvage what we can before the pour. Two weeks, for nine hundred years of engineering.",
-                    "Someone's been here at night. Neat holes, screened spoil: pothunters, professional ones. They knew where to dig, which scares me more than the bulldozers.",
-                    "We catalogued an etched olla shard last week and now it's missing from the tray. If the diggers dropped it in their hurry, it's still on this site. Under a tarp, maybe. Keep an eye out.",
-                    "The doorway up on the mound? At summer solstice dawn it frames Hole-in-the-Rock, straight across the valley. Stand in it early some morning. It'll change how you see this whole city.",
-                    "If you find anything out there, anything at all, document, don't dig. Promise me that, Professor."
-                ]}
+                { name: 'Dr. Delgado', x: 350, y: 200, dialog: (() => {
+                    let i = 0;
+                    const beforePour = [
+                        "Dr. Delgado, city archaeology. We've got two weeks to salvage what we can before the pour. Two weeks, for nine hundred years of engineering.",
+                        "Someone's been here at night. Neat holes, screened spoil: pothunters, professional ones. They knew where to dig, which scares me more than the bulldozers.",
+                        "We catalogued an etched olla shard last week and now it's missing from the tray. If the diggers dropped it in their hurry, it's still on this site. Under a tarp, maybe. Keep an eye out.",
+                        "The doorway up on the mound? At summer solstice dawn it frames Hole-in-the-Rock, straight across the valley. Stand in it early some morning. It'll change how you see this whole city.",
+                        "If you find anything out there, anything at all, document, don't dig. Promise me that, Professor. The pour is June 23. After that, whatever we haven't recorded is gone."
+                    ];
+                    return (player, game) => {
+                        if (game.gameDate >= 23) {
+                            if (!player.hasItem('artifact2')) {
+                                player.addItem('artifact2');
+                                return "It's done. They poured at first light; I watched. But here — I pulled this from the salvage tray before the trucks came. An etched olla shard, canal lines and notch counts. Take it. Document it. Someone should carry it out of here who won't sell it.";
+                            }
+                            return "Nine hundred years of engineering, under four inches of grey. Two weeks was never enough, and everyone signing the permits knew it. Write down what you saw here, Professor. That's all that's left to do.";
+                        }
+                        return beforePour[i++ % beforePour.length];
+                    };
+                })()}
             ],
             enemies: [
                 { type: 'scorpion', x: 450, y: 350 },
@@ -460,6 +624,7 @@ export function getMaps() {
                     "You say 'Hohokam' like they're a riddle. Huhugam means our ancestors, the ones who came before. We never went anywhere, Professor. The cities changed. The people didn't stop.",
                     "Some of these markings are calendars. The notch on that ridge catches the sun on the longest day. My grandmother knew more about it than your whole department, and that part isn't mine to give you.",
                     "The saguaro fruit is ripening. The harvest marks our new year. Your calendar is carved in rock; ours never stopped being alive. Both count the same sun.",
+                    "If a coyote walks ahead of you and keeps looking back — that's not a coyote in a hurry. Old family, that one. Follow at a respectful distance, don't thank him out loud, and pay attention to where you end up.",
                     "Watch the horizon at dusk, from the worn spot below the notch. Then you'll understand what this mountain is for."
                 ]}
             ],
@@ -479,6 +644,7 @@ export function getMaps() {
                 { type: "petroglyph_panel", x: 400, y: 250, width: 64, height: 64, text: "The star-scorpion panel. A circle with rays beside Scorpius. AD 1006, the anchor of the whole calendar.", questTrigger: {
                     id: 'supernova_read',
                     description: 'The star panel: the great star of AD 1006 anchors the calendar.',
+                    completed: true,
                     grantsItem: 'artifact3',
                     startText: "There it is. A scorpion of stars, and beside it, a circle with rays, far too bright to be the moon. Your 1956 sketch, line for line. If this records the great star of AD 1006, then every count on the calendar stick is a DATE. You take out charcoal and paper and make a careful rubbing. (Star Chart Rubbing added.)"
                 }},
@@ -503,6 +669,12 @@ export function getMaps() {
                 { type: 'campfire_remains', x: 200, y: 400 },
                 // UFO debunk beat
                 { type: "interactive_point", x: 540, y: 250, text: "Scorch marks on the caliche and a scrap of burned magnesium casing. Military flare, not a saucer. The strange lights have a boring answer. The rock carvings do not." },
+                // Blacklight find: the panels were painted once
+                { type: 'uv_trace', x: 400, y: 320, questTrigger: {
+                    id: 'uv_pigment', completed: true,
+                    description: 'UV: ghost-lines of ochre pigment on the star panel.',
+                    startText: "Under the lamp the panel's edges bloom: ghost-lines of ochre, invisible by day. The carvings were PAINTED once. Nine hundred summers took the color and kept the count."
+                }},
                 { type: "doorway", x: 0, y: 232, toMap: 'sky_people_shrine', toX: CANVAS_WIDTH - 70, toY: 200, text: "To South Mtn." },
                 { type: "doorway", x: CANVAS_WIDTH - 48, y: 120, toMap: 'asu_lab', toX: 50, toY: 240, text: "To ASU" }
             ],
@@ -529,7 +701,8 @@ export function getMaps() {
                 { type: 'jackrabbit', x: 360, y: 160 },
                 { type: 'lizard', x: 220, y: 340 },
                 { type: 'quail', x: 120, y: 300 },
-                { type: 'roadrunner', x: 440, y: 380 }
+                { type: 'roadrunner', x: 440, y: 380 },
+                { type: 'guide_coyote', x: 560, y: 420, path: [[380, 400], [220, 380], [110, 350]] }
             ]
         },
         ghost_town: {
@@ -556,6 +729,7 @@ export function getMaps() {
                 { type: 'chest', x: 60, y: 160, contains: 'prickly_pear', text: "Someone stashed a fresh prickly pear in here. Still good!" },
                 { type: 'campfire_remains', x: 540, y: 420 },
                 { type: 'doorway', x: 296, y: 0, toMap: 'desert', toX: 296, toY: CANVAS_HEIGHT - 60, text: "To Desert" },
+                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 120, toMap: 'superstition_mountains', toX: 60, toY: 240, text: "To Superstitions" },
                 { type: 'mine_portal', x: CANVAS_WIDTH - 60, y: 300, toMap: 'abandoned_mine', toX: 60, toY: 240, text: "To Mine" }
             ],
             npcs: [
@@ -607,6 +781,11 @@ export function getMaps() {
                 { type: 'rock', x: 350, y: 180, color: '#4A3B2A' },
                 { type: 'sign', x: 100, y: 250, text: "DANGER: Shaft 7 closed by order of the Territorial Mining Office, 1912." },
                 { type: 'looter_pit', x: 480, y: 330, text: "A fresh pit among the old workings. Cutler's crew tested here and moved on. Nothing worth their while. Their idea of 'worth' is the whole problem." },
+                { type: 'uv_trace', x: 340, y: 220, questTrigger: {
+                    id: 'uv_chalk', completed: true,
+                    description: "UV: the miners' chalk waymarks, still glowing in the dark.",
+                    startText: "Chalk arrows flare blue-white on the timbers: the old miners' waymarks, invisible for seventy years. Every one of them points OUT. Men who mark the way out are men who mean to come back."
+                }},
                 { type: 'chest', x: 520, y: 160, contains: 'old_pickaxe', text: "The Prospector's old pickaxe! It's dusted blue-green. Copper ore, nothing stranger. Mostly." },
                 { type: 'chest', x: 240, y: 430, contains: 'lucky_charm', text: "A lucky rabbit foot on a worn chain. Some miner's talisman." },
                 { type: 'doorway', x: 0, y: 232, toMap: 'ghost_town', toX: CANVAS_WIDTH - 120, toY: 300, text: "To Town" }
@@ -645,16 +824,33 @@ export function getMaps() {
                 { type: 'secret_panel', x: 300, y: 400, portalOnInteract: true, toMap: 'artifact_chamber', toX: CANVAS_WIDTH / 2 - 16, toY: CANVAS_HEIGHT - 80,
                     requiredItems: ['artifact1', 'artifact2', 'artifact3'],
                     lockedText: "A panel, locked from behind. Three shallow slots are cut into the frame: one shaped like a notched stick, one like a curved shard, one a flat sheet.",
-                    interactionText: "The stick fragment, the olla shard, the rubbing. Each slips into its slot like a tooth of a key, and the counts line up into one unbroken calendar. Push what cannot fly. The statue grinds aside: a maintenance stair, down into the old utility vault. The canal segment runs directly below." },
+                    requiredRecords: ['alignment_light', 'alignment_doorway', 'alignment_horizon'],
+                    recordHints: {
+                        alignment_light: "the dawn light on the chamber floor at Hole-in-the-Rock (Papago, first light)",
+                        alignment_doorway: "the mound doorway at dawn (Pueblo Grande, first light)",
+                        alignment_horizon: "the sun settling into the horizon notch at dusk (South Mountain)",
+                    },
+                    interactionText: "The stick fragment, the olla shard, the rubbing. Each slips into its slot like a tooth of a key, and the counts line up into one unbroken calendar. You have stood in the light three times; now the counts read like a clock face. Push what cannot fly. The statue grinds aside: a maintenance stair, down into the old utility vault. The canal segment runs directly below." },
                 { type: 'doorway', x: 0, y: 232, toMap: 'white_tanks_petroglyphs', toX: CANVAS_WIDTH - 70, toY: 120, text: "Exit" }
             ],
             npcs: [
-                { name: "Grad Student", x: 400, y: 300, dialog: [
-                    "Working on my thesis... don't mind the mess.",
-                    "You're the second person this month to pull the 1912 canal surveys. A Mr. Cutler requested the same boxes last week. Paid the copy fees in cash.",
-                    "If you need a break, Mill Avenue has coffee, and Gammage runs a summer organ series. Frank Lloyd Wright built it. It's sort of our pyramid.",
-                    "The planetarium's ephemeris program is on the mainframe if you need sky positions. Any date you want. It's 1986. The future is now, Professor."
-                ]},
+                { name: "Grad Student", x: 400, y: 300, dialog: (() => {
+                    let i = 0;
+                    const lines = [
+                        "Working on my thesis... don't mind the mess.",
+                        "You're the second person this month to pull the 1912 canal surveys. A Mr. Cutler requested the same boxes last week. Paid the copy fees in cash.",
+                        "If you need a break, Mill Avenue has coffee, and Gammage runs a summer organ series. Frank Lloyd Wright built it. It's sort of our pyramid.",
+                        "The planetarium's ephemeris program is on the mainframe if you need sky positions. Any date you want. It's 1986. The future is now, Professor.",
+                        "How's the UV lamp working out? Scorpions glow green. So does old rock pigment. We didn't expect that second part."
+                    ];
+                    return (player) => {
+                        if (!player.hasItem('blacklight')) {
+                            player.addItem('blacklight');
+                            return "Oh — you're the professor with the Model 100. Computer club made these: UV lamp, clips right onto it. Scorpions light up green under it at night. So does old mineral pigment, it turns out, which nobody expected. Take one, we made a dozen.";
+                        }
+                        return lines[i++ % lines.length];
+                    };
+                })()},
                 { name: 'Sparky', x: 470, y: 400, dialog: [
                     "FEAR THE FORK! ...Sorry, Professor. Contractually obligated. It is one hundred and nine degrees inside this head.",
                     "Football this fall? We are going ALL the way. Rose Bowl. Write it down. I am never wrong when I am wearing the head.",
@@ -665,10 +861,115 @@ export function getMaps() {
             enemies: [],
             critters: []
         },
+        canal_path: {
+            name: 'The Arizona Canal', background: '#D8B488', haboob: true,
+            objects: [
+                // The canal crosses the whole reach; a footbridge is the only way over
+                { type: 'srp_canal', x: 0, y: 200, width: 280, height: 56 },
+                { type: 'srp_canal', x: 344, y: 200, width: 296, height: 56, text: "Nine hundred years ago the water ran the same direction, twenty feet down, for the same reason. The 1912 engineers just agreed with it." },
+                { type: 'footbridge', x: 280, y: 196 },
+                // North bank: the lock keeper's place
+                { type: 'old_building', x: 90, y: 50, shelter: true, text: "The lock keeper's house. SRP, 1912. The kitchen light is on at all hours; water doesn't keep office hours." },
+                { type: 'wind_chime', x: 196, y: 96 },
+                { type: 'sign', x: 250, y: 120, text: "SRP - ARIZONA CANAL, LOCK 9. Keeper: J. Vega. This reach follows a Hohokam alignment, surveyed 1912." },
+                { type: 'interactive_point', x: 430, y: 130, text: "Dredge spoil in neat screened piles, and fresh tire tracks. Cutler's crew sieved this stretch and moved on. The canal didn't give up whatever they wanted." },
+                { type: 'survey_flag', x: 470, y: 110 },
+                { type: 'survey_flag', x: 505, y: 145 },
+                { type: 'chest', x: 570, y: 70, contains: 'prickly_pear', text: "A lunch cooler someone forgot on the bank. One ripe prickly pear inside, still cool." },
+                // South bank
+                { type: 'campfire_remains', x: 70, y: 400 },
+                { type: 'water_source', x: 390, y: 290 },
+                { type: 'cactus', x: 40, y: 300 },
+                { type: 'fruit_cactus', x: 470, y: 420 },
+                { type: 'desert_flower', x: 310, y: 340 },
+                { type: 'tumbleweed', x: 180, y: 370 },
+                { type: 'dead_tree', x: 590, y: 300 },
+                { type: 'interactive_point', x: 240, y: 300, text: "The water moves east, steady as a clock, whispering over the concrete. In a whiteout you could walk this whole reach by sound alone." },
+                { type: 'doorway', x: 0, y: 380, toMap: 'papago_park', toX: CANVAS_WIDTH - 70, toY: 240, text: "To Papago" },
+                { type: 'doorway', x: CANVAS_WIDTH - 48, y: 380, toMap: 'hohokam_site', toX: 50, toY: 240, text: "To the Mound" }
+            ],
+            npcs: [
+                { name: 'Lock Keeper Vega', x: 150, y: 150, dialog: [
+                    "Vega. Salt River Project. My grandfather tended this reach, and his people ran water here before there was an SRP to pay for it. Somebody in my family has always worked water.",
+                    "This canal? 1912 concrete on a nine-hundred-year-old grade. The engineers didn't invent anything. They just agreed with people who'd already done the math.",
+                    "When the dust wall comes through, don't run and don't rub your eyes. Get low, get inside, and listen. The water tells you where the canal is. My chime tells you where the door is.",
+                    "Cutler's crew dredged east of Lock 9 last week. Pulled up two bicycles and a shopping cart. Some men can't hear water unless it rings like a register."
+                ]}
+            ],
+            enemies: [
+                { type: 'snake', x: 480, y: 340 },
+                { type: 'scorpion', x: 220, y: 430 }
+            ],
+            critters: [
+                { type: 'roadrunner', x: 350, y: 410 },
+                { type: 'quail', x: 100, y: 340 },
+                { type: 'quail', x: 128, y: 352 },
+                { type: 'jackrabbit', x: 540, y: 440 }
+            ]
+        },
+        superstition_mountains: {
+            name: 'Superstition Mountains', background: '#8A6248',
+            objects: [
+                { type: 'stone_needle', x: 292, y: 30 },
+                { type: 'granite_boulder', x: 80, y: 110, color: '#7A5A48' },
+                { type: 'granite_boulder', x: 500, y: 100, color: '#7A5A48' },
+                { type: 'rock', x: 180, y: 170, color: '#6B4A38' },
+                { type: 'rock', x: 430, y: 210, width: 48, height: 36, color: '#6B4A38' },
+                { type: 'cactus', x: 34, y: 320 },
+                { type: 'cactus', x: 570, y: 250 },
+                { type: 'fruit_cactus', x: 120, y: 420 },
+                { type: 'dead_tree', x: 530, y: 360 },
+                { type: 'animal_bones', x: 240, y: 310 },
+                { type: 'animal_bones', x: 410, y: 440 },
+                { type: 'tumbleweed', x: 310, y: 390 },
+                { type: 'campfire_remains', x: 80, y: 350 },
+                // Cutler's camp, flagged like a crime scene
+                { type: 'survey_flag', x: 470, y: 300 },
+                { type: 'survey_flag', x: 508, y: 322 },
+                { type: 'survey_flag', x: 545, y: 295 },
+                { type: 'barrel', x: 452, y: 260 },
+                { type: 'interactive_point', x: 495, y: 345, text: "Cutler's camp: cots, a generator, a card table with a map pinned under a whiskey bottle. The map is annotated in three colors of certainty." },
+                // The marked spot from the legend, and what's actually there
+                { type: 'interactive_point', x: 330, y: 170, text: "From the worn spot the legend names, the Needle lines up exactly with the notch in the ridge. You check the bearing twice. A hundred dead men took it before you, standing right here, every one of them sure." },
+                { type: 'looter_pit', x: 296, y: 224, width: 64, height: 36, questTrigger: {
+                    id: 'dutchman_bust',
+                    description: 'The Dutchman spot: an empty hole and a rusted canteen.',
+                    completed: true,
+                    startText: "The marked spot. Somebody dug here half a century before Cutler: the spoil is crusted hard as the caliche. The hole is empty. It was always going to be empty. Above you the Needle keeps not caring. The desert doesn't curse anyone. It just doesn't pay out."
+                }},
+                { type: 'chest', x: 352, y: 244, contains: 'rusted_canteen', text: "Half-buried beside the pit: a rusted 1930s army canteen, holed clean through. Somebody chased the legend this far, then lightened their load on the way out. Or didn't walk out." },
+                { type: 'sign', x: 190, y: 440, text: "TONTO NATIONAL FOREST. Carry water. Tell someone where you went." },
+                { type: 'doorway', x: 0, y: 232, toMap: 'ghost_town', toX: CANVAS_WIDTH - 120, toY: 140, text: "To Dusty Gulch" }
+            ],
+            npcs: [
+                { name: 'Vance Cutler', x: 440, y: 390, dialog: [
+                    "Jim Walker, in my camp. Sit; there's shade, and the coffee's terrible. You went and got principles, I went and got a generator. Look which one of us sleeps on a cot.",
+                    "Here's my map. The military crest, the Needle's shadow at four o'clock, the old Peralta bearings. It all LINES UP, Jim. You know that feeling. It's the same one you chase. I just cash mine out.",
+                    "Partner with me. Full split, your name on whatever paper you want. You read rock better than any man I ever robbed a museum with. That was a joke. Mostly.",
+                    "You keep looking at my dig like it's a grave. It's a hole. If it's empty I dig another one. That's the difference between us: you think the desert is telling you something, I think it's hiding something. One of us goes home rich.",
+                    "Suit yourself, old friend. When you change your mind, follow the flags."
+                ]}
+            ],
+            enemies: [
+                { type: 'javelina', x: 150, y: 210 },
+                { type: 'javelina', x: 195, y: 235 },
+                { type: 'gila_monster', x: 380, y: 330 },
+                { type: 'snake', x: 250, y: 410 },
+                { type: 'snake', x: 540, y: 430 },
+                { type: 'vulture', x: 320, y: 90 },
+                { type: 'scorpion', x: 100, y: 300 }
+            ],
+            critters: [
+                { type: 'jackrabbit', x: 560, y: 410 },
+                { type: 'lizard', x: 210, y: 350 }
+            ]
+        },
         artifact_chamber: {
             name: 'The Vault Beneath the Canal Line', background: '#301020', indoor: true,
             objects: [
                 { type: 'pedestal', x: CANVAS_WIDTH / 2 - 16, y: CANVAS_HEIGHT / 2 - 16 },
+                { type: 'doorway', x: 0, y: 232, toMap: 'asu_lab', toX: 344, toY: 410, text: "Up the stair" },
+                { type: 'offering_ledge', x: 84, y: 300 },
                 { type: 'crystal', x: 100, y: 120 },
                 { type: 'crystal', x: CANVAS_WIDTH - 124, y: 120 },
                 { type: 'stalagmite', x: 60, y: 350 },
@@ -692,6 +993,8 @@ export function getMaps() {
 }
 
 export const MAP_MUSIC = {
+    canal_path: 'canalTheme',
+    superstition_mountains: 'superstitionsTheme',
     desert: 'firstScenarioTheme',
     canyon: 'secondScenarioTheme',
     camelback: 'thirdScenarioTheme',

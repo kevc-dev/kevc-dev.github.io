@@ -14,6 +14,10 @@ export class Critter extends Entity {
         this.dirY = 0;
         this.facing = Math.random() < 0.5 ? 1 : -1;
         this.animFrame = Math.floor(Math.random() * 100);
+        // Guide behavior (the coyote that might be Ban): waits, leads, vanishes
+        this.pathIndex = 0;
+        this.started = false;
+        this.gone = false;
     }
 
     get isMoving() { return this.state !== 'idle'; }
@@ -21,6 +25,11 @@ export class Critter extends Entity {
     update() {
         this.animFrame++;
         const player = this.game.player;
+
+        if (this.critterType.guide) {
+            this.updateGuide(player);
+            return;
+        }
 
         if (player && this.fleeRange > 0) {
             const dx = this.centerX - player.centerX;
@@ -66,6 +75,39 @@ export class Critter extends Entity {
         }
     }
 
+    // The doc's rule: never resolve whether it's the same coyote. It waits at a
+    // distance, trots to the next waypoint when you approach, and is simply
+    // gone after the last one. Following too close loses it.
+    updateGuide(player) {
+        if (this.gone || !player) return;
+        const path = this.critterType.path || [];
+        const dToPlayer = Math.hypot(player.centerX - this.centerX, player.centerY - this.centerY);
+        if (!this.started) {
+            if (dToPlayer < 150) this.started = true;
+            else return;
+        }
+        // Crowded: it doesn't wait around to be petted
+        if (dToPlayer < 40) { this.gone = true; return; }
+        const target = path[this.pathIndex];
+        if (!target) { this.gone = true; return; }
+        const dx = target[0] - this.centerX;
+        const dy = target[1] - this.centerY;
+        const d = Math.hypot(dx, dy);
+        if (d > 6) {
+            this.state = 'wander';
+            this.x += (dx / d) * this.speed;
+            this.y += (dy / d) * this.speed;
+            if (Math.abs(dx) > 2) this.facing = dx > 0 ? 1 : -1;
+        } else {
+            // Waits at the waypoint, looking back, until you close the gap
+            this.state = 'idle';
+            if (player && Math.abs(player.centerX - this.centerX) > 2) {
+                this.facing = player.centerX > this.centerX ? 1 : -1;
+            }
+            if (dToPlayer < 110) this.pathIndex++;
+        }
+    }
+
     get walkFrame() {
         return this.isMoving ? Math.floor(this.animFrame / 7) % 2 : 0;
     }
@@ -90,12 +132,46 @@ export class Critter extends Entity {
             case 'Lizard': this.drawLizard(ctx); break;
             case 'Quail': this.drawQuail(ctx); break;
             case 'Desert Tortoise': this.drawTortoise(ctx); break;
+            case 'Coyote': this.drawGuideCoyote(ctx); break;
             default:
                 ctx.fillStyle = '#996633';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
                 break;
         }
         ctx.restore();
+    }
+
+    // Same pixels as the hostile coyote, nothing marking it special. On purpose.
+    drawGuideCoyote(ctx) {
+        const P = { B: '#B8860B', D: '#8B4513', U: '#D2B48C', K: '#111111', N: '#2A1A0A' };
+        const F = [[
+            ".............D..D...",
+            ".............DDDD...",
+            "D............BBBB...",
+            "DD..........BKBBNN..",
+            ".DD..BBBBBBBBBBB....",
+            ".DDBBBBBBBBBBBB.....",
+            "..DBBBBBBBBBBB......",
+            "...BUUUUUUUUUB......",
+            "...BUUUUUUUUUB......",
+            "....B..B..B..B......",
+            "....B..B..B..B......",
+            "....D..D..D..D......",
+        ], [
+            ".............D..D...",
+            ".............DDDD...",
+            "D............BBBB...",
+            "DD..........BKBBNN..",
+            ".DD..BBBBBBBBBBB....",
+            ".DDBBBBBBBBBBBB.....",
+            "..DBBBBBBBBBBB......",
+            "...BUUUUUUUUUB......",
+            "...BUUUUUUUUUB......",
+            "...B..B....B..B.....",
+            "...B..B....B..B.....",
+            "...D..D....D..D.....",
+        ]];
+        this.drawSprite(ctx, F, P, this.walkFrame);
     }
 
     drawJackrabbit(ctx) {

@@ -38,6 +38,9 @@ export const PLAYER_ATTACK_KNOCKBACK = 26;
 export const ENEMY_WANDER_SPEED_FACTOR = 0.4;
 export const ENEMY_WANDER_RADIUS = 80;
 
+// Checkpoint save slot in localStorage
+export const SAVE_KEY = 'desert_chronicles_save_v1';
+
 export const GAME_STATE = {
     START_SCREEN: 'START_SCREEN',
     INTRO: 'INTRO',
@@ -46,6 +49,7 @@ export const GAME_STATE = {
     PAUSED: 'PAUSED',
     DIALOG: 'DIALOG',
     PUZZLE: 'PUZZLE',
+    MAP_VIEW: 'MAP_VIEW',
     WIN: 'WIN',
     GAME_OVER: 'GAME_OVER',
 };

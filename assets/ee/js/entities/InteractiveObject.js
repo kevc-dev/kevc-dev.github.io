@@ -3,9 +3,10 @@ import { Arrow } from './Arrow.js';
 import { GAME_STATE, TURRET_COOLDOWN, TURRET_ARROW_SPEED, TURRET_ARROW_DAMAGE, TURRET_AGGRO_RANGE } from '../constants.js';
 
 export class InteractiveObject extends Entity {
-    constructor(game, x, y, objData) {
+    constructor(game, x, y, objData, mapIndex = -1) {
         super(game, x, y, objData.width, objData.height, objData.type);
         this.objData = JSON.parse(JSON.stringify(objData));
+        this.mapIndex = mapIndex;
         this.isInteractable = this.objData.interactive || this.objData.portal || this.objData.portalOnInteract || this.objData.triggersPuzzle;
         if (this.type === 'skull_turret') {
             this.attackCooldown = TURRET_COOLDOWN;
@@ -38,8 +39,11 @@ export class InteractiveObject extends Entity {
             case 'fruit_cactus': this.drawFruitCactus(ctx); break;
             case 'rock': this.drawRock(ctx); break;
             case 'chest': this.drawChest(ctx); break;
-            case 'sign':
-            case 'interactive_point': this.drawSign(ctx); break;
+            case 'sign': this.drawSign(ctx); break;
+            case 'interactive_point':
+                this.drawSign(ctx);
+                if (this.objData.lightBeam) this.drawLightBeam(ctx);
+                break;
             case 'petroglyph_panel': this.drawPetroglyphPanel(ctx); break;
             case 'ancient_symbol': this.drawAncientSymbol(ctx); break;
             case 'water_source': this.drawWaterSource(ctx); break;
@@ -90,6 +94,18 @@ export class InteractiveObject extends Entity {
             case 'horizon_marker': this.drawHorizonMarker(ctx); break;
             case 'survey_flag': this.drawSurveyFlag(ctx); break;
             case 'looter_pit': this.drawLooterPit(ctx); break;
+            case 'srp_canal': this.drawSrpCanal(ctx); break;
+            case 'footbridge': this.drawFootbridge(ctx); break;
+            case 'wind_chime': this.drawWindChime(ctx); break;
+            case 'stone_needle': this.drawStoneNeedle(ctx); break;
+            case 'canyon_wall': this.drawCanyonWall(ctx); break;
+            case 'balanced_rock': this.drawBalancedRock(ctx); break;
+            case 'dry_wash': this.drawDryWash(ctx); break;
+            case 'uv_trace': this.drawUvTrace(ctx); break;
+            case 'offering_ledge': this.drawOfferingLedge(ctx); break;
+            case 'mountain_slope': this.drawMountainSlope(ctx); break;
+            case 'praying_monk': this.drawPrayingMonk(ctx); break;
+            case 'trail_path': this.drawTrailPath(ctx); break;
             default: ctx.fillRect(this.x, this.y, this.width, this.height); break;
         }
     }
@@ -271,6 +287,33 @@ export class InteractiveObject extends Entity {
         ctx.fillRect(this.x + 4, this.y + 9, this.width - 12, 1.5);
     }
 
+    // A column of light standing on the floor while this object's time window
+    // is open (the canyon's noon blade)
+    drawLightBeam(ctx) {
+        const tg = this.objData.timeGated;
+        if (!tg) return;
+        const hour = this.game.gameHour;
+        if (hour < tg.startHour || hour >= tg.endHour) return;
+        const t = this.game.animationFrame;
+        const glow = 0.28 + Math.sin(t * 0.03) * 0.06;
+        const cx = Math.round(this.centerX);
+        const floorY = this.y + this.height - 2;
+        ctx.fillStyle = `rgba(255, 232, 160, ${glow})`;
+        ctx.fillRect(cx - 10, 0, 20, floorY);
+        ctx.fillStyle = `rgba(255, 244, 200, ${glow + 0.16})`;
+        ctx.fillRect(cx - 4, 0, 8, floorY);
+        // Hot pool where the blade stands
+        ctx.fillStyle = `rgba(255, 244, 200, ${glow + 0.22})`;
+        ctx.fillRect(cx - 14, floorY - 3, 28, 7);
+        // Dust swimming in the column
+        for (let i = 0; i < 5; i++) {
+            const my = (i * 83 + t * (0.4 + i * 0.13)) % floorY;
+            const mx = cx - 6 + ((i * 37) % 12);
+            ctx.fillStyle = `rgba(255, 250, 220, ${0.5 - i * 0.07})`;
+            ctx.fillRect(Math.round(mx), Math.round(my), 2, 2);
+        }
+    }
+
     drawWaterSource(ctx) {
         const x = this.x, y = this.y, w = this.width, h = this.height;
         const t = this.game.animationFrame;
@@ -355,12 +398,32 @@ export class InteractiveObject extends Entity {
     }
 
     drawPedestal(ctx) {
+        const unopened = !this.objData.opened && (!this.game.player || !this.game.player.hasItem('final_artifact'));
+        // Solstice dawn: one gold line comes down the stair and finds the olla
+        const solsticeLight = unopened && this.game.gameDate >= 21 && this.game.gameHour >= 5 && this.game.gameHour < 8;
+        if (solsticeLight) {
+            const glow = 0.65 + Math.sin(this.game.animationFrame * 0.06) * 0.2;
+            const x1 = 0, y1 = 26; // the stair, top-left, where the doorway lets the dawn in
+            const x2 = this.centerX, y2 = this.y - 4;
+            const steps = 26;
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const bx = Math.round(x1 + (x2 - x1) * t);
+                const by = Math.round(y1 + (y2 - y1) * t);
+                ctx.fillStyle = `rgba(255, 215, 120, ${glow * 0.25})`;
+                ctx.fillRect(bx - 5, by - 5, 10, 10);
+                ctx.fillStyle = `rgba(255, 230, 160, ${glow})`;
+                ctx.fillRect(bx - 2, by - 2, 4, 4);
+            }
+            ctx.fillStyle = `rgba(255, 215, 120, ${glow * 0.3})`;
+            ctx.fillRect(this.x - 8, this.y - 14, this.width + 16, this.height + 20);
+        }
         ctx.fillStyle = '#8888AA';
         ctx.fillRect(this.x, this.y + this.height * 0.2, this.width, this.height * 0.8);
         ctx.fillStyle = '#777799';
         ctx.fillRect(this.x - 2, this.y + this.height * 0.1, this.width + 4, this.height * 0.2);
-        if (!this.objData.opened && (!this.game.player || !this.game.player.hasItem('final_artifact'))) {
-            ctx.fillStyle = '#FFD700';
+        if (unopened) {
+            ctx.fillStyle = solsticeLight ? '#FFE88A' : '#FFD700';
             ctx.fillRect(this.x + this.width / 4, this.y - this.height / 4, this.width / 2, this.height / 2);
             if (this.game.animationFrame % 30 < 5) {
                 ctx.fillStyle = '#FFFFFF';
@@ -372,7 +435,8 @@ export class InteractiveObject extends Entity {
     drawHohokamCanal(ctx) {
         ctx.fillStyle = '#A0522D';
         ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.fillStyle = '#658EA9';
+        // waterColor overrides after the June 23 pour: concrete grey instead of old water
+        ctx.fillStyle = this.objData.waterColor || '#658EA9';
         ctx.fillRect(this.x, this.y + this.height * 0.2, this.width, this.height * 0.6);
     }
 
@@ -1447,6 +1511,333 @@ export class InteractiveObject extends Entity {
         ctx.fillRect(Math.round(x + w * 0.5) - 6, Math.round(y + h) - 2, 12, 2);
     }
 
+    // Deterministic per-object randomness for procedural rock faces
+    seededRand() {
+        let seed = ((Math.round(this.x) * 31 + Math.round(this.y) * 17 + this.width * 7) >>> 0) || 1;
+        return () => {
+            seed = (seed * 1103515245 + 12345) >>> 0;
+            return (seed >>> 8) / 16777216;
+        };
+    }
+
+    // Camelback granite: sage-grey ledges with brush growing out of the cracks
+    drawMountainSlope(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const rand = this.seededRand();
+        const bands = ['#8A8A72', '#7C7C66', '#94947C', '#70705C'];
+        const bandH = 11;
+        for (let by = 0; by < h; by += bandH) {
+            ctx.fillStyle = bands[Math.floor(by / bandH) % bands.length];
+            ctx.fillRect(x, y + by, w, Math.min(bandH, h - by));
+        }
+        // Sunlit ledge top, shaded base
+        ctx.fillStyle = '#AAAA90';
+        ctx.fillRect(x, y, w, 4);
+        ctx.fillStyle = 'rgba(30, 30, 20, 0.3)';
+        ctx.fillRect(x, y + h - 5, w, 5);
+        // Embedded boulders
+        for (let i = 0; i < Math.max(2, Math.floor(w / 70)); i++) {
+            const bx = x + rand() * (w - 22);
+            const by = y + 6 + rand() * (h - 20);
+            ctx.fillStyle = '#767662';
+            ctx.fillRect(Math.round(bx), Math.round(by), 16 + Math.round(rand() * 8), 8 + Math.round(rand() * 5));
+            ctx.fillStyle = '#9A9A82';
+            ctx.fillRect(Math.round(bx) + 2, Math.round(by), 8, 3);
+        }
+        // Brittlebush and jojoba out of the cracks
+        for (let i = 0; i < Math.max(2, Math.floor(w / 60)); i++) {
+            const px = x + 4 + rand() * (w - 14);
+            const py = y + 4 + rand() * (h - 14);
+            ctx.fillStyle = '#5A6B4A';
+            ctx.fillRect(Math.round(px), Math.round(py), 5, 4);
+            ctx.fillRect(Math.round(px) + 2, Math.round(py) - 2, 2, 3);
+            if (rand() < 0.4) {
+                ctx.fillStyle = '#E8C84A'; // brittlebush bloom
+                ctx.fillRect(Math.round(px) + 3, Math.round(py) - 3, 2, 2);
+            }
+        }
+    }
+
+    // The kneeling red sandstone figure at the camel's head, facing east
+    drawPrayingMonk(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const red = '#C1583A', dark = '#9A4630', light = '#D97B52';
+        // Kneeling base
+        ctx.fillStyle = red;
+        ctx.fillRect(x, y + h * 0.68, w, h * 0.32);
+        ctx.fillStyle = dark;
+        ctx.fillRect(x + w * 0.6, y + h * 0.68, w * 0.4, h * 0.32);
+        // Torso, leaning slightly east
+        ctx.fillStyle = red;
+        ctx.fillRect(x + w * 0.16, y + h * 0.26, w * 0.44, h * 0.46);
+        ctx.fillStyle = dark;
+        ctx.fillRect(x + w * 0.46, y + h * 0.26, w * 0.14, h * 0.46);
+        // Head
+        ctx.fillStyle = red;
+        ctx.fillRect(x + w * 0.2, y, w * 0.32, h * 0.24);
+        ctx.fillStyle = light;
+        ctx.fillRect(x + w * 0.2, y, w * 0.32, 4);
+        ctx.fillRect(x + w * 0.16, y + h * 0.26, 3, h * 0.46); // west rim light
+        // Praying hands: a nub raised toward the sunrise
+        ctx.fillStyle = red;
+        ctx.fillRect(x + w * 0.62, y + h * 0.3, w * 0.16, h * 0.26);
+        ctx.fillStyle = light;
+        ctx.fillRect(x + w * 0.62, y + h * 0.3, w * 0.16, 3);
+        // Rubble at the base
+        ctx.fillStyle = dark;
+        ctx.fillRect(x - 4, y + h - 5, w + 8, 5);
+    }
+
+    // Packed dirt switchback, boot prints and all
+    drawTrailPath(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const rand = this.seededRand();
+        ctx.fillStyle = '#C9B189';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#B49A70';
+        ctx.fillRect(x, y, w, 2);
+        ctx.fillRect(x, y + h - 2, w, 2);
+        // Boot prints in pairs, following the long axis
+        const vertical = h > w;
+        const steps = Math.max(2, Math.floor((vertical ? h : w) / 26));
+        for (let i = 0; i < steps; i++) {
+            const t = (i + 0.5) / steps;
+            const px = vertical ? x + w * 0.3 + rand() * w * 0.4 : x + w * t;
+            const py = vertical ? y + h * t : y + h * 0.25 + rand() * h * 0.5;
+            ctx.fillStyle = 'rgba(140, 115, 80, 0.75)';
+            ctx.fillRect(Math.round(px), Math.round(py), 3, 5);
+            ctx.fillRect(Math.round(px) + 5, Math.round(py) + 3, 3, 5);
+        }
+        // Kicked pebbles
+        for (let i = 0; i < Math.max(2, (w * h) / 1800); i++) {
+            ctx.fillStyle = '#A89068';
+            ctx.fillRect(Math.round(x + rand() * (w - 3)), Math.round(y + rand() * (h - 3)), 2, 2);
+        }
+    }
+
+    drawCanyonWall(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const rand = this.seededRand();
+        // Sedimentary strata bands
+        const bands = ['#B0603A', '#9C5230', '#C1703E', '#8B4A2C', '#A85838'];
+        const bandH = 12;
+        for (let by = 0; by < h; by += bandH) {
+            ctx.fillStyle = bands[Math.floor(by / bandH) % bands.length];
+            ctx.fillRect(x, y + by, w, Math.min(bandH, h - by));
+        }
+        // Sunlit rim and shadowed base
+        ctx.fillStyle = '#D98B57';
+        ctx.fillRect(x, y, w, 4);
+        ctx.fillStyle = 'rgba(40, 15, 5, 0.35)';
+        ctx.fillRect(x, y + h - 6, w, 6);
+        // Desert-varnish streaks bleeding down from the rim
+        for (let i = 0; i < Math.max(2, Math.floor(w / 40)); i++) {
+            const vx = x + rand() * (w - 8);
+            ctx.fillStyle = 'rgba(52, 30, 40, 0.3)';
+            ctx.fillRect(Math.round(vx), y + 4, 5, Math.round(8 + rand() * h * 0.45));
+        }
+        // Vertical fracture cracks
+        for (let i = 0; i < Math.max(2, Math.floor(w / 55)); i++) {
+            const cx = x + 4 + rand() * (w - 10);
+            const ch = 8 + rand() * h * 0.5;
+            const cy = y + rand() * (h - ch);
+            ctx.fillStyle = 'rgba(60, 20, 8, 0.5)';
+            ctx.fillRect(Math.round(cx), Math.round(cy), 2, Math.round(ch));
+        }
+        // Rubble at the foot
+        for (let i = 0; i < Math.max(2, Math.floor(w / 60)); i++) {
+            const rx = x + rand() * (w - 10);
+            ctx.fillStyle = '#8B4A2C';
+            ctx.fillRect(Math.round(rx), y + h - 4, 6 + Math.round(rand() * 5), 4);
+        }
+    }
+
+    drawBalancedRock(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // The cap: a huge stepped boulder
+        ctx.fillStyle = '#B0603A';
+        ctx.fillRect(x + 4, y + 8, w - 8, h * 0.34);
+        ctx.fillRect(x, y + 14, w, h * 0.24);
+        ctx.fillRect(x + 8, y, w - 16, 12);
+        ctx.fillStyle = '#D98B57';
+        ctx.fillRect(x + 8, y, w - 16, 3);
+        ctx.fillStyle = '#8B4A2C';
+        ctx.fillRect(x + 4, y + h * 0.3, w - 8, 6);
+        // The impossible neck
+        ctx.fillStyle = '#9C5230';
+        ctx.fillRect(x + w / 2 - 5, y + h * 0.38, 10, h * 0.34);
+        ctx.fillStyle = '#7A3E24';
+        ctx.fillRect(x + w / 2 + 2, y + h * 0.38, 3, h * 0.34);
+        // Base mound
+        ctx.fillStyle = '#A85838';
+        ctx.fillRect(x + w / 2 - 14, y + h * 0.72, 28, h * 0.16);
+        ctx.fillRect(x + w / 2 - 20, y + h * 0.84, 40, h * 0.16);
+        // Daylight showing under the cap, either side of the neck
+        ctx.fillStyle = '#BC6C25';
+        ctx.fillRect(x + 6, y + h * 0.36, w / 2 - 12, 2);
+        ctx.fillRect(x + w / 2 + 6, y + h * 0.36, w / 2 - 12, 2);
+    }
+
+    drawDryWash(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const rand = this.seededRand();
+        // Pale flood-scoured sand
+        ctx.fillStyle = '#D8B98C';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#C9A876';
+        ctx.fillRect(x, y, w, 3);
+        ctx.fillRect(x, y + h - 3, w, 3);
+        // Meander lines left by the last flow
+        ctx.fillStyle = 'rgba(160, 120, 70, 0.5)';
+        for (let i = 0; i < 3; i++) {
+            const ly = y + 6 + i * (h - 12) / 3;
+            for (let sx = 0; sx < w - 14; sx += 22) {
+                ctx.fillRect(x + sx + ((i * 7 + sx / 22) % 3) * 4, Math.round(ly + Math.sin(sx * 0.05 + i) * 2), 14, 2);
+            }
+        }
+        // Tumbled gravel
+        for (let i = 0; i < w / 24; i++) {
+            const gx = x + rand() * (w - 6);
+            const gy = y + 4 + rand() * (h - 10);
+            ctx.fillStyle = rand() < 0.5 ? '#B99868' : '#8B7355';
+            ctx.fillRect(Math.round(gx), Math.round(gy), 3 + Math.round(rand() * 3), 3);
+        }
+    }
+
+    drawSrpCanal(ctx) {
+        const t = this.game.animationFrame;
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Concrete banks
+        ctx.fillStyle = '#B8B0A0';
+        ctx.fillRect(x, y, w, 6);
+        ctx.fillRect(x, y + h - 6, w, 6);
+        ctx.fillStyle = '#98907E';
+        ctx.fillRect(x, y + 4, w, 2);
+        ctx.fillRect(x, y + h - 6, w, 2);
+        // Water
+        ctx.fillStyle = '#2A5A8A';
+        ctx.fillRect(x, y + 6, w, h - 12);
+        // Eastward flow streaks
+        for (let i = 0; i < Math.max(2, Math.floor(w / 56)); i++) {
+            const lane = y + 12 + (i % 3) * Math.max(8, (h - 24) / 3);
+            const fx = x + ((i * 53 + t * 0.9) % Math.max(24, w - 26));
+            ctx.fillStyle = '#3B77AC';
+            ctx.fillRect(Math.round(fx), Math.round(lane), 22, 3);
+            ctx.fillStyle = '#4E8FC4';
+            ctx.fillRect(Math.round(fx) + 6, Math.round(lane) + 4, 12, 2);
+        }
+        // Sun glint
+        if (t % 60 < 10) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(Math.round(x + w * 0.3 + (t % 5) * 8), Math.round(y + h * 0.45), 2, 2);
+        }
+    }
+
+    drawFootbridge(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Planks across the water
+        for (let i = 0; i < 7; i++) {
+            ctx.fillStyle = i % 2 === 0 ? '#8A6B45' : '#7A5E3C';
+            ctx.fillRect(x + 4, y + 4 + i * (h - 8) / 7, w - 8, (h - 8) / 7 - 1);
+        }
+        // Rails
+        ctx.fillStyle = '#5E4A34';
+        ctx.fillRect(x, y, 4, h);
+        ctx.fillRect(x + w - 4, y, 4, h);
+        ctx.fillRect(x, y, w, 3);
+        ctx.fillRect(x, y + h - 3, w, 3);
+    }
+
+    drawWindChime(ctx) {
+        const t = this.game.animationFrame;
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const sway = Math.round(Math.sin(t * 0.06) * 2);
+        // Bracket
+        ctx.fillStyle = '#5E4A34';
+        ctx.fillRect(x, y, 4, 8);
+        ctx.fillRect(x, y, w, 3);
+        // Hanging copper tubes, staggered lengths, swaying together
+        ctx.fillStyle = '#B87333';
+        ctx.fillRect(x + 3 + sway, y + 4, 2, h * 0.55);
+        ctx.fillRect(x + 7 + sway, y + 4, 2, h * 0.75);
+        ctx.fillRect(x + 11 + sway, y + 4, 2, h * 0.62);
+        // A ring note
+        if (t % 70 < 8) {
+            ctx.fillStyle = '#FFF0C0';
+            ctx.fillRect(x + 8 + sway, Math.round(y + h * 0.8), 2, 2);
+        }
+    }
+
+    drawStoneNeedle(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        const base = '#6B5B4A', dark = '#54463A', warm = '#8A7052';
+        // Tapering volcanic spire, stacked slabs narrowing upward
+        const slabs = 8;
+        for (let i = 0; i < slabs; i++) {
+            const t2 = i / slabs; // 0 at top
+            const sw = w * (0.3 + 0.7 * t2);
+            const sx = x + (w - sw) / 2 + Math.round(Math.sin(i * 2.7) * 3);
+            const sy = y + h * t2;
+            const sh = h / slabs + 1;
+            ctx.fillStyle = base;
+            ctx.fillRect(Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh));
+            // Shadow side (east face stays dark until evening)
+            ctx.fillStyle = dark;
+            ctx.fillRect(Math.round(sx + sw * 0.62), Math.round(sy), Math.round(sw * 0.38), Math.round(sh));
+            // Warm rim light on the west edge
+            ctx.fillStyle = warm;
+            ctx.fillRect(Math.round(sx), Math.round(sy), 3, Math.round(sh));
+        }
+        // The summit block
+        ctx.fillStyle = dark;
+        ctx.fillRect(Math.round(x + w / 2 - 4), y - 6, 8, 8);
+    }
+
+    // Only exists under the blacklight: fluorescing pigment, chalk, minerals
+    drawUvTrace(ctx) {
+        if (!this.game.uvActive) return;
+        const t = this.game.animationFrame;
+        const rand = this.seededRand();
+        const pulse = 0.55 + Math.sin(t * 0.06) * 0.25;
+        for (let i = 0; i < 9; i++) {
+            const px = this.x + rand() * this.width;
+            const py = this.y + rand() * this.height;
+            ctx.fillStyle = i % 3 === 0
+                ? `rgba(160, 255, 190, ${pulse})`
+                : `rgba(110, 220, 255, ${pulse * 0.8})`;
+            ctx.fillRect(Math.round(px), Math.round(py), 2 + (i % 2), 2);
+        }
+        // A soft halo so the find reads at a glance
+        ctx.fillStyle = `rgba(120, 240, 200, ${pulse * 0.12})`;
+        ctx.fillRect(this.x - 6, this.y - 6, this.width + 12, this.height + 12);
+    }
+
+    drawOfferingLedge(ctx) {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        // Stone shelf
+        ctx.fillStyle = '#5A4A5A';
+        ctx.fillRect(x, y + h * 0.4, w, h * 0.6);
+        ctx.fillStyle = '#6A5A6A';
+        ctx.fillRect(x - 2, y + h * 0.3, w + 4, h * 0.25);
+        // The offerings that were here long before you
+        ctx.fillStyle = '#E8E0D0';   // shell beads, gone chalky
+        ctx.fillRect(x + 6, y + h * 0.15, 3, 3);
+        ctx.fillRect(x + 11, y + h * 0.18, 2, 2);
+        ctx.fillStyle = '#C97B5A';   // pot sherd
+        ctx.fillRect(x + w - 14, y + h * 0.12, 6, 4);
+        ctx.fillStyle = '#40C4B0';   // a turquoise chip
+        ctx.fillRect(x + w * 0.5 - 1, y + h * 0.2, 2, 2);
+        // Yours, once given
+        if (this.objData.gifted) {
+            ctx.fillStyle = '#C8A868';
+            ctx.fillRect(x + w * 0.5 - 4, y + h * 0.05, 8, 5);
+            if (this.game.animationFrame % 80 < 10) {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(x + w * 0.5 + 3, y + h * 0.02, 2, 2);
+            }
+        }
+    }
+
     drawSurveyFlag(ctx) {
         const x = this.x, y = this.y, w = this.width, h = this.height;
         const flutter = Math.sin(this.game.animationFrame * 0.15) * 2;
@@ -1477,22 +1868,79 @@ export class InteractiveObject extends Entity {
         this.drawPixels(ctx, rows, P, this.x, this.y + this.height - rows.length * scale, scale);
     }
 
+    // Record a lasting change to this object (opened, spent trigger) in the game's
+    // per-map state so it survives map transitions and checkpoint reloads.
+    persistState(patch) {
+        if (this.mapIndex < 0 || !this.game.currentMapName) return;
+        const ms = this.game.mapState;
+        const entry = ms[this.game.currentMapName] = ms[this.game.currentMapName] || { objects: {} };
+        entry.objects[this.mapIndex] = { ...entry.objects[this.mapIndex], ...patch };
+        this.game.saveGame();
+    }
+
     onInteract(player) {
-        // Camp: rest until dawn
-        if (this.objData.rest) {
-            const daySec = 24 * 3600;
-            const cur = this.game.gameTime % daySec;
-            const dawn = 6 * 3600;
-            let advance = dawn - cur;
-            if (advance <= 0) advance += daySec;
-            this.game.gameTime += advance;
-            player.heal(20);
-            player.hydration = Math.max(10, player.hydration - 15);
-            this.game.ui.updateHydration(player.hydration, player.maxHydration);
-            this.game.ui.updateClock(this.game.gameTime);
-            this.game.ui.showDialog("You bank the coals and sleep under more stars than the city ever shows you. Dawn comes up gold and quiet. (You rest until first light. +20 HP, -15 H2O)", "CAMP");
-            this.game.setGameState(GAME_STATE.DIALOG);
+        // UV traces don't exist for you until the lamp says so
+        if (this.objData.uv && !this.game.uvActive) return;
+
+        // The offering ledge: give something up, permanently, to earn the vault
+        if (this.type === 'offering_ledge') {
+            if (player.quests.find(q => q.id === 'gift_left')) {
+                this.game.ui.showDialog("Your offering sits among the older ones, already looking like it was always here. That's the idea.", "OFFERING LEDGE");
+                this.game.setGameState(GAME_STATE.DIALOG);
+                return;
+            }
+            const giftable = ['lucky_charm', 'rusted_canteen', 'old_pickaxe', 'prickly_pear'].filter(k => player.hasItem(k));
+            const options = [];
+            const offeringActions = [];
+            if (giftable.length > 0) {
+                options.push(`Leave the ${this.game.itemTypes[giftable[0]].name}`);
+                offeringActions.push({ type: 'item', key: giftable[0] });
+            }
+            options.push('Pour out canteen water (-30 H2O)');
+            offeringActions.push({ type: 'water' });
+            options.push('Step back');
+            offeringActions.push({ type: 'cancel' });
+            while (options.length < 3) {
+                options.push('Not yet');
+                offeringActions.push({ type: 'cancel' });
+            }
+            this.game.currentPuzzle = {
+                isOfferingChoice: true,
+                offeringActions,
+                question: "A worn stone ledge by the stair, dotted with small old gifts: shell, sherd, a chip of turquoise. Whoever came down here before you left something. What do you leave?",
+                options,
+            };
+            this.game.setGameState(GAME_STATE.PUZZLE);
             return;
+        }
+
+        // Camp: choose to sleep until dawn or wait for dusk — time is a resource,
+        // and the alignments only read at first light and crimson evening.
+        if (this.objData.rest) {
+            this.game.currentPuzzle = {
+                isCampChoice: true,
+                question: "The coals take. How long do you stay?",
+                options: [
+                    "Sleep until dawn (+20 HP, -15 H2O)",
+                    "Wait for dusk (+10 HP, -10 H2O)",
+                    "Break camp",
+                ],
+            };
+            this.game.setGameState(GAME_STATE.PUZZLE);
+            return;
+        }
+
+        // Storm shelter: when the haboob is up, ducking inside skips the worst of it
+        if (this.objData.shelter && this.game.currentMap.haboob) {
+            const phase = this.game.currentMap.haboob.phase;
+            if (phase === 'approaching' || phase === 'engulfed') {
+                this.game.currentMap.endHaboob();
+                this.game.gameTime += 1800; // half an hour indoors
+                this.game.ui.updateClock(this.game.gameTime);
+                this.game.ui.showDialog("You duck inside. Vega pours coffee without asking, and the two of you listen to the world scour itself smooth. When the chime settles, it's over.", "SHELTER");
+                this.game.setGameState(GAME_STATE.DIALOG);
+                return;
+            }
         }
 
         // Time-gated alignments: only read at the right hour
@@ -1505,11 +1953,42 @@ export class InteractiveObject extends Entity {
                 : (hour >= tg.startHour || hour < tg.endHour);
             this.game.ui.showDialog(inWindow ? tg.successText : tg.failText, (this.objData.name || this.type).toUpperCase());
             this.game.setGameState(GAME_STATE.DIALOG);
-            if (inWindow && tg.record) player.addQuest(tg.record);
+            if (inWindow) {
+                this.game.sound.playChime();
+                if (tg.record) player.addQuest(tg.record);
+            }
             return;
         }
 
+        // Already holding the stick (e.g. reloaded mid-finale): the choice is still to make
+        if (this.objData.triggersPuzzle && this.game.player && this.game.player.hasItem('final_artifact')) {
+            this.game.startEndingChoice();
+            return;
+        }
         if (this.objData.triggersPuzzle && (!this.game.player || !this.game.player.hasItem('final_artifact')) && !this.objData.opened) {
+            // You don't reach for the olla with empty-handed habits: give first
+            if (!player.quests.find(q => q.id === 'gift_left')) {
+                this.game.ui.showDialog("The olla waits, and your hands stop short of it. Thirty years of taking things out of the ground. There's a worn ledge back by the stair, dotted with small old gifts. Leave something first.", "THE VAULT");
+                this.game.setGameState(GAME_STATE.DIALOG);
+                return;
+            }
+            // The cache only reads at solstice dawn. Everything else about this game
+            // taught you to wait; the finale asks you to do it on purpose.
+            const date = this.game.gameDate;
+            const hour = this.game.gameHour;
+            if (date < 21) {
+                this.game.advanceToSolsticeDawn();
+                this.game.ui.showDialog("The final count on the stick ends at the solstice. Every reader before you did what you do now: you bank a small fire against the vault wall, ration the canteen, and wait for the one morning the whole instrument was built to catch. (June 21. First light.)", "THE VAULT");
+                this.game.setGameState(GAME_STATE.DIALOG);
+                this.game.saveGame(true);
+                return;
+            }
+            if (hour < 5 || hour >= 8) {
+                this.game.advanceToHour(5);
+                this.game.ui.showDialog("You wait out the dark beside the 1912 benchmark, listening to water move somewhere under the floor. First light comes down the old stair like it has an appointment.", "THE VAULT");
+                this.game.setGameState(GAME_STATE.DIALOG);
+                return;
+            }
             this.game.startPuzzle(this.objData.puzzleDetails);
             return;
         }
@@ -1526,6 +2005,27 @@ export class InteractiveObject extends Entity {
                 return;
             }
             player.completeQuest('three_records');
+        }
+        // Knowledge lock: carrying the pieces isn't the same as knowing the reading.
+        // The alignments must have been witnessed — dawn light, doorway, horizon notch.
+        if (this.objData.requiredRecords && !this.objData.isNowPortal) {
+            const unread = this.objData.requiredRecords.filter(id => !player.quests.some(q => q.id === id));
+            if (unread.length > 0) {
+                const hints = unread.map(id => (this.objData.recordHints && this.objData.recordHints[id]) || id).join('; ');
+                this.game.ui.showDialog("The three pieces slot together and the counts run unbroken... and still mean nothing to you. You have the pieces without the reading. Still to witness: " + hints + ".", (this.objData.name || this.type).toUpperCase());
+                this.game.setGameState(GAME_STATE.DIALOG);
+                if (!player.quests.find(q => q.id === 'learn_alignments')) {
+                    player.addQuest({ id: 'learn_alignments', description: 'Witness the readings: the dawn light, the mound doorway, the horizon notch.', completed: false });
+                }
+                return;
+            }
+            player.completeQuest('learn_alignments');
+        }
+
+        // A passage already opened stays a passage
+        if (this.objData.isNowPortal && this.objData.toMap) {
+            this.game.changeMap(this.objData.toMap, this.objData.toX, this.objData.toY);
+            return;
         }
 
         if (this.objData.portalOnInteract && this.objData.toMap && !this.objData.isNowPortal) {
@@ -1548,6 +2048,7 @@ export class InteractiveObject extends Entity {
             if (player.addItem(this.objData.contains)) {
                 this.game.ui.showDialog(this.objData.text || `You found a ${this.game.itemTypes[this.objData.contains].name}!`, this.type.toUpperCase());
                 this.objData.opened = true;
+                this.persistState({ opened: true });
                 if (this.objData.questComplete) player.completeQuest(this.objData.questComplete);
             } else {
                 this.game.ui.showDialog("The container is empty or you already have this item.", this.type.toUpperCase());
@@ -1576,6 +2077,7 @@ export class InteractiveObject extends Entity {
             this.game.ui.showDialog(this.objData.questTrigger.startText || `New Quest: ${this.objData.questTrigger.description}`, "INFO");
             this.game.setGameState(GAME_STATE.DIALOG);
             delete this.objData.questTrigger;
+            this.persistState({ questTriggerSpent: true });
             return;
         }
         if (this.objData.requiredItem && this.objData.questComplete) {

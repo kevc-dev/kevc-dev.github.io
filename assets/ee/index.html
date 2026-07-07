@@ -332,16 +332,40 @@
         }
          #saveNotification {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0,0,0,0.8);
+            bottom: 5px;
+            left: 10px;
+            background-color: rgba(0,0,0,0.75);
             color: #FFAA33;
-            padding: 20px;
-            font-size: 14px;
-            border: 2px solid #8B4513;
-            z-index: 1000;
+            padding: 6px 8px;
+            font-size: 9px;
+            border: 1px solid #8B4513;
+            z-index: 60;
             display: none;
+        }
+        #muteButton {
+            position: absolute;
+            top: 70px;
+            right: 10px;
+            color: #FFF;
+            font-size: 12px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 4px 6px;
+            border: 1px solid #8B4513;
+            z-index: 60;
+            cursor: pointer;
+            user-select: none;
+            /* uiContainer is pointer-events:none so the HUD doesn't eat canvas
+               clicks; interactive children must opt back in */
+            pointer-events: all;
+        }
+        #dialogBox img.portrait {
+            float: left;
+            width: 48px;
+            height: 48px;
+            margin: 0 10px 4px 0;
+            image-rendering: pixelated;
+            border: 2px solid #8B4513;
+            background: #1A1410;
         }
         #footer {
             font-family: 'Press Start 2P', monospace;
@@ -529,9 +553,10 @@
             <div id="hpBar" class="statusBar">HP <div id="hpFill"></div></div>
             <div id="hydrationBar" class="statusBar">H2O <div id="hydrationFill"></div></div>
             <div id="mapNameDisplay">Sonoran Desert</div>
+            <div id="muteButton" title="Toggle sound">&#128266;</div>
             <div id="clockDisplay">Day 1 - 08:00 AM</div>
             <div id="questLogDisplay">
-                <h3>Active Quests:</h3>
+                <h3>Walker's Journal:</h3>
                 <ul id="questList"></ul>
             </div>
             <div id="inventoryInfo">
@@ -546,7 +571,7 @@
                 <button id="puzzleOptionC">Option C</button>
             </div>
             <div id="winScreen">
-                <h1>YOU WIN!</h1>
+                <h1 id="winTitle">EXPEDITION'S END</h1>
                 <p id="winMessage">Congratulations, Professor!</p>
                 <svg id="pixelTrophy" width="64" height="64" viewBox="0 0 16 16" style="image-rendering: pixelated;">
                     <rect x="6" y="1" width="4" height="2" fill="#FFD700"/> <rect x="5" y="3" width="6" height="1" fill="#FFD700"/>
@@ -561,7 +586,8 @@
             <h1>DESERT CHRONICLES</h1>
             <h2>The Arizona Artifact</h2>
             <p>Arizona, 1986. One retired archaeologist. Sixteen days to the solstice. A desert that remembers more than it lets on.</p>
-            <button id="startButton">START</button>
+            <button id="startButton">NEW EXPEDITION</button>
+            <button id="continueButton" style="display: none;">CONTINUE</button>
             <div id="loadingText" style="display: none;">Loading...</div>
         </div>
 
@@ -595,7 +621,7 @@
     </div>
 
     <div id="controlsInfo" style="font-size: 10px; margin-top: 10px; text-align:center; max-width: 640px;">
-        Controls: WASD/Arrows - Move | E/Space - Interact | F - Attack | I - Inventory | Q - Quests | P - Pause
+        Controls: WASD/Arrows - Move | E/Space - Interact | F - Attack | M - Map | I - Inventory | Q - Quests | P - Pause
     </div>
 
     <script type="module" src="js/main.js"></script>
